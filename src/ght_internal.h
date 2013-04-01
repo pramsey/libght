@@ -2,7 +2,7 @@
 *  LibGHT, software to manage point clouds.
 *  LibGHT is free and open source software provided by the Government of Canada
 *  Copyright (c) 2012 Natural Resources Canada
-* 
+*
 *  Nouri Sabo <nsabo@NRCan.gc.ca>, Natural Resources Canada
 *  Paul Ramsey <pramsey@opengeo.org>, OpenGeo
 *
@@ -21,7 +21,7 @@
 
 #define GHT_TRY(functioncall) { if ( (functioncall) == GHT_ERROR ) return GHT_ERROR; }
 
-typedef enum  
+typedef enum
 {
     GHT_NONE,
     GHT_GLOBAL,
@@ -77,7 +77,7 @@ void ght_error(const char *fmt, ...);
 void ght_info(const char *fmt, ...);
 /** Send warning message */
 void ght_warn(const char *fmt, ...);
-        
+
 
 /** Initialize memory/message handling */
 void ght_set_handlers(GhtAllocator allocator, GhtReallocator reallocator,
@@ -91,7 +91,7 @@ void   ght_set_allocator(GhtAllocator allocator);
 void   ght_set_deallocator(GhtDeallocator deallocator);
 
 /**
-* Calculate the amount of charaters two GhtHashes have in common. 
+* Calculate the amount of charaters two GhtHashes have in common.
 * Returns -1 for two full hashes with nothing in common.
 * Returns 0 if one of the hashes is "", the "master hash".
 *
@@ -113,8 +113,8 @@ GhtErr ght_area_from_hash(const GhtHash *hash, GhtArea *area);
 /** Release hash memory */
 GhtErr ght_hash_free(GhtHash *hash);
 
-/** 
-* Find the common parts of two hash strings and return pointers 
+/**
+* Find the common parts of two hash strings and return pointers
 * to the unique bits. Also returns a code indicating the kind
 * of match between the hashes.
 *  GHT_NONE, no match ("acbde" "12345")

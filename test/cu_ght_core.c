@@ -2,7 +2,7 @@
 *  LibGHT, software to manage point clouds.
 *  LibGHT is free and open source software provided by the Government of Canada
 *  Copyright (c) 2012 Natural Resources Canada
-* 
+*
 *  Nouri Sabo <nsabo@NRCan.gc.ca>, Natural Resources Canada
 *  Paul Ramsey <pramsey@opengeo.org>, OpenGeo
 *
@@ -14,26 +14,26 @@
 /* GLOBALS ************************************************************/
 
 /* Setup/teardown for this suite */
-static int 
+static int
 init_suite(void)
 {
-	return 0;
+    return 0;
 }
 
-static int 
+static int
 clean_suite(void)
 {
-	return 0;
+    return 0;
 }
 
 
 /* TESTS **************************************************************/
 
-static void 
-test_geohash_inout() 
+static void
+test_geohash_inout()
 {
-    /* ght_hash_from_coordinate(const GhtCoordinate *coord, 
-                                unsigned int resolution, 
+    /* ght_hash_from_coordinate(const GhtCoordinate *coord,
+                                unsigned int resolution,
                                 GhtHash **rhash) */
 
     /* ght_area_from_hash(const GhtHash *hash, GhtArea *area) */
@@ -126,12 +126,12 @@ static void
 test_ght_hash_common_length(void)
 {
     /*
-    int 
-    ght_hash_common_length(const GhtHash *a, const GhtHash *b, int max_len) 
+    int
+    ght_hash_common_length(const GhtHash *a, const GhtHash *b, int max_len)
     */
     GhtHash *a, *b;
     int common;
-    
+
     a = "b000000";
     common = ght_hash_common_length(a, a, 9);
     CU_ASSERT_EQUAL(common, 7);
@@ -163,16 +163,16 @@ static void
 test_ght_hash_leaf_parts(void)
 {
     /*
-    GhtErr 
+    GhtErr
     ght_hash_leaf_parts(const GhtHash *a, const GhtHash *b, int maxlen,
-                        GhtHashMatch *matchtype, GhtHash **a_leaf, GhtHash **b_leaf) 
+                        GhtHashMatch *matchtype, GhtHash **a_leaf, GhtHash **b_leaf)
     */
     GhtHash *a, *b;
     GhtHash *a_leaf, *b_leaf;
     GhtHashMatch matchtype;
     GhtErr e;
     int maxlen = 5;
-    
+
     a = "abcdefgh";
     b = "abcdefgh";
     maxlen = 8;
@@ -226,15 +226,15 @@ test_ght_node_build_tree(void)
     GhtNode *node1, *node2, *node3, *node4, *node5, *root;
     GhtErr err;
 
-    /* ght_node_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtNode **node); */    
+    /* ght_node_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtNode **node); */
     coord.x = -127.4123;
     coord.y = 49.23141;
     err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &root);
     CU_ASSERT_STRING_EQUAL(root->hash, "c0v2hdm1wpzpy4vtv4");
     CU_ASSERT_EQUAL(err, GHT_OK);
-    
+
     /* ght_node_insert_node(GhtNode *node, GhtNode *node_to_insert, int duplicates) */
-    
+
     /* insert duplicate */
     coord.x = -127.4123;
     coord.y = 49.23141;
@@ -259,7 +259,7 @@ test_ght_node_build_tree(void)
     CU_ASSERT_STRING_EQUAL(root->children->nodes[0]->hash, "wpzpy4vtv4");
     /* which in turn has the old identical node as a child */
     CU_ASSERT_EQUAL(root->children->nodes[0]->children->nodes[0], node1);
-    
+
     /* insert child */
     err = ght_node_new("c0v2hdm1wpzpy4vkv4", &node3);
     /* before insert, it's full length */
@@ -279,7 +279,7 @@ test_ght_node_build_tree(void)
     CU_ASSERT_EQUAL(node4->hash, NULL);
     /* also, it's hanging off the previous node */
     CU_ASSERT_EQUAL(node3->children->nodes[0], node4);
-    
+
     /* insert another duplicate of previous */
     err = ght_node_new("c0v2hdm1wpzpy4vkv4", &node5);
     /* before insert, it's full length */
@@ -290,7 +290,7 @@ test_ght_node_build_tree(void)
     CU_ASSERT_EQUAL(node5->hash, NULL);
     /* also, it's hanging off the parent node */
     CU_ASSERT_EQUAL(node3->children->nodes[1], node5);
-    
+
 }
 
 
@@ -337,13 +337,14 @@ test_ght_node_build_tree_big(void)
 
 /* REGISTER ***********************************************************/
 
-CU_TestInfo core_tests[] = {
-	GHT_TEST(test_geohash_inout),
-	GHT_TEST(test_ght_hash_common_length),
-	GHT_TEST(test_ght_hash_leaf_parts),
-	GHT_TEST(test_ght_node_build_tree),
-	GHT_TEST(test_ght_node_build_tree_big),
-	CU_TEST_INFO_NULL
+CU_TestInfo core_tests[] =
+{
+    GHT_TEST(test_geohash_inout),
+    GHT_TEST(test_ght_hash_common_length),
+    GHT_TEST(test_ght_hash_leaf_parts),
+    GHT_TEST(test_ght_node_build_tree),
+    GHT_TEST(test_ght_node_build_tree_big),
+    CU_TEST_INFO_NULL
 };
 
 CU_SuiteInfo core_suite = {"core", init_suite, clean_suite, core_tests};

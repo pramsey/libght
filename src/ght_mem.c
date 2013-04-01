@@ -2,7 +2,7 @@
 *  LibGHT, software to manage point clouds.
 *  LibGHT is free and open source software provided by the Government of Canada
 *  Copyright (c) 2012 Natural Resources Canada
-* 
+*
 *  Nouri Sabo <nsabo@NRCan.gc.ca>, Natural Resources Canada
 *  Paul Ramsey <pramsey@opengeo.org>, OpenGeo
 *
@@ -85,14 +85,14 @@ void ght_init(void)
     ght_context.err     = default_error_handler;
     ght_context.warn    = default_warn_handler;
     ght_context.info    = default_info_handler;
-    
+
     xmlGcMemSetup(
-                  (xmlFreeFunc)    ght_free, 
-                  (xmlMallocFunc)  ght_malloc, 
-                  (xmlMallocFunc)  ght_malloc, 
-                  (xmlReallocFunc) ght_realloc, 
-                  (xmlStrdupFunc)  ght_strdup
-                 );
+        (xmlFreeFunc)    ght_free,
+        (xmlMallocFunc)  ght_malloc,
+        (xmlMallocFunc)  ght_malloc,
+        (xmlReallocFunc) ght_realloc,
+        (xmlStrdupFunc)  ght_strdup
+    );
 }
 
 
@@ -106,14 +106,14 @@ void ght_set_handlers(GhtAllocator allocator, GhtReallocator reallocator,
     ght_context.err = error_handler;
     ght_context.warn = warn_handler;
     ght_context.info = info_handler;
-    
+
     xmlGcMemSetup(
-                  (xmlFreeFunc)    ght_free,
-                  (xmlMallocFunc)  ght_malloc, 
-                  (xmlMallocFunc)  ght_malloc, 
-                  (xmlReallocFunc) ght_realloc, 
-                  (xmlStrdupFunc)  ght_strdup
-                 );
+        (xmlFreeFunc)    ght_free,
+        (xmlMallocFunc)  ght_malloc,
+        (xmlMallocFunc)  ght_malloc,
+        (xmlReallocFunc) ght_realloc,
+        (xmlStrdupFunc)  ght_strdup
+    );
 }
 
 void ght_set_allocator(GhtAllocator allocator)
@@ -127,7 +127,7 @@ void ght_set_deallocator(GhtDeallocator deallocator)
 }
 
 void *
-ght_malloc(size_t size) 
+ght_malloc(size_t size)
 {
     void *mem = ght_context.alloc(size);
     memset(mem, 0, size); /* Always clean memory */

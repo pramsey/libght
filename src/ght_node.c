@@ -2,7 +2,7 @@
 *  LibGHT, software to manage point clouds.
 *  LibGHT is free and open source software provided by the Government of Canada
 *  Copyright (c) 2012 Natural Resources Canada
-* 
+*
 *  Nouri Sabo <nsabo@NRCan.gc.ca>, Natural Resources Canada
 *  Paul Ramsey <pramsey@opengeo.org>, OpenGeo
 *
@@ -30,7 +30,7 @@ ght_nodelist_new(GhtNodeList **nodelist)
 GhtErr
 ght_nodelist_free(GhtNodeList *nl, int deep)
 {
-    
+
     if ( nl->nodes )
     {
         if ( deep )
@@ -39,7 +39,7 @@ ght_nodelist_free(GhtNodeList *nl, int deep)
             for ( i = 0; i < nl->num_nodes; i++ )
             {
                 ght_node_free(nl->nodes[i]);
-            }            
+            }
         }
         ght_free(nl->nodes);
     }
@@ -52,14 +52,14 @@ GhtErr
 ght_nodelist_add_node(GhtNodeList *nl, GhtNode *node)
 {
     // assert(nl);
-    // assert(node);   
+    // assert(node);
     /* First time, initialize */
     if ( nl->max_nodes == 0 )
     {
-        nl->nodes = ght_malloc(sizeof(GhtNode*) * 8);        
+        nl->nodes = ght_malloc(sizeof(GhtNode*) * 8);
         nl->max_nodes = 8;
     }
-    
+
     /* Node list is full, so expand it */
     if ( nl->num_nodes == nl->max_nodes )
     {
@@ -67,10 +67,10 @@ ght_nodelist_add_node(GhtNodeList *nl, GhtNode *node)
         nl->nodes = ght_realloc(nl->nodes, sizeof(GhtNode*) * nl->max_nodes);
         if ( ! nl->nodes ) return GHT_ERROR;
     }
-    
+
     /* Something wrong with memory? */
     if ( ! nl->nodes ) return GHT_ERROR;
-    
+
     /* Add the node to list */
     nl->nodes[nl->num_nodes] = node;
     nl->num_nodes++;
@@ -144,8 +144,8 @@ ght_node_add_child(GhtNode *parent, GhtNode *child)
 }
 
 
-/** 
-* Recursive function, walk down from parent node, looking for 
+/**
+* Recursive function, walk down from parent node, looking for
 * appropriate insertion point for node_to_insert. If duplicates,
 * and duplicate leaf, insert as hash-less "attribute only" node.
 * ["abcdefg", "abcdeff", "abcdddd", "abbbeee"] becomes
@@ -161,10 +161,10 @@ ght_node_insert_node(GhtNode *node, GhtNode *node_to_insert, int duplicates)
     /* NULL hash implies this node is a faux node for duplicate points */
     if ( ! node->hash )
         return GHT_INCOMPLETE;
-    
+
     /* matchtype in (GHT_NONE, GHT_GLOBAL, GHT_SAME, GHT_CHILD, GHT_SPLIT) */
     /* NONE and GLOBAL come back with GHT_ERROR, so we don't handle them yet */
-    GHT_TRY(ght_hash_leaf_parts(node->hash, node_to_insert->hash, GHT_MAX_HASH_LENGTH, 
+    GHT_TRY(ght_hash_leaf_parts(node->hash, node_to_insert->hash, GHT_MAX_HASH_LENGTH,
                                 &matchtype, &node_leaf, &node_to_insert_leaf));
 
     /* Insert node is child of node, either explicitly, or implicitly for */
@@ -182,7 +182,7 @@ ght_node_insert_node(GhtNode *node, GhtNode *node_to_insert, int duplicates)
         /* Node didn't fit any of the children, so add it at this level */
         return ght_node_add_child(node, node_to_insert);
     }
-    
+
     if ( matchtype == GHT_SAME )
     {
         if ( duplicates )
@@ -199,7 +199,7 @@ ght_node_insert_node(GhtNode *node, GhtNode *node_to_insert, int duplicates)
             return GHT_OK;
         }
     }
-    
+
     if ( matchtype == GHT_SPLIT )
     {
         /* We need a new node to hold that part of the parent that is not shared */
@@ -222,10 +222,10 @@ ght_node_insert_node(GhtNode *node, GhtNode *node_to_insert, int duplicates)
         /* Done! */
         return GHT_OK;
     }
-    
+
     /* Don't get here */
     return GHT_ERROR;
-    
+
 }
 
 
@@ -262,19 +262,19 @@ ght_node_count_leaves(const GhtNode *node, int *count)
 GhtErr
 ght_node_free(GhtNode *node)
 {
-    int i; 
+    int i;
     const int deep = 1;
     assert(node != NULL);
-    
+
     if ( node->attributes )
         ght_attributelist_free(node->attributes);
 
     if ( node->children )
         ght_nodelist_free(node->children, deep);
-        
+
     if ( node->hash )
         ght_hash_free(node->hash);
-        
+
     ght_free(node);
 }
 

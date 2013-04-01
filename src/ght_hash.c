@@ -27,7 +27,8 @@
     }
 
 static const char BASE32_ENCODE_TABLE[33] = "0123456789bcdefghjkmnpqrstuvwxyz";
-static const char BASE32_DECODE_TABLE[44] = {
+static const char BASE32_DECODE_TABLE[44] =
+{
     /* 0 */   0, /* 1 */   1, /* 2 */   2, /* 3 */   3, /* 4 */   4,
     /* 5 */   5, /* 6 */   6, /* 7 */   7, /* 8 */   8, /* 9 */   9,
     /* : */  -1, /* ; */  -1, /* < */  -1, /* = */  -1, /* > */  -1,
@@ -39,7 +40,8 @@ static const char BASE32_DECODE_TABLE[44] = {
     /* X */  29, /* Y */  30, /* Z */  31
 };
 
-static const char NEIGHBORS_TABLE[8][33] = {
+static const char NEIGHBORS_TABLE[8][33] =
+{
     "p0r21436x8zb9dcf5h7kjnmqesgutwvy", /* NORTH EVEN */
     "bc01fg45238967deuvhjyznpkmstqrwx", /* NORTH ODD  */
     "bc01fg45238967deuvhjyznpkmstqrwx", /* EAST EVEN  */
@@ -50,7 +52,8 @@ static const char NEIGHBORS_TABLE[8][33] = {
     "238967debc01fg45kmstqrwxuvhjyznp"  /* SOUTH ODD  */
 };
 
-static const char BORDERS_TABLE[8][9] = {
+static const char BORDERS_TABLE[8][9] =
+{
     "prxz",     /* NORTH EVEN */
     "bcfguvyz", /* NORTH ODD */
     "bcfguvyz", /* EAST  EVEN */
@@ -61,7 +64,7 @@ static const char BORDERS_TABLE[8][9] = {
     "0145hjnp"  /* SOUTH ODD */
 };
 
-GhtErr 
+GhtErr
 ght_hash_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtHash **hash)
 {
     int i;
@@ -87,10 +90,12 @@ ght_hash_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, Gh
     if (geohash == NULL)
         return GHT_ERROR;
 
-    val1 = lon; range1 = &lon_range;
-    val2 = lat; range2 = &lat_range;
+    val1 = lon;
+    range1 = &lon_range;
+    val2 = lat;
+    range2 = &lat_range;
 
-    for (i=0; i < resolution; i++) 
+    for (i=0; i < resolution; i++)
     {
         bits = 0;
         SET_BIT(bits, mid, range1, val1, 4);
@@ -116,7 +121,7 @@ ght_hash_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, Gh
 }
 
 
-GhtErr 
+GhtErr
 ght_area_from_hash(const GhtHash *hash, GhtArea *area)
 {
 
@@ -135,20 +140,20 @@ ght_area_from_hash(const GhtHash *hash, GhtArea *area)
 
     p = (const char*)hash;
 
-    while (*p != '\0') 
+    while (*p != '\0')
     {
         c = toupper(*p++);
-        if (c < 0x30) 
+        if (c < 0x30)
         {
             return GHT_ERROR;
         }
         c -= 0x30;
-        if (c > 43) 
+        if (c > 43)
         {
             return GHT_ERROR;
         }
         bits = BASE32_DECODE_TABLE[c];
-        if (bits == -1) 
+        if (bits == -1)
         {
             return GHT_ERROR;
         }
@@ -166,34 +171,34 @@ ght_area_from_hash(const GhtHash *hash, GhtArea *area)
     return GHT_OK;
 }
 
-int 
-ght_hash_common_length(const GhtHash *a, const GhtHash *b, int max_len) 
+int
+ght_hash_common_length(const GhtHash *a, const GhtHash *b, int max_len)
 {
     int min_len;
     int index = 0;
     int a_len = strlen(a);
     int b_len = strlen(b);
-    
+
     /* One of the arguments is the "magic empty hash" */
     if ( a_len == 0 || b_len == 0 )
         return 0;
 
     /* First chars differ! */
     if ( *a != *b )
-        return -1; 
+        return -1;
 
     min_len = (a_len < b_len) ? a_len : b_len;
 
     if ( min_len < max_len )
         max_len = min_len;
 
-    
+
     while(index < max_len)
     {
         if ( *a != *b )
-            return index; 
+            return index;
 
-        a++; 
+        a++;
         b++;
         index++;
     }
@@ -202,22 +207,22 @@ ght_hash_common_length(const GhtHash *a, const GhtHash *b, int max_len)
 
 /**
 * Takes in a potential parent hash (a), and a potential child (b).
-* Returns pointers to the start of the sub-hashes once the 
+* Returns pointers to the start of the sub-hashes once the
 * common parts are stripped.
 * Match types are:
 *   GHT_NONE, GHT_GLOBAL, GHT_SAME, GHT_CHILD, GHT_SPLIT
 */
-GhtErr 
+GhtErr
 ght_hash_leaf_parts(const GhtHash *a, const GhtHash *b, int maxlen,
-                    GhtHashMatch *matchtype, GhtHash **a_leaf, GhtHash **b_leaf) 
+                    GhtHashMatch *matchtype, GhtHash **a_leaf, GhtHash **b_leaf)
 {
     const GhtHash *a_start = a;
     const GhtHash *b_start = b;
-    
+
     /* Initialize return values */
     *a_leaf = (GhtHash*)a;
     *b_leaf = (GhtHash*)b;
-        
+
     while( *a && *b && *a == *b && (a - a_start) < maxlen )
     {
         a++;
@@ -239,7 +244,7 @@ ght_hash_leaf_parts(const GhtHash *a, const GhtHash *b, int maxlen,
         if ( *b == 0 || (*a && *b) )
         {
             *matchtype = GHT_NONE;
-            return GHT_ERROR;            
+            return GHT_ERROR;
         }
     }
     /* Past the first character... */
