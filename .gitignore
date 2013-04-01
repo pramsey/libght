@@ -1,4 +1,15 @@
 *.o
 *.a
 *.so
+*.dylib
+cmake_install.cmake
+CMakeFiles
+CMakeCache.txt
+
 test/cu_tester
+test/cmake_install.cmake
+test/CMakeFiles
+
+src/cmake_install.cmake
+src/ght_config.h
+src/CMakeFiles
