@@ -29,3 +29,7 @@ set_target_properties(libght-static
 
 target_link_libraries(libght xml2)
 target_link_libraries(libght-static xml2)
+
+install (TARGETS libght DESTINATION lib)
+install (TARGETS libght-static DESTINATION lib)
+install (FILES "${PROJECT_SOURCE_DIR}/src/ght.h" DESTINATION include)
