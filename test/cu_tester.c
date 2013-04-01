@@ -165,26 +165,31 @@ file_to_str(const char *fname)
     char *str = ght_malloc(sz);
     char *ptr = str;
     char *ln;
+	size_t MAXLINELEN = 8192;
+	char buf[MAXLINELEN];
 
     snprintf(fullpath, 512, "%s/%s", PROJECTSOURCE, fname);
 
-    printf("fullpath %s\n",fullpath);
+	fr = fopen (fullpath, "rt");
 
-    fr = fopen (fullpath, "rt");
-    if ( ! fr ) return NULL;
-    while( ln = fgetln(fr, &lnsz) )
-    {
-        if ( ptr - str + lnsz > sz )
-        {
-            size_t bsz = ptr - str;
-            sz *= 2;
-            str = ght_realloc(str, sz);
-            ptr = str + bsz;
-        }
-        memcpy(ptr, ln, lnsz);
-        ptr += lnsz;
-    }
-    fclose(fr);
+	while (fgets(buf, MAXLINELEN, fr) != NULL) {
+		if (buf[0] == '\0')
+			continue;
+		lnsz = strlen(buf);
+		if ( ptr - str + lnsz > sz )
+		{
+			size_t bsz = ptr - str;
+			sz *= 2;
+			str = ght_realloc(str, sz);
+			ptr = str + bsz;
+		}
+		memcpy(ptr, buf, lnsz);
+		ptr += lnsz;
+	}
+	
+    *ptr = '\0';
 
-    return str;
+	return str;
+
+
 }
