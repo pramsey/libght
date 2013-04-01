@@ -6,13 +6,16 @@ cmake_install.cmake
 CMakeFiles
 CMakeCache.txt
 Makefile
+CMakeScripts
 
 test/cu_tester
 test/cmake_install.cmake
 test/CMakeFiles
 test/Makefile
+test/CMakeScripts
 
 src/cmake_install.cmake
 src/ght_config.h
 src/CMakeFiles
 src/Makefile
+src/CMakeScripts
