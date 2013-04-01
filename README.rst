@@ -23,22 +23,24 @@ UNIX
 ----
 
 ::
+
     mkdir libght-build
     cd libght-build
-	cmake ../libght-src
-	make
-	make test
-	make install
+    cmake ../libght-src
+    make
+    make test
+    make install
 
 Windows
 -------
 
 ::
-	mkdir libght-build
-	cd libght-build
-	cmake -G "NMake Makefiles" ..\libght-src
-	nmake
-	nmake install
+
+    mkdir libght-build
+    cd libght-build
+    cmake -G "NMake Makefiles" ..\libght-src
+    nmake
+    nmake install
 
 Utilities
 =========
