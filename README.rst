@@ -10,15 +10,29 @@ The advantage of a GeoHashTree file over a LAS file is fast access and filtering
 Requires
 ========
 
-- [LibXML2](http://www.xmlsoft.org/downloads.html) for handling schema documents
-- [CUnit](http://cunit.sourceforge.net/) for running unit tests
-- [CMake](http://www.cmake.org/cmake/resources/software.html) to build
+- `LibXML2 <http://www.xmlsoft.org/downloads.html>`_ for handling schema documents
+- `CUnit <http://cunit.sourceforge.net/>`_ for running unit tests
+- `CMake <http://www.cmake.org/cmake/resources/software.html>`_ to build
 
 Build
-========
+=====
 
-- LibXML2 for handling schema documents
-- CUnit for running unit tests
+UNIX
+----
+
+::
+	cmake -G "Unix Makefiles"
+	make
+	make test
+	make install
+
+Windows
+-------
+
+::
+	cmake -G "NMake Makefiles"
+	nmake
+	nmake install
 
 Utilities
 =========
