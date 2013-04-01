@@ -11,7 +11,7 @@
 /* GLOBALS ************************************************************/
 
 static GhtSchema *schema = NULL;
-static const char *xmlfile = "data/pdal-schema.xml";
+static const char *xmlfile = "test/data/pdal-schema.xml";
 static char *xmlstr;
 
 /* Setup/teardown for this suite */

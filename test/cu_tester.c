@@ -159,13 +159,18 @@ char*
 file_to_str(const char *fname)
 {
 	FILE *fr;
+	char fullpath[512]; 
 	size_t lnsz;
 	size_t sz = 8192;
 	char *str = ght_malloc(sz);
 	char *ptr = str;
 	char *ln;
+
+	snprintf(fullpath, 512, "%s/%s", PROJECTSOURCE, fname);
+
+	printf("fullpath %s\n",fullpath);
 	
-	fr = fopen (fname, "rt");
+	fr = fopen (fullpath, "rt");
     if ( ! fr ) return NULL;
 	while( ln = fgetln(fr, &lnsz) )
 	{

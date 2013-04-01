@@ -17,11 +17,15 @@ Requires
 Build
 =====
 
+CMake prefers builds "out of source", where all the generated files are created separately from the source directory. To make this happen, create a build directory, enter it, then invoke `cmake` with the source directory as the target argument. 
+
 UNIX
 ----
 
 ::
-	cmake -G "Unix Makefiles"
+    mkdir libght-build
+    cd libght-build
+	cmake ../libght-src
 	make
 	make test
 	make install
@@ -30,7 +34,9 @@ Windows
 -------
 
 ::
-	cmake -G "NMake Makefiles"
+	mkdir libght-build
+	cd libght-build
+	cmake -G "NMake Makefiles" ..\libght-src
 	nmake
 	nmake install
 

@@ -2,10 +2,25 @@
 # test suite build
 #------------------------------------------------------------------------------
 
-file(GLOB_RECURSE GHT_TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.c)
-file(GLOB_RECURSE GHT_TEST_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
+set (GHT_TEST_SOURCES 
+	cu_ght_core.c
+	cu_ght_schema.c
+	cu_tester.c
+	)
+
+set (GHT_TEST_HEADERS
+	cu_tester.h
+	)
+
+set (GHT_TEST_DATA
+	data/pdal-schema.xml
+	data/simple-schema.xml
+	)
 
 include_directories ("${PROJECT_SOURCE_DIR}/src")
+include_directories ("${CUNIT_INCLUDE_DIR}")
 
 add_executable(cu_tester ${GHT_TEST_SOURCES} ${GHT_TEST_HEADERS})
 target_link_libraries (cu_tester libght-static cunit)
+
+install (FILES "${GHT_TEST_DATA}" DESTINATION share)
