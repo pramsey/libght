@@ -45,7 +45,7 @@ clean_suite(void)
 static void
 test_schema_from_xml()
 {
-    int rv = ght_schema_from_xml(xmlstr, &schema);
+    int rv = ght_schema_from_xml_str(xmlstr, &schema);
     ght_free(xmlstr);
 
     // char *schemastr = ght_schema_to_json(schema);

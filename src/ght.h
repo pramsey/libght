@@ -52,9 +52,9 @@ typedef struct
 
 typedef struct
 {
-    int ndims;
-    GhtDimension ** dims;
-    size_t size;
+    int num_dims;
+    int max_dims;
+    GhtDimension **dims;
 } GhtSchema;
 
 typedef struct
@@ -133,7 +133,7 @@ typedef void  (*GhtMessageHandler)(const char *string, va_list ap);
 void   ght_init(void);
 
 
-GhtErr ght_schema_from_xml(const char *xmlstr, GhtSchema **schema);
+GhtErr ght_schema_from_xml_str(const char *xmlstr, GhtSchema **schema);
 GhtErr ght_schema_free(GhtSchema *schema);
 
 

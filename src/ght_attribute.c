@@ -9,6 +9,7 @@
 ******************************************************************************/
 
 #include "ght_internal.h"
+#include <strings.h>
 
 GhtErr ght_type_size(GhtType type, size_t *size)
 {
@@ -16,6 +17,20 @@ GhtErr ght_type_size(GhtType type, size_t *size)
     assert(type);
     *size = GhtTypeSizes[type];
     return GHT_OK;
+}
+
+GhtErr ght_type_from_str(const char *str, GhtType *type)
+{
+    int i;
+    for ( i = 0; i < GHT_NUM_TYPES; i++ )
+    {
+        if ( strcasecmp(str, GhtTypeStrings[i]) == 0 )
+        {
+            *type = i;
+            return GHT_OK;
+        }
+    }
+    return GHT_ERROR;
 }
 
 GhtErr ght_attributelist_free(GhtAttributeList *atlist)

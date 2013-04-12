@@ -26,6 +26,7 @@
 #endif
 
 #define GHT_TRY(functioncall) { if ( (functioncall) == GHT_ERROR ) return GHT_ERROR; }
+#define GHT_NUM_TYPES 11
 
 typedef enum
 {
@@ -158,5 +159,17 @@ GhtErr ght_attribute_get_value(const GhtAttribute *attr, double *val);
 
 /** Size in bytes of an attribute type */
 GhtErr ght_type_size(GhtType type, size_t *size);
+
+/** Give a type string (eg "uint16_t"), return the GhtType number */
+GhtErr ght_type_from_str(const char *str, GhtType *type);
+
+/** Create an empty dimension */
+GhtErr ght_dimension_new(GhtDimension **dim);
+
+/** Create a schema from an XML document */
+GhtErr ght_schema_from_xml_str(const char *xmlstr, GhtSchema **schema);
+
+/** Free an existing schema */
+GhtErr ght_schema_free(GhtSchema *schema);
 
 #endif /* _GHT_INTERNAL_H */
