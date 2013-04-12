@@ -43,6 +43,22 @@ typedef char GhtHash;
 
 typedef struct
 {
+    char *name;
+    char *description;
+    GhtType type;
+    double scale;
+    double offset;
+} GhtDimension;
+
+typedef struct
+{
+    int ndims;
+    GhtDimension ** dims;
+    size_t size;
+} GhtSchema;
+
+typedef struct
+{
     double x;
     double y;
 } GhtCoordinate;
@@ -61,7 +77,7 @@ typedef struct
 
 typedef struct
 {
-    int dim;
+    const GhtDimension *dim;
     char val[GHT_ATTRIBUTE_MAX_SIZE];
 } GhtAttribute;
 
@@ -69,7 +85,7 @@ typedef struct
 {
     int num_attrs;
     int max_attrs;
-    GhtAttribute *attrs;
+    GhtAttribute **attrs;
 } GhtAttributeList;
 
 struct GhtNodeList_t;
@@ -94,26 +110,6 @@ typedef struct
     int num_nodes;
 } GhtTree;
 
-typedef struct
-{
-    char *name;
-    char *description;
-    int position;
-    size_t size;
-    size_t byte_position;
-    int interpretation;
-    double scale;
-    double offset;
-    int active;
-} GhtDimension;
-
-
-typedef struct
-{
-    int ndims;
-    GhtDimension ** dims;
-    size_t size;
-} GhtSchema;
 
 
 typedef GhtHash* GhtHashPtr;

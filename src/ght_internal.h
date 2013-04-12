@@ -19,6 +19,12 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#else
+#include "pstdint.h"
+#endif
+
 #define GHT_TRY(functioncall) { if ( (functioncall) == GHT_ERROR ) return GHT_ERROR; }
 
 typedef enum
@@ -29,18 +35,6 @@ typedef enum
     GHT_CHILD,
     GHT_SPLIT
 } GhtHashMatch;
-
-typedef struct
-{
-    int num_pages;
-    int max_pages;
-    int num_elements;
-    int elements_per_page;
-    size_t element_size;
-    unsigned char **pages;
-} GhtMemoryPool;
-
-
 
 static char *GhtTypeStrings[] =
 {
@@ -54,12 +48,12 @@ static char *GhtTypeStrings[] =
 
 static size_t GhtTypeSizes[] =
 {
-    -1,    /* PC_UNKNOWN */
-    1, 1,  /* PC_INT8, PC_UINT8, */
-    2, 2,  /* PC_INT16, PC_UINT16 */
-    4, 4,  /* PC_INT32, PC_UINT32 */
-    8, 8,  /* PC_INT64, PC_UINT64 */
-    8, 4   /* PC_DOUBLE, PC_FLOAT */
+    -1,                                 /* GHT_UNKNOWN */
+    sizeof(int8_t),  sizeof(uint8_t),   /* GHT_INT8,   GHT_UINT8, */
+    sizeof(int16_t), sizeof(uint16_t),  /* GHT_INT16,  GHT_UINT16 */
+    sizeof(int32_t), sizeof(uint32_t),  /* GHT_INT32,  GHT_UINT32 */
+    sizeof(int64_t), sizeof(uint64_t),  /* GHT_INT64,  GHT_UINT64 */
+    sizeof(double),  sizeof(float)      /* GHT_DOUBLE, GHT_FLOAT */
 };
 
 
@@ -159,6 +153,10 @@ GhtErr ght_nodelist_free(GhtNodeList *nl, int deep);
 /** Free an attribute list */
 GhtErr ght_attributelist_free(GhtAttributeList *attrs);
 
+/** Return the scaled and offset version of the packed attribute value */
+GhtErr ght_attribute_get_value(const GhtAttribute *attr, double *val);
 
+/** Size in bytes of an attribute type */
+GhtErr ght_type_size(GhtType type, size_t *size);
 
 #endif /* _GHT_INTERNAL_H */

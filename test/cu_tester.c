@@ -168,7 +168,7 @@ file_to_str(const char *fname)
 	size_t MAXLINELEN = 8192;
 	char buf[MAXLINELEN];
 
-    snprintf(fullpath, 512, "%s/%s", PROJECTSOURCE, fname);
+    snprintf(fullpath, 512, "%s/%s", PROJECT_SOURCE_DIR, fname);
 
 	fr = fopen (fullpath, "rt");
 

@@ -10,6 +10,110 @@
 
 #include "ght_internal.h"
 
-GhtErr ght_attributelist_free(GhtAttributeList *attrs)
-{ };
+GhtErr ght_type_size(GhtType type, size_t *size)
+{
+    assert(size);
+    assert(type);
+    *size = GhtTypeSizes[type];
+    return GHT_OK;
+}
 
+GhtErr ght_attributelist_free(GhtAttributeList *atlist)
+{
+    int i;
+    if ( ! atlist ) return;
+    if ( atlist->attrs )
+    {
+        for ( i = 0; i < atlist->num_attrs; i++ )
+        {
+            if ( atlist->attrs[i] )
+                ght_free(atlist->attrs[i]);
+        } 
+        ght_free(atlist->attrs);
+    }
+    ght_free(atlist);
+    return GHT_OK;
+};
+
+GhtErr ght_attribute_get_value(const GhtAttribute *attr, double *val)
+{
+    const GhtDimension *dim = attr->dim;
+    switch(dim->type)
+    {
+        case GHT_UNKNOWN:
+        {
+            return GHT_ERROR;
+        }
+        case GHT_INT8:
+        {
+            int8_t v;
+            memcpy(&v, attr->val, GhtTypeSizes[dim->type]);
+            *val = v;
+            return GHT_OK;
+        }
+        case GHT_UINT8:
+        {
+            uint8_t v;
+            memcpy(&v, attr->val, GhtTypeSizes[dim->type]);
+            *val = v;
+            return GHT_OK;
+        }
+        case GHT_INT16:
+        {
+            int16_t v;
+            memcpy(&v, attr->val, GhtTypeSizes[dim->type]);
+            *val = v;
+            return GHT_OK;
+        }
+        case GHT_UINT16:
+        {
+            uint16_t v;
+            memcpy(&v, attr->val, GhtTypeSizes[dim->type]);
+            *val = v;
+            return GHT_OK;
+        }
+        case GHT_INT32:
+        {
+            int32_t v;
+            memcpy(&v, attr->val, GhtTypeSizes[dim->type]);
+            *val = v;
+            return GHT_OK;
+        }
+        case GHT_UINT32:
+        {
+            uint32_t v;
+            memcpy(&v, attr->val, GhtTypeSizes[dim->type]);
+            *val = v;
+            return GHT_OK;
+        }
+        case GHT_INT64:
+        {
+            int64_t v;
+            memcpy(&v, attr->val, GhtTypeSizes[dim->type]);
+            *val = v;
+            return GHT_OK;
+        }
+        case GHT_UINT64:
+        {
+            uint64_t v;
+            memcpy(&v, attr->val, GhtTypeSizes[dim->type]);
+            *val = v;
+            return GHT_OK;
+        }
+        case GHT_DOUBLE:
+        {
+            double v;
+            memcpy(&v, attr->val, GhtTypeSizes[dim->type]);
+            *val = v;
+            return GHT_OK;
+        }
+        case GHT_FLOAT:
+        {
+            float v;
+            memcpy(&v, attr->val, GhtTypeSizes[dim->type]);
+            *val = v;
+            return GHT_OK;
+        }
+        
+    }
+}

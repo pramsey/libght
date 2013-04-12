@@ -42,7 +42,10 @@ Windows
     nmake
     nmake install
 
-Utilities
-=========
+To Do
+=====
 
-TBD
+- File format header structure
+  - Endianness flag (die if mismatch)
+  - Version number (support legacy)
+
