@@ -68,6 +68,7 @@ GhtErr ght_schema_free(GhtSchema *schema)
         if ( schema->dims[i] )
             ght_dimension_free(schema->dims[i]);
     }
+    ght_free(schema->dims);
     ght_free(schema);
     return GHT_OK;
 }

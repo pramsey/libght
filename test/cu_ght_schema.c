@@ -12,31 +12,30 @@
 
 static GhtSchema *schema = NULL;
 static const char *xmlfile = "test/data/pdal-schema.xml";
-static char *xmlstr;
+static char *xmlstr = NULL;
 
 /* Setup/teardown for this suite */
 static int
 init_suite(void)
 {
+    GhtErr result;
     schema = NULL;
     xmlstr = file_to_str(xmlfile);
+    result = ght_schema_from_xml_str(xmlstr, &schema);
 
-    if ( ! xmlstr ) return 1;
-    return 0;
+    return result;
 }
 
 static int
 clean_suite(void)
 {
     if ( schema )
-    {
         ght_schema_free(schema);
-        return 0;
-    }
-    else
-    {
-        return 0;
-    }
+        
+    if ( xmlstr ) 
+        ght_free(xmlstr);
+        
+    return 0;
 }
 
 
@@ -45,8 +44,8 @@ clean_suite(void)
 static void
 test_schema_from_xml()
 {
-    int rv = ght_schema_from_xml_str(xmlstr, &schema);
-    ght_free(xmlstr);
+//    ght_schema_free(schema);
+//    ght_free(xmlstr);
 
     // char *schemastr = ght_schema_to_json(schema);
     // printf("ndims %d\n", schema->ndims);
