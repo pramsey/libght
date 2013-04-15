@@ -120,7 +120,6 @@ typedef GhtDimension* GhtDimensionPtr;
 typedef GhtSchema* GhtSchemaPtr;
 
 
-
 /* Global function signatures for memory/logging handlers. */
 typedef void* (*GhtAllocator)(size_t size);
 typedef void* (*GhtReallocator)(void *mem, size_t size);
@@ -128,12 +127,12 @@ typedef void  (*GhtDeallocator)(void *mem);
 typedef void  (*GhtMessageHandler)(const char *string, va_list ap);
 
 
-
 /** Initialize memory/message handling with defaults (malloc/free/printf) */
 void   ght_init(void);
 
 
 GhtErr ght_schema_from_xml_str(const char *xmlstr, GhtSchema **schema);
+GhtErr ght_schema_to_xml_str(const GhtSchema *schema, char **xml_str);
 GhtErr ght_schema_free(GhtSchema *schema);
 
 

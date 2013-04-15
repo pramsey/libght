@@ -11,6 +11,7 @@
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include "ght_internal.h"
+#include "stringbuffer.h"
 
 /** Create an empty dimension */
 GhtErr ght_dimension_new(GhtDimension **dimension) 
@@ -235,3 +236,49 @@ GhtErr ght_schema_from_xml_str(const char *xml_str, GhtSchema **schema)
     
     return result;
 }
+
+GhtErr ght_schema_to_xml_str(const GhtSchema *schema, char **xml_str) 
+{
+    int i;
+    stringbuffer_t *sb = stringbuffer_create_with_size(1024);
+    assert(schema);
+    assert(xml_str);
+    
+    stringbuffer_append(sb, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+    stringbuffer_append(sb, "<pc:PointCloudSchema xmlns:pc=\"http://pointcloud.org/schemas/PC/1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n");
+    
+    for ( i = 0; i < schema->num_dims; i++ )
+    {
+        GhtDimension *dim = schema->dims[i];
+        stringbuffer_append(sb, "<pc:dimension>\n");
+        stringbuffer_aprintf(sb, "<pc:position>%d</pc:position>\n", i+1);
+        if ( dim->name )
+        {
+            stringbuffer_aprintf(sb, "<pc:name>%s</pc:name>\n", dim->name);
+        }
+        if ( dim->description )
+        {
+            stringbuffer_aprintf(sb, "<pc:description>%s</pc:description>\n", dim->description);
+        }
+        stringbuffer_aprintf(sb, "<pc:interpretation>%s</pc:interpretation>\n", GhtTypeStrings[dim->type]);
+        stringbuffer_aprintf(sb, "<pc:size>%zu</pc:size>\n", GhtTypeSizes[dim->type]);
+        if ( dim->scale != 1 )
+        {
+            stringbuffer_aprintf(sb, "<pc:scale>%g</pc:scale>\n", dim->offset);
+        }
+        if ( dim->offset != 0 )
+        {
+            stringbuffer_aprintf(sb, "<pc:offset>%g</pc:offset>\n", dim->offset);
+        }
+        stringbuffer_append(sb, "<pc:active>true</pc:active>\n");
+        stringbuffer_append(sb, "</pc:dimension>\n");
+    }
+    
+    stringbuffer_append(sb, "</pc:PointCloudSchema>");     
+    
+    *xml_str = stringbuffer_getstringcopy(sb);
+    stringbuffer_destroy(sb);
+    return GHT_OK;
+}
+
+
