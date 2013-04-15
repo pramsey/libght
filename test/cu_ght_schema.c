@@ -42,18 +42,28 @@ clean_suite(void)
 /* TESTS **************************************************************/
 
 static void
-test_schema_from_xml()
+test_schema_xml()
 {
-//    ght_schema_free(schema);
-//    ght_free(xmlstr);
+    char *mystr, *str;
+    GhtErr result;
+    GhtSchema *myschema = NULL;
 
-    // char *schemastr = ght_schema_to_json(schema);
-    // printf("ndims %d\n", schema->ndims);
-    // printf("name0 %s\n", schema->dims[0]->name);
-    // printf("%s\n", schemastr);
+    result = ght_schema_to_xml_str(schema, &str);
+    CU_ASSERT_EQUAL(result, GHT_OK);
+    
+    result = ght_schema_from_xml_str(str, &myschema);
+    CU_ASSERT_EQUAL(result, GHT_OK);
 
-//  CU_ASSERT(schema != NULL);
+    result = ght_schema_to_xml_str(myschema, &mystr);
+    CU_ASSERT_EQUAL(result, GHT_OK);
+    
+    CU_ASSERT_STRING_EQUAL(str, mystr);
+    ght_free(str);
+    ght_free(mystr);
+    ght_schema_free(myschema);
 }
+
+
 
 static void
 test_schema_size()
@@ -68,8 +78,7 @@ test_schema_size()
 
 CU_TestInfo schema_tests[] =
 {
-    GHT_TEST(test_schema_from_xml),
-    GHT_TEST(test_schema_size),
+    GHT_TEST(test_schema_xml),
     CU_TEST_INFO_NULL
 };
 

@@ -21,6 +21,7 @@ GhtErr ght_dimension_new(GhtDimension **dimension)
 
     dim = ght_malloc(sizeof(GhtDimension));
     memset(dim, 0, sizeof(GhtDimension));
+    dim->scale = 1.0;
     *dimension = dim;
     return GHT_OK;
 }
@@ -264,7 +265,7 @@ GhtErr ght_schema_to_xml_str(const GhtSchema *schema, char **xml_str)
         stringbuffer_aprintf(sb, "<pc:size>%zu</pc:size>\n", GhtTypeSizes[dim->type]);
         if ( dim->scale != 1 )
         {
-            stringbuffer_aprintf(sb, "<pc:scale>%g</pc:scale>\n", dim->offset);
+            stringbuffer_aprintf(sb, "<pc:scale>%g</pc:scale>\n", dim->scale);
         }
         if ( dim->offset != 0 )
         {
