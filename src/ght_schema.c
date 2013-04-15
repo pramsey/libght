@@ -46,6 +46,37 @@ GhtErr ght_dimension_set_description(GhtDimension *dim, const char *desc)
     return GHT_OK; 
 }
 
+GhtErr ght_schema_get_dimension_by_name(const GhtSchema *schema, const char *name, GhtDimension **dim)
+{
+    int i;
+    assert(name);
+    assert(schema);
+    *dim = NULL;
+    
+    for ( i = 0; i < schema->num_dims; i++ )
+    {
+        const char *sname = schema->dims[i]->name;
+        if ( sname && strcasecmp(name, sname) == 0 )
+        {
+            *dim = schema->dims[i];
+            return GHT_OK;
+        }
+    }
+    return GHT_ERROR;
+}
+
+GhtErr ght_schema_get_dimension_by_index(const GhtSchema *schema, int i, GhtDimension **dim)
+{
+    assert(dim);
+    *dim = NULL;
+    if ( i >= 0 && i < schema->num_dims )
+    {
+        *dim = schema->dims[i];
+        return GHT_OK;
+    }
+    return GHT_ERROR;
+}
+
 GhtErr ght_schema_new(GhtSchema **schema)
 {
     static int max_dims = 8;

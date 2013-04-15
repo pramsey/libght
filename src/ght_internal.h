@@ -151,9 +151,6 @@ GhtErr ght_nodelist_add_node(GhtNodeList *nl, GhtNode *node);
 /** Free a nodelist, and optionally all the nodes referenced by the list */
 GhtErr ght_nodelist_free(GhtNodeList *nl, int deep);
 
-/** Free an attribute list */
-GhtErr ght_attributelist_free(GhtAttributeList *attrs);
-
 /** Return the scaled and offset version of the packed attribute value */
 GhtErr ght_attribute_get_value(const GhtAttribute *attr, double *val);
 
@@ -168,6 +165,12 @@ GhtErr ght_dimension_new(GhtDimension **dim);
 
 /** Create a schema from an XML document */
 GhtErr ght_schema_from_xml_str(const char *xmlstr, GhtSchema **schema);
+
+/** Find the GhtDimension corresponding to a name */
+GhtErr ght_schema_get_dimension_by_name(const GhtSchema *schame, const char *name, GhtDimension **dim);
+
+/** Find the GhtDimension corresponding to an index */
+GhtErr ght_schema_get_dimension_by_index(const GhtSchema *schema, int i, GhtDimension **dim);
 
 /** Free an existing schema */
 GhtErr ght_schema_free(GhtSchema *schema);

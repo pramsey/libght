@@ -267,7 +267,7 @@ ght_node_free(GhtNode *node)
     assert(node != NULL);
 
     if ( node->attributes )
-        ght_attributelist_free(node->attributes);
+        ght_free(node->attributes);
 
     if ( node->children )
         ght_nodelist_free(node->children, deep);
