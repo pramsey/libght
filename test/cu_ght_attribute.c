@@ -127,22 +127,67 @@ test_ght_build_tree_with_attributes(void)
     GhtNodeList *nodelist;
     GhtNode *root, *node;
     GhtErr err;
+    GhtAttribute attr;
     stringbuffer_t *sb;
+    double d;
     
+    /* Read a nodelist from a TSV file */
     nodelist = tsv_file_to_node_list(simpledata, simpleschema);
     CU_ASSERT_EQUAL(nodelist->num_nodes, 8);
     
+    /* Build node list into a tree */
     root = nodelist->nodes[0];
-    
     for ( i = 1; i < nodelist->num_nodes; i++ )
     {
         err = ght_node_insert_node(root, nodelist->nodes[i], GHT_DUPES_YES);
     }
 
+    /* Write the tree to string:
+        c0n0e
+          q
+            m
+              m7
+                dvy8yz9  Z=123.4:Intensity=5
+                ky667sj  Z=123.4:Intensity=5
+              qw00rg068  Z=123.4:Intensity=5
+            hekkhnhj3b  Z=123.4:Intensity=5
+            6myj870p99  Z=123.3:Intensity=5
+            46jybv17y1  Z=123.4:Intensity=5
+          r
+            980jtyf1dh  Z=123.4:Intensity=5
+            2khvpfu13f  Z=123.4:Intensity=5
+    */
     sb = stringbuffer_create();
     ght_node_to_string(root, sb, 0);
-    printf("\n%s\n", stringbuffer_getstring(sb));
+    // printf("\n%s\n", stringbuffer_getstring(sb));
     stringbuffer_destroy(sb);
+
+    /* Compact the tree on both attributes:
+        c0n0e  Intensity=5
+          q
+            m  Z=123.4
+              m7
+                dvy8yz9
+                ky667sj
+              qw00rg068
+            hekkhnhj3b  Z=123.4
+            6myj870p99  Z=123.3
+            46jybv17y1  Z=123.4
+          r  Z=123.4
+            980jtyf1dh
+            2khvpfu13f  
+    */
+    sb = stringbuffer_create();
+    ght_node_compact_attribute(root, simpleschema->dims[2], &attr);
+    ght_node_compact_attribute(root, simpleschema->dims[3], &attr);
+    ght_node_to_string(root, sb, 0);
+    // printf("\n%s\n", stringbuffer_getstring(sb));
+    stringbuffer_destroy(sb);
+    
+    /* Check that Intensity=5 has migrated all the way to the top of the tree */
+    CU_ASSERT_STRING_EQUAL(root->attributes->attributes[0]->dim->name, "Intensity");
+    ght_attribute_get_value(root->attributes->attributes[0], &d);
+    CU_ASSERT_DOUBLE_EQUAL(d, 5, 0.00000001);
     
     ght_node_free(root);
     ght_nodelist_free_shallow(nodelist);

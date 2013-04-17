@@ -325,10 +325,11 @@ ght_attributelist_add_attribute(GhtAttributeList *al, GhtAttribute *attr)
     return GHT_OK;
 }
 
+
 GhtErr
 ght_attributelist_delete_attribute(GhtAttributeList *al, const GhtDimension *dim)
 {
-    int i;
+    int i, j;
     GhtErr status = GHT_ERROR;
     size_t sz = sizeof(GhtAttribute*);
     
@@ -348,16 +349,19 @@ ght_attributelist_delete_attribute(GhtAttributeList *al, const GhtDimension *dim
     al->num_attributes--;
     
     /* Free the attribute we're deleting */
-    ght_free(al->attributes[i]);
+    ght_attribute_free(al->attributes[i]);
     
     /* If this removal creates a gap, fill it in */
-    if ( i < al->num_attributes )
-        memmove(al->attributes + i * sz, al->attributes + i * (sz+1), al->num_attributes - i);
+    for ( j = i; j < al->num_attributes; j++ )
+    {
+        al->attributes[j] = al->attributes[j+1];
+    }
         
     /* Null out the end of the array */
     al->attributes[al->num_attributes] = NULL;
     
     return GHT_OK;
 }
+
 
 

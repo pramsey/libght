@@ -9,6 +9,7 @@
 ******************************************************************************/
 
 #include "ght_internal.h"
+#include <float.h>
 
 /** New, empty, nodelist */
 GhtErr
@@ -264,7 +265,7 @@ GhtErr
 ght_node_to_string(GhtNode *node, stringbuffer_t *sb, int level)
 {
     int i = 0;
-    stringbuffer_aprintf(sb, "%*s%s", level, "", node->hash);
+    stringbuffer_aprintf(sb, "%*s%s", 2*level, "", node->hash);
     if ( node->attributes )
     {
         stringbuffer_append(sb, "  ");
@@ -343,13 +344,73 @@ ght_node_delete_attribute(GhtNode *node, const GhtDimension *dim)
 }
 
 static GhtErr
-ght_node_compact_attribute_with_delta(GhtNode *node, const GhtDimension *dim, double delta)
+ght_node_compact_attribute_with_delta(GhtNode *node, const GhtDimension *dim, double delta, GhtAttribute *compacted_attribute)
 {
+    int i;
     
+    /* This is an internal node, see if all the children share a value in this dimension */
+    if ( node->children && node->children->num_nodes > 0 )
+    {
+        double minval = DBL_MAX;
+        double maxval = -1 * DBL_MAX;
+        double totval = 0.0;
+        int node_count = 0;
+        
+        /* Figure out the range of values for this dimension in child nodes */
+        for ( i = 0; i < node->children->num_nodes; i++ )
+        {
+            GhtAttribute attr;
+            GhtErr err;
+            err = ght_node_compact_attribute_with_delta(node->children->nodes[i], dim, delta, &attr);
+            if ( err == GHT_OK )
+            {
+                double d;
+                GHT_TRY(ght_attribute_get_value(&attr, &d));
+                (d < minval) ? (minval = d) : 0;
+                (d > maxval) ? (maxval = d) : 0;
+                totval += d;
+                node_count++;
+            }
+            else
+            {
+                continue;
+            }
+        }
+        
+        /* If the range is narrow, and we got values from all our children, compact them */
+        if ( (maxval-minval) < delta && node_count == node->children->num_nodes )
+        {
+            double val = (minval+maxval)/2.0;
+            GhtAttribute *myattr;
+            for ( i = 0; i < node->children->num_nodes; i++ )
+            {
+                ght_node_delete_attribute(node->children->nodes[i], dim);
+            }
+            ght_attribute_new(dim, val, &myattr);
+            memcpy(compacted_attribute, myattr, sizeof(GhtAttribute));
+            ght_node_add_attribute(node, myattr);
+            return GHT_OK;
+        }
+        return GHT_ERROR;
+    }
+    /* This is a leaf node, send the attribute value up to the caller */
+    else
+    {
+        if ( ! node->attributes ) return GHT_ERROR;
+        for ( i = 0; i < node->attributes->num_attributes; i++ )
+        {
+            if ( dim == node->attributes->attributes[i]->dim )
+            {
+                memcpy(compacted_attribute, node->attributes->attributes[i], sizeof(GhtAttribute));
+                return GHT_OK;
+            }
+        }
+        return GHT_ERROR;
+    }
 }
 
 GhtErr
-ght_node_compact_attribute(GhtNode *node, const GhtDimension *dim)
+ght_node_compact_attribute(GhtNode *node, const GhtDimension *dim, GhtAttribute *attr)
 {
-    return ght_node_compact_attribute_with_delta(node, dim, 10e-8);
+    return ght_node_compact_attribute_with_delta(node, dim, 10e-8, attr);
 }

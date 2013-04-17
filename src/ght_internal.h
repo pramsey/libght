@@ -155,7 +155,7 @@ GhtErr ght_node_delete_attribute(GhtNode *node, const GhtDimension *dim);
 GhtErr ght_node_add_attribute(GhtNode *node, GhtAttribute *attribute);
 
 /** Move attributes to the highest level in the tree at which they apply to all children */
-GhtErr ght_node_compact_attribute(GhtNode *node, const GhtDimension *dim);
+GhtErr ght_node_compact_attribute(GhtNode *node, const GhtDimension *dim, GhtAttribute *attr);
 
 /** Create an empty nodelist */
 GhtErr ght_nodelist_new(GhtNodeList **nodelist);
