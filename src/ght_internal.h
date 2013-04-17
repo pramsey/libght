@@ -149,10 +149,13 @@ GhtErr ght_node_to_string(GhtNode *node, stringbuffer_t *sb, int level);
 GhtErr ght_node_count_leaves(const GhtNode *node, int *count);
 
 /** Delete an attribute from the node (frees the attribute) */
-GhtErr ght_node_delete_attribute(GhtNode *node, int i);
+GhtErr ght_node_delete_attribute(GhtNode *node, const GhtDimension *dim);
 
 /** Add a new attribute to the node */
 GhtErr ght_node_add_attribute(GhtNode *node, GhtAttribute *attribute);
+
+/** Move attributes to the highest level in the tree at which they apply to all children */
+GhtErr ght_node_compact_attribute(GhtNode *node, const GhtDimension *dim);
 
 /** Create an empty nodelist */
 GhtErr ght_nodelist_new(GhtNodeList **nodelist);
@@ -194,7 +197,7 @@ GhtErr ght_attributelist_to_string(const GhtAttributeList *al, stringbuffer_t *s
 GhtErr ght_attributelist_add_attribute(GhtAttributeList *al, GhtAttribute *attr);
 
 /** Delete an entry from a GhtAttributeList */
-GhtErr ght_attributelist_delete_attribute(GhtAttributeList *al, int i);
+GhtErr ght_attributelist_delete_attribute(GhtAttributeList *al, const GhtDimension *dim);
 
 /** Size in bytes of an attribute type */
 GhtErr ght_type_size(GhtType type, size_t *size);

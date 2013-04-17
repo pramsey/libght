@@ -141,7 +141,7 @@ test_ght_build_tree_with_attributes(void)
 
     sb = stringbuffer_create();
     ght_node_to_string(root, sb, 0);
-    // printf("\n%s\n", stringbuffer_getstring(sb));
+    printf("\n%s\n", stringbuffer_getstring(sb));
     stringbuffer_destroy(sb);
     
     ght_node_free(root);

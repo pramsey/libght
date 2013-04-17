@@ -306,7 +306,7 @@ ght_attributelist_to_string(const GhtAttributeList *al, stringbuffer_t *sb)
     }
     return GHT_OK;
 }
-    
+
 GhtErr
 ght_attributelist_add_attribute(GhtAttributeList *al, GhtAttribute *attr)
 {
@@ -326,12 +326,23 @@ ght_attributelist_add_attribute(GhtAttributeList *al, GhtAttribute *attr)
 }
 
 GhtErr
-ght_attributelist_delete_attribute(GhtAttributeList *al, int i)
+ght_attributelist_delete_attribute(GhtAttributeList *al, const GhtDimension *dim)
 {
+    int i;
+    GhtErr status = GHT_ERROR;
     size_t sz = sizeof(GhtAttribute*);
     
-    if ( i < 0 || i >= al->num_attributes )
-        return GHT_ERROR;
+    for ( i = 0; i < al->num_attributes; i++ )
+    {
+        if ( al->attributes[i] && dim == al->attributes[i]->dim ) 
+        {
+            status = GHT_OK;
+            break;
+        }
+    }
+    
+    if ( status != GHT_OK )
+        return status;
     
     /* We're going to have one less attribute */
     al->num_attributes--;

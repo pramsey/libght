@@ -327,12 +327,12 @@ ght_node_add_attribute(GhtNode *node, GhtAttribute *attribute)
 }
 
 GhtErr
-ght_node_delete_attribute(GhtNode *node, int i)
+ght_node_delete_attribute(GhtNode *node, const GhtDimension *dim)
 {
     if ( ! node->attributes )
         return GHT_ERROR;
     
-    GHT_TRY(ght_attributelist_delete_attribute(node->attributes, i));
+    GHT_TRY(ght_attributelist_delete_attribute(node->attributes, dim));
     
     if ( node->attributes->num_attributes == 0 )
     {
@@ -342,4 +342,14 @@ ght_node_delete_attribute(GhtNode *node, int i)
     return GHT_OK;
 }
 
+static GhtErr
+ght_node_compact_attribute_with_delta(GhtNode *node, const GhtDimension *dim, double delta)
+{
+    
+}
 
+GhtErr
+ght_node_compact_attribute(GhtNode *node, const GhtDimension *dim)
+{
+    return ght_node_compact_attribute_with_delta(node, dim, 10e-8);
+}
