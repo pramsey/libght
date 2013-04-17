@@ -43,11 +43,41 @@ GhtErr ght_attribute_new(const GhtDimension *dim, double val, GhtAttribute **att
     return GHT_OK;
 }
 
+/** Convert a real value double into a value suitable for storage */
+static GhtErr
+ght_attribute_real_to_storage(const GhtDimension *dim, double *val)
+{
+    if ( dim->offset )
+    {
+        *val -= dim->offset;
+    }
+    if ( dim->scale != 1 )
+    {
+        *val /= dim->scale;
+    }
+    return GHT_OK;
+}
+
+/** Convert a real value double into a value suitable for storage */
+static GhtErr
+ght_attribute_storage_to_real(const GhtDimension *dim, double *val)
+{
+    if ( dim->scale != 1 )
+    {
+        *val *= dim->scale;
+    }
+    if ( dim->offset )
+    {
+        *val += dim->offset;
+    }
+    return GHT_OK;
+}
+
 GhtErr ght_attribute_get_value(const GhtAttribute *attr, double *val)
 {
-    const GhtDimension *dim = attr->dim;
-    size_t size = GhtTypeSizes[dim->type];
-    switch(dim->type)
+    const GhtType type = attr->dim->type;
+    size_t size = GhtTypeSizes[type];
+    switch(type)
     {
         case GHT_UNKNOWN:
         {
@@ -58,81 +88,90 @@ GhtErr ght_attribute_get_value(const GhtAttribute *attr, double *val)
             int8_t v;
             memcpy(&v, attr->val, size);
             *val = v;
-            return GHT_OK;
+            break;
         }
         case GHT_UINT8:
         {
             uint8_t v;
             memcpy(&v, attr->val, size);
             *val = v;
-            return GHT_OK;
+            break;
         }
         case GHT_INT16:
         {
             int16_t v;
             memcpy(&v, attr->val, size);
             *val = v;
-            return GHT_OK;
+            break;
         }
         case GHT_UINT16:
         {
             uint16_t v;
             memcpy(&v, attr->val, size);
             *val = v;
-            return GHT_OK;
+            break;
         }
         case GHT_INT32:
         {
             int32_t v;
             memcpy(&v, attr->val, size);
             *val = v;
-            return GHT_OK;
+            break;
         }
         case GHT_UINT32:
         {
             uint32_t v;
             memcpy(&v, attr->val, size);
             *val = v;
-            return GHT_OK;
+            break;
         }
         case GHT_INT64:
         {
             int64_t v;
             memcpy(&v, attr->val, size);
             *val = v;
-            return GHT_OK;
+            break;
         }
         case GHT_UINT64:
         {
             uint64_t v;
             memcpy(&v, attr->val, size);
             *val = v;
-            return GHT_OK;
+            break;
         }
         case GHT_DOUBLE:
         {
             double v;
             memcpy(&v, attr->val, size);
             *val = v;
-            return GHT_OK;
+            break;
         }
         case GHT_FLOAT:
         {
             float v;
             memcpy(&v, attr->val, size);
             *val = v;
-            return GHT_OK;
+            break;
         }
-        
+        default:
+        {
+            return GHT_ERROR;
+        }
     }
+    GHT_TRY(ght_attribute_storage_to_real(attr->dim, val));
+    return GHT_OK;    
 }
 
 
 GhtErr ght_attribute_set_value(GhtAttribute *attr, double val)
 {
-    const GhtDimension *dim = attr->dim;
-    size_t size = GhtTypeSizes[dim->type];
-    switch(dim->type)
+    const GhtType type = attr->dim->type;
+    size_t size = GhtTypeSizes[type];
+    double dv = val;
+    
+    GHT_TRY(ght_attribute_real_to_storage(attr->dim, &dv));
+    
+    switch(type)
     {
         case GHT_UNKNOWN:
         {
@@ -140,64 +179,76 @@ GhtErr ght_attribute_set_value(GhtAttribute *attr, double val)
         }
         case GHT_INT8:
         {
-            int8_t v;
+            int8_t v = dv;
             memcpy(attr->val, &v, size);
             return GHT_OK;
         }
         case GHT_UINT8:
         {
-            uint8_t v;
+            uint8_t v = dv;
             memcpy(attr->val, &v, size);
             return GHT_OK;
         }
         case GHT_INT16:
         {
-            int16_t v;
+            int16_t v = dv;
             memcpy(attr->val, &v, size);
             return GHT_OK;
         }
         case GHT_UINT16:
         {
-            uint16_t v;
+            uint16_t v = dv;
             memcpy(attr->val, &v, size);
             return GHT_OK;
         }
         case GHT_INT32:
         {
-            int32_t v;
+            int32_t v = dv;
             memcpy(attr->val, &v, size);
             return GHT_OK;
         }
         case GHT_UINT32:
         {
-            uint32_t v;
+            uint32_t v = dv;
             memcpy(attr->val, &v, size);
             return GHT_OK;
         }
         case GHT_INT64:
         {
-            int64_t v;
+            int64_t v = dv;
             memcpy(attr->val, &v, size);
             return GHT_OK;
         }
         case GHT_UINT64:
         {
-            uint64_t v;
+            uint64_t v = dv;
             memcpy(attr->val, &v, size);
             return GHT_OK;
         }
         case GHT_DOUBLE:
         {
-            double v;
+            double v = dv;
             memcpy(attr->val, &v, size);
             return GHT_OK;
         }
         case GHT_FLOAT:
         {
-            float v;
+            float v = dv;
             memcpy(attr->val, &v, size);
             return GHT_OK;
         }
-        
+        default:
+        {
+            return GHT_ERROR;
+        }
     }
+    return GHT_OK;
+}
+
+GhtErr ght_attribute_to_string(const GhtAttribute *attr, stringbuffer_t *sb)
+{
+    double d;
+    GHT_TRY(ght_attribute_get_value(attr, &d));
+    stringbuffer_aprintf(sb, "%g", d);
+    return GHT_OK;
 }

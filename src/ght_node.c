@@ -233,8 +233,15 @@ ght_node_insert_node(GhtNode *node, GhtNode *node_to_insert, int duplicates)
 GhtErr
 ght_node_to_string(GhtNode *node, stringbuffer_t *sb, int level)
 {
-    int i;
-    stringbuffer_aprintf(sb, "%*s%s\n", level, "", node->hash);
+    int i = 0;
+    stringbuffer_aprintf(sb, "%*s%s", level, "", node->hash);
+    for ( i = 0; i < node->num_attributes; i++ )
+    {
+        if ( i ) stringbuffer_append(sb, ":");
+        else stringbuffer_append(sb, "  ");
+        ght_attribute_to_string(node->attributes[i], sb);
+    }
+    stringbuffer_append(sb, "\n");
     for ( i = 0; i < ght_node_num_children(node); i++ )
     {
         GHT_TRY(ght_node_to_string(node->children->nodes[i], sb, level + 1));

@@ -166,6 +166,9 @@ GhtErr ght_attribute_get_value(const GhtAttribute *attr, double *val);
 /** Set the packed attribute value */
 GhtErr ght_attribute_set_value(GhtAttribute *attr, double val);
 
+/** Write an appropriately formatted value into the stringbugger */
+GhtErr ght_attribute_to_string(const GhtAttribute *attr, stringbuffer_t *sb);
+
 /** Size in bytes of an attribute type */
 GhtErr ght_type_size(GhtType type, size_t *size);
 

@@ -94,14 +94,38 @@ tsv_file_to_node_list(const char *fname, const GhtSchema *schema)
 /* TESTS ***********************************************************/
 
 static void
+test_ght_build_node_with_attributes(void)
+{
+    GhtAttribute *a;
+    GhtCoordinate coord;
+    GhtNode *node;
+    stringbuffer_t *sb = stringbuffer_create();
+    
+    /* X, Y */
+    coord.x = -127;
+    coord.y = 45;
+    ght_node_from_coordinate(&coord, 16, &node);
+    /* Z */
+    ght_attribute_new(simpleschema->dims[2], 1231.2, &a);
+    ght_node_add_attribute(node, a);
+    /* Intensity */
+    ght_attribute_new(simpleschema->dims[2], 3, &a);
+    ght_node_add_attribute(node, a);
+    
+    ght_node_to_string(node, sb, 0);
+    CU_ASSERT_STRING_EQUAL("c0j8n012j80252h0  1231.2:3\n", stringbuffer_getstring(sb));
+    // printf("%s\n", stringbuffer_getstring(sb));
+    stringbuffer_destroy(sb);
+    
+}    
+
+static void
 test_ght_build_tree_with_attributes(void)
 {
-    static const char *simpledata = "test/data/simple-data.tsv";
-    
+    static const char *simpledata = "test/data/simple-data.tsv";   
     GhtNodeList *nodelist;
-    
     nodelist = tsv_file_to_node_list(simpledata, simpleschema);
-    
+    CU_ASSERT_EQUAL(nodelist->num_nodes, 8);
     ght_nodelist_free_deep(nodelist);
 }
 
@@ -111,6 +135,7 @@ test_ght_build_tree_with_attributes(void)
 CU_TestInfo attribute_tests[] =
 {
     GHT_TEST(test_ght_build_tree_with_attributes),
+    GHT_TEST(test_ght_build_node_with_attributes),
     CU_TEST_INFO_NULL
 };
 
