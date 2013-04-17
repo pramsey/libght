@@ -18,6 +18,7 @@ ght_nodelist_new(GhtNodeList **nodelist)
     assert(nodelist);
     nl = ght_malloc(sizeof(GhtNodeList));
     if ( ! nl ) return GHT_ERROR;
+    memset(nl, 0, sizeof(GhtNodeList));
     nl->nodes = NULL;
     nl->num_nodes = 0;
     nl->max_nodes = 0;
@@ -25,24 +26,31 @@ ght_nodelist_new(GhtNodeList **nodelist)
     return GHT_OK;
 }
 
-/** If deep is set, free list and all nodes. Otherwise, just free
-* over arching list and leave the nodes alone. */
+/** Free just the containing structure, leaving the nodes */
 GhtErr
-ght_nodelist_free_deep(GhtNodeList *nl)
+ght_nodelist_free_shallow(GhtNodeList *nl)
 {
-
     if ( nl->nodes )
-    {
-        int i;
-        for ( i = 0; i < nl->num_nodes; i++ )
-        {
-            ght_node_free(nl->nodes[i]);
-        }
         ght_free(nl->nodes);
-    }
+
     ght_free(nl);
 }
 
+/** Free all the nodes, then the containing stuff */
+GhtErr
+ght_nodelist_free_deep(GhtNodeList *nl)
+{
+    int i;
+    if ( nl->nodes )
+    {
+        for ( i = 0; i < nl->num_nodes; i++ )
+        {
+            if ( nl->nodes[i] )
+                ght_node_free(nl->nodes[i]);
+        }
+    }
+    return ght_nodelist_free_shallow(nl);
+}
 
 /** Add node, adding memory space as necessary. */
 GhtErr
@@ -94,10 +102,9 @@ ght_node_new(GhtNode **node)
 {
     GhtNode *n = ght_malloc(sizeof(GhtNode));
     if ( ! n ) return GHT_ERROR;
+    memset(n, 0, sizeof(GhtNode));
     n->children = NULL;
     n->attributes = NULL;
-    n->num_attributes = 0;
-    n->max_attributes = 0;
     n->hash = NULL;
     *node = n;
     return GHT_OK;
@@ -144,6 +151,24 @@ ght_node_add_child(GhtNode *parent, GhtNode *child)
     return ght_nodelist_add_node(parent->children, child);
 }
 
+static GhtErr
+ght_node_transfer_attributes(GhtNode *node_from, GhtNode *node_to)
+{
+    size_t sz;
+    
+    /* Nothing to transfer */
+    if ( ! node_from->attributes )
+        return GHT_OK;
+        
+    /* Uh oh, something is already there */
+    if ( node_to->attributes )
+        return GHT_ERROR;
+        
+    node_to->attributes = node_from->attributes;
+    node_from->attributes = NULL;
+    
+    return GHT_OK;
+}
 
 /**
 * Recursive function, walk down from parent node, looking for
@@ -153,7 +178,7 @@ ght_node_add_child(GhtNode *parent, GhtNode *child)
 * "ab"->["c"->["d"->["ddd","ef"->["g","f"]]],"b"]
 */
 GhtErr
-ght_node_insert_node(GhtNode *node, GhtNode *node_to_insert, int duplicates)
+ght_node_insert_node(GhtNode *node, GhtNode *node_to_insert, GhtDuplicates duplicates)
 {
     GhtHash *node_leaf, *node_to_insert_leaf;
     GhtErr err;
@@ -170,6 +195,7 @@ ght_node_insert_node(GhtNode *node, GhtNode *node_to_insert, int duplicates)
 
     /* Insert node is child of node, either explicitly, or implicitly for */
     /* the "" hash which serves as a master parent */
+    /* "abcdef" is a GHT_CHILD or "abc", and gets added as "def" */
     if ( matchtype == GHT_CHILD || matchtype == GHT_GLOBAL )
     {
         int i;
@@ -201,11 +227,15 @@ ght_node_insert_node(GhtNode *node, GhtNode *node_to_insert, int duplicates)
         }
     }
 
+    /* "abcdef" and "abcghi" need to GHT_SPLIT, into "abc"->["def", "ghi"] */
     if ( matchtype == GHT_SPLIT )
     {
         /* We need a new node to hold that part of the parent that is not shared */
         GhtNode *another_node_to_insert;
         GHT_TRY(ght_node_new_from_hash(node_leaf, &another_node_to_insert));
+        /* Move attributes to the new child */
+        GHT_TRY(ght_node_transfer_attributes(node, another_node_to_insert));
+        
         /* Any children of the parent need to move down the tree with the unique part of the hash */
         if ( node->children )
         {
@@ -235,11 +265,10 @@ ght_node_to_string(GhtNode *node, stringbuffer_t *sb, int level)
 {
     int i = 0;
     stringbuffer_aprintf(sb, "%*s%s", level, "", node->hash);
-    for ( i = 0; i < node->num_attributes; i++ )
+    if ( node->attributes )
     {
-        if ( i ) stringbuffer_append(sb, ":");
-        else stringbuffer_append(sb, "  ");
-        ght_attribute_to_string(node->attributes[i], sb);
+        stringbuffer_append(sb, "  ");
+        ght_attributelist_to_string(node->attributes, sb);
     }
     stringbuffer_append(sb, "\n");
     for ( i = 0; i < ght_node_num_children(node); i++ )
@@ -275,22 +304,13 @@ ght_node_free(GhtNode *node)
     assert(node != NULL);
 
     if ( node->attributes )
-    {
-        for ( i = 0; i < node->num_attributes; i++ )
-        {
-            if ( node->attributes[i] )
-            {
-                ght_free(node->attributes[i]);
-            }
-        }
-        ght_free(node->attributes);
-    }
+        GHT_TRY(ght_attributelist_free(node->attributes));
 
     if ( node->children )
-        ght_nodelist_free_deep(node->children);
+        GHT_TRY(ght_nodelist_free_deep(node->children));
 
     if ( node->hash )
-        ght_hash_free(node->hash);
+        GHT_TRY(ght_hash_free(node->hash));
 
     ght_free(node);
 }
@@ -298,41 +318,27 @@ ght_node_free(GhtNode *node)
 GhtErr
 ght_node_add_attribute(GhtNode *node, GhtAttribute *attribute)
 {
-    if ( node->max_attributes == 0 )
+    if ( ! node->attributes )
     {
-        node->max_attributes = 2;
-        node->attributes = ght_malloc(node->max_attributes * sizeof(GhtAttribute*));
+        GHT_TRY(ght_attributelist_new(&(node->attributes)));
     }
-    if( node->num_attributes == node->max_attributes )
-    {
-        node->max_attributes *= 2;
-        node->attributes = ght_realloc(node->attributes, node->max_attributes * sizeof(GhtAttribute*));
-    }
-    node->attributes[node->num_attributes] = attribute;
-    node->num_attributes++;
+    GHT_TRY(ght_attributelist_add_attribute(node->attributes, attribute));
     return GHT_OK;
 }
 
 GhtErr
 ght_node_delete_attribute(GhtNode *node, int i)
 {
-    size_t sz = sizeof(GhtAttribute*);
-    if ( i < 0 || i >= node->num_attributes )
+    if ( ! node->attributes )
         return GHT_ERROR;
     
-    /* We're going to have one less attribute */
-    node->num_attributes--;
+    GHT_TRY(ght_attributelist_delete_attribute(node->attributes, i));
     
-    /* Free the attribute we're deleting */
-    ght_free(node->attributes[i]);
-    
-    /* If this removal creates a gap, fill it in */
-    if ( i < node->num_attributes )
-        memmove(node->attributes + i * sz, node->attributes + i * (sz+1), node->num_attributes - i);
-        
-    /* Null out the end of the array */
-    node->attributes[node->num_attributes] = NULL;
-    
+    if ( node->attributes->num_attributes == 0 )
+    {
+        GHT_TRY(ght_attributelist_free(node->attributes));
+        node->attributes = NULL;
+    }
     return GHT_OK;
 }
 

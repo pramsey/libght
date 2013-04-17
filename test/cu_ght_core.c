@@ -239,7 +239,7 @@ test_ght_node_build_tree(void)
     coord.x = -127.4123;
     coord.y = 49.23141;
     err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node1);
-    err = ght_node_insert_node(root, node1, 1);
+    err = ght_node_insert_node(root, node1, GHT_DUPES_YES);
     CU_ASSERT_EQUAL(err, GHT_OK);
     CU_ASSERT_EQUAL(node1->hash, NULL);
 
@@ -249,7 +249,7 @@ test_ght_node_build_tree(void)
     err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node2);
     /* before insert, it's full length */
     CU_ASSERT_STRING_EQUAL(node2->hash, "c0v2hdm1gcuekpf9y1");
-    err = ght_node_insert_node(root, node2, 1);
+    err = ght_node_insert_node(root, node2, GHT_DUPES_YES);
     CU_ASSERT_EQUAL(err, GHT_OK);
     /* after insert, it's been truncated to the distinct part */
     CU_ASSERT_STRING_EQUAL(node2->hash, "gcuekpf9y1");
@@ -264,7 +264,7 @@ test_ght_node_build_tree(void)
     err = ght_node_new_from_hash("c0v2hdm1wpzpy4vkv4", &node3);
     /* before insert, it's full length */
     CU_ASSERT_STRING_EQUAL(node3->hash, "c0v2hdm1wpzpy4vkv4");
-    err = ght_node_insert_node(root, node3, 1);
+    err = ght_node_insert_node(root, node3, GHT_DUPES_YES);
     CU_ASSERT_EQUAL(err, GHT_OK);
     /* after insert it's only got the last piece */
     CU_ASSERT_STRING_EQUAL(node3->hash, "kv4");
@@ -273,7 +273,7 @@ test_ght_node_build_tree(void)
     err = ght_node_new_from_hash("c0v2hdm1wpzpy4vkv4", &node4);
     /* before insert, it's full length */
     CU_ASSERT_STRING_EQUAL(node4->hash, "c0v2hdm1wpzpy4vkv4");
-    err = ght_node_insert_node(root, node4, 1);
+    err = ght_node_insert_node(root, node4, GHT_DUPES_YES);
     CU_ASSERT_EQUAL(err, GHT_OK);
     /* after insert it's nulled, because it's a duplicate */
     CU_ASSERT_EQUAL(node4->hash, NULL);
@@ -284,7 +284,7 @@ test_ght_node_build_tree(void)
     err = ght_node_new_from_hash("c0v2hdm1wpzpy4vkv4", &node5);
     /* before insert, it's full length */
     CU_ASSERT_STRING_EQUAL(node5->hash, "c0v2hdm1wpzpy4vkv4");
-    err = ght_node_insert_node(root, node5, 1);
+    err = ght_node_insert_node(root, node5, GHT_DUPES_YES);
     CU_ASSERT_EQUAL(err, GHT_OK);
     /* after insert it's nulled, because it's a duplicate */
     CU_ASSERT_EQUAL(node5->hash, NULL);
@@ -317,7 +317,7 @@ test_ght_node_build_tree_big(void)
             err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node);
             if ( i || j )
             {
-                err = ght_node_insert_node(root, node, 1);
+                err = ght_node_insert_node(root, node, GHT_DUPES_YES);
             }
             else
             {

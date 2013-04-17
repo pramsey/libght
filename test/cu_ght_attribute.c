@@ -109,24 +109,43 @@ test_ght_build_node_with_attributes(void)
     ght_attribute_new(simpleschema->dims[2], 1231.2, &a);
     ght_node_add_attribute(node, a);
     /* Intensity */
-    ght_attribute_new(simpleschema->dims[2], 3, &a);
+    ght_attribute_new(simpleschema->dims[3], 3, &a);
     ght_node_add_attribute(node, a);
     
     ght_node_to_string(node, sb, 0);
-    CU_ASSERT_STRING_EQUAL("c0j8n012j80252h0  1231.2:3\n", stringbuffer_getstring(sb));
+    CU_ASSERT_STRING_EQUAL("c0j8n012j80252h0  Z=1231.2:Intensity=3\n", stringbuffer_getstring(sb));
     // printf("%s\n", stringbuffer_getstring(sb));
     stringbuffer_destroy(sb);
-    
-}    
+    ght_node_free(node);
+}
 
 static void
 test_ght_build_tree_with_attributes(void)
 {
+    int i;
     static const char *simpledata = "test/data/simple-data.tsv";   
     GhtNodeList *nodelist;
+    GhtNode *root, *node;
+    GhtErr err;
+    stringbuffer_t *sb;
+    
     nodelist = tsv_file_to_node_list(simpledata, simpleschema);
     CU_ASSERT_EQUAL(nodelist->num_nodes, 8);
-    ght_nodelist_free_deep(nodelist);
+    
+    root = nodelist->nodes[0];
+    
+    for ( i = 1; i < nodelist->num_nodes; i++ )
+    {
+        err = ght_node_insert_node(root, nodelist->nodes[i], GHT_DUPES_YES);
+    }
+
+    sb = stringbuffer_create();
+    ght_node_to_string(root, sb, 0);
+    // printf("\n%s\n", stringbuffer_getstring(sb));
+    stringbuffer_destroy(sb);
+    
+    ght_node_free(root);
+    ght_nodelist_free_shallow(nodelist);
 }
 
 

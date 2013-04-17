@@ -37,6 +37,12 @@ typedef enum
     GHT_SPLIT
 } GhtHashMatch;
 
+typedef enum
+{   
+    GHT_DUPES_NO = 0,
+    GHT_DUPES_YES = 1
+} GhtDuplicates;
+
 static char *GhtTypeStrings[] =
 {
     "unknown",
@@ -125,7 +131,7 @@ GhtErr ght_hash_leaf_parts(const GhtHash *a, const GhtHash *b, int maxlen, GhtHa
 GhtErr ght_node_free(GhtNode *node);
 
 /** Add node_to_insert to a tree of nodes headed by node */
-GhtErr ght_node_insert_node(GhtNode *node, GhtNode *node_to_insert, int duplicates);
+GhtErr ght_node_insert_node(GhtNode *node, GhtNode *node_to_insert, GhtDuplicates duplicates);
 
 /** Set the hash string on a node, takes ownership of hash */
 GhtErr ght_node_set_hash(GhtNode *node, GhtHash *hash);
@@ -157,8 +163,14 @@ GhtErr ght_nodelist_add_node(GhtNodeList *nl, GhtNode *node);
 /** Free a nodelist, and optionally all the nodes referenced by the list */
 GhtErr ght_nodelist_free_deep(GhtNodeList *nl);
 
+/** Free a nodelist, but not the nodes it holds */
+GhtErr ght_nodelist_free_shallow(GhtNodeList *nl);
+
 /** Alocate a new attribute and fill in the value */
 GhtErr ght_attribute_new(const GhtDimension *dim, double val, GhtAttribute **attr);
+
+/** Free an attribtue */
+GhtErr ght_attribute_free(GhtAttribute *attr);
 
 /** Return the scaled and offset version of the packed attribute value */
 GhtErr ght_attribute_get_value(const GhtAttribute *attr, double *val);
@@ -166,8 +178,23 @@ GhtErr ght_attribute_get_value(const GhtAttribute *attr, double *val);
 /** Set the packed attribute value */
 GhtErr ght_attribute_set_value(GhtAttribute *attr, double val);
 
-/** Write an appropriately formatted value into the stringbugger */
+/** Write an appropriately formatted value into the stringbuffer_t */
 GhtErr ght_attribute_to_string(const GhtAttribute *attr, stringbuffer_t *sb);
+
+/** Allocate a new GhtAttributeList */
+GhtErr ght_attributelist_new(GhtAttributeList **attrlist);
+
+/** Free a GhtAttributeList and all contained GhtAttribute */
+GhtErr ght_attributelist_free(GhtAttributeList *al);
+
+/** Write a string version of GhtAttributeList */
+GhtErr ght_attributelist_to_string(const GhtAttributeList *al, stringbuffer_t *sb);
+
+/** Add a GhtAttribute to a GhtAttributeList */
+GhtErr ght_attributelist_add_attribute(GhtAttributeList *al, GhtAttribute *attr);
+
+/** Delete an entry from a GhtAttributeList */
+GhtErr ght_attributelist_delete_attribute(GhtAttributeList *al, int i);
 
 /** Size in bytes of an attribute type */
 GhtErr ght_type_size(GhtType type, size_t *size);
