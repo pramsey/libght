@@ -134,13 +134,19 @@ GhtErr ght_node_set_hash(GhtNode *node, GhtHash *hash);
 GhtErr ght_node_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtNode **node);
 
 /** Create a new node from a hash */
-GhtErr ght_node_new(GhtHash *hash, GhtNode **node);
+GhtErr ght_node_new_from_hash(GhtHash *hash, GhtNode **node);
 
 /** Fill a stringbuffer with a printout of the node tree */
 GhtErr ght_node_to_string(GhtNode *node, stringbuffer_t *sb, int level);
 
 /** How many leaf nodes in this tree? */
 GhtErr ght_node_count_leaves(const GhtNode *node, int *count);
+
+/** Delete an attribute from the node (frees the attribute) */
+GhtErr ght_node_delete_attribute(GhtNode *node, int i);
+
+/** Add a new attribute to the node */
+GhtErr ght_node_add_attribute(GhtNode *node, GhtAttribute *attribute);
 
 /** Create an empty nodelist */
 GhtErr ght_nodelist_new(GhtNodeList **nodelist);
@@ -149,10 +155,16 @@ GhtErr ght_nodelist_new(GhtNodeList **nodelist);
 GhtErr ght_nodelist_add_node(GhtNodeList *nl, GhtNode *node);
 
 /** Free a nodelist, and optionally all the nodes referenced by the list */
-GhtErr ght_nodelist_free(GhtNodeList *nl, int deep);
+GhtErr ght_nodelist_free_deep(GhtNodeList *nl);
+
+/** Alocate a new attribute and fill in the value */
+GhtErr ght_attribute_new(const GhtDimension *dim, double val, GhtAttribute **attr);
 
 /** Return the scaled and offset version of the packed attribute value */
 GhtErr ght_attribute_get_value(const GhtAttribute *attr, double *val);
+
+/** Set the packed attribute value */
+GhtErr ght_attribute_set_value(GhtAttribute *attr, double val);
 
 /** Size in bytes of an attribute type */
 GhtErr ght_type_size(GhtType type, size_t *size);

@@ -81,6 +81,16 @@ typedef struct
     char val[GHT_ATTRIBUTE_MAX_SIZE];
 } GhtAttribute;
 
+typedef struct
+{
+    double min;
+    double max;
+    double sum;
+    int count;
+    GhtType type;
+    const GhtDimension *dim;
+} GhtAttributeStats;
+
 struct GhtNodeList_t;
 
 typedef struct
@@ -89,7 +99,7 @@ typedef struct
     struct GhtNodeList_t *children;
     int num_attributes;
     int max_attributes;
-    GhtAttribute *attributes;
+    GhtAttribute **attributes;
 } GhtNode;
 
 typedef struct GhtNodeList_t

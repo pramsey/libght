@@ -261,7 +261,7 @@ test_ght_node_build_tree(void)
     CU_ASSERT_EQUAL(root->children->nodes[0]->children->nodes[0], node1);
 
     /* insert child */
-    err = ght_node_new("c0v2hdm1wpzpy4vkv4", &node3);
+    err = ght_node_new_from_hash("c0v2hdm1wpzpy4vkv4", &node3);
     /* before insert, it's full length */
     CU_ASSERT_STRING_EQUAL(node3->hash, "c0v2hdm1wpzpy4vkv4");
     err = ght_node_insert_node(root, node3, 1);
@@ -270,7 +270,7 @@ test_ght_node_build_tree(void)
     CU_ASSERT_STRING_EQUAL(node3->hash, "kv4");
 
     /* insert duplicate of previous */
-    err = ght_node_new("c0v2hdm1wpzpy4vkv4", &node4);
+    err = ght_node_new_from_hash("c0v2hdm1wpzpy4vkv4", &node4);
     /* before insert, it's full length */
     CU_ASSERT_STRING_EQUAL(node4->hash, "c0v2hdm1wpzpy4vkv4");
     err = ght_node_insert_node(root, node4, 1);
@@ -281,7 +281,7 @@ test_ght_node_build_tree(void)
     CU_ASSERT_EQUAL(node3->children->nodes[0], node4);
 
     /* insert another duplicate of previous */
-    err = ght_node_new("c0v2hdm1wpzpy4vkv4", &node5);
+    err = ght_node_new_from_hash("c0v2hdm1wpzpy4vkv4", &node5);
     /* before insert, it's full length */
     CU_ASSERT_STRING_EQUAL(node5->hash, "c0v2hdm1wpzpy4vkv4");
     err = ght_node_insert_node(root, node5, 1);
@@ -334,6 +334,9 @@ test_ght_node_build_tree_big(void)
     // printf("count %d\n", count);
     CU_ASSERT_EQUAL(count, npts*npts);
 }
+
+
+
 
 /* REGISTER ***********************************************************/
 

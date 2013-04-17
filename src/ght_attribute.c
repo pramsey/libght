@@ -33,6 +33,16 @@ GhtErr ght_type_from_str(const char *str, GhtType *type)
     return GHT_ERROR;
 }
 
+GhtErr ght_attribute_new(const GhtDimension *dim, double val, GhtAttribute **attr)
+{
+    GhtAttribute *a;
+    a = ght_malloc(sizeof(GhtAttribute));
+    a->dim = dim;
+    GHT_TRY(ght_attribute_set_value(a, val));
+    *attr = a;
+    return GHT_OK;
+}
+
 GhtErr ght_attribute_get_value(const GhtAttribute *attr, double *val)
 {
     const GhtDimension *dim = attr->dim;

@@ -12,6 +12,7 @@
 /* ADD YOUR SUITE HERE (1 of 2) */
 extern CU_SuiteInfo schema_suite;
 extern CU_SuiteInfo core_suite;
+extern CU_SuiteInfo attributes_suite;
 
 /*
 ** The main() function for setting up and running the tests.
@@ -25,6 +26,7 @@ int main(int argc, char *argv[])
     {
         schema_suite,
         core_suite,
+        attributes_suite,
         CU_SUITE_INFO_NULL
     };
 
@@ -190,6 +192,5 @@ file_to_str(const char *fname)
     *ptr = '\0';
 
 	return str;
-
-
 }
+

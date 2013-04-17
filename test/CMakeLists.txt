@@ -5,6 +5,7 @@
 set (GHT_TEST_SOURCES 
 	cu_ght_core.c
 	cu_ght_schema.c
+	cu_ght_attribute.c
 	cu_tester.c
 	)
 
