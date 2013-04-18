@@ -37,9 +37,9 @@
 #include "bytebuffer.h"
 
 /* Use appropriate allocators for this deployment */
-//#define malloc ght_malloc
-//#define free ght_free
-//#define realloc ght_realloc
+#define malloc ght_malloc
+#define free ght_free
+#define realloc ght_realloc
 
 
 /**
