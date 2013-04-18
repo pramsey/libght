@@ -4,12 +4,13 @@
 
 set ( GHT_SOURCES
 	ght_attribute.c	
-	ght_mem.c	
-	ght_schema.c	
-	stringbuffer.c
 	ght_hash.c	
+	ght_mem.c	
 	ght_node.c	
+	ght_schema.c	
+	ght_serialize.c	
 	ght_util.c
+	stringbuffer.c
 	)
 
 set (GHT_HEADERS
