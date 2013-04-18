@@ -9,21 +9,7 @@
 ******************************************************************************/
 
 #include "ght_internal.h"
-#include "bytebuffer.h"
 
-typedef enum
-{
-    GHT_WRITER_FILE,
-    GHT_WRITER_MEM
-} GhtWriterType;
-
-typedef struct 
-{
-    GhtWriterType type;
-    FILE *file;
-    char *filename;
-    bytebuffer_t *bytebuffer;
-} GhtWriter;
 
 GhtErr
 ght_writer_new_file(const char *filename, GhtWriter **writer)
@@ -50,24 +36,23 @@ ght_writer_new_mem(GhtWriter **writer)
 }
 
 GhtErr
-ght_writer_write(GhtWriter *writer, uint8_t *bytes, size_t bytesize)
+ght_write(GhtWriter *writer, uint8_t *bytes, size_t bytesize)
 {
     if ( writer->type == GHT_WRITER_MEM )
     {
-        
+        bytebuffer_append(writer->bytebuffer, bytes, bytesize);
+        return GHT_OK;
     }
     else if (writer->type == GHT_WRITER_FILE )
     {
-        
+        ght_error("%s: file writing currently unimplemented", __func__);
+        return GHT_ERROR;
     }
     else
     {
         ght_error("%s: unknown writer type %d", __func__, writer->type);
         return GHT_ERROR;
-    }
-    
+    }    
 }
-
-
 
 

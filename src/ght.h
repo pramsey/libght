@@ -43,6 +43,7 @@ typedef char GhtHash;
 
 typedef struct
 {
+    int position;
     char *name;
     char *description;
     GhtType type;

@@ -13,6 +13,7 @@
 
 #include "ght.h"
 #include "stringbuffer.h"
+#include "bytebuffer.h"
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -43,6 +44,12 @@ typedef enum
     GHT_DUPES_YES = 1
 } GhtDuplicates;
 
+typedef enum
+{
+    GHT_WRITER_FILE,
+    GHT_WRITER_MEM
+} GhtWriterType;
+
 static char *GhtTypeStrings[] =
 {
     "unknown",
@@ -62,6 +69,14 @@ static size_t GhtTypeSizes[] =
     sizeof(int64_t), sizeof(uint64_t),  /* GHT_INT64,  GHT_UINT64 */
     sizeof(double),  sizeof(float)      /* GHT_DOUBLE, GHT_FLOAT */
 };
+
+typedef struct 
+{
+    GhtWriterType type;
+    FILE *file;
+    char *filename;
+    bytebuffer_t *bytebuffer;
+} GhtWriter;
 
 
 /** Allocate memory using runtime memory management */
@@ -193,6 +208,9 @@ GhtErr ght_type_from_str(const char *str, GhtType *type);
 /** Create an empty dimension */
 GhtErr ght_dimension_new(GhtDimension **dim);
 
+/** Where is the dimension in the schema? */
+GhtErr ght_dimension_get_position(const GhtDimension *dim, int *position);
+
 /** Create a schema from an XML document */
 GhtErr ght_schema_from_xml_str(const char *xmlstr, GhtSchema **schema);
 
@@ -204,5 +222,14 @@ GhtErr ght_schema_get_dimension_by_index(const GhtSchema *schema, int i, GhtDime
 
 /** Free an existing schema */
 GhtErr ght_schema_free(GhtSchema *schema);
+
+/** Create a new file-based writer */
+GhtErr ght_writer_new_file(const char *filename, GhtWriter **writer);
+
+/** Create a new memory-backed writer */
+GhtErr ght_writer_new_mem(GhtWriter **writer);
+
+/** Write bytes out to the target */
+GhtErr ght_write(GhtWriter *writer, uint8_t *bytes, size_t bytesize);
 
 #endif /* _GHT_INTERNAL_H */

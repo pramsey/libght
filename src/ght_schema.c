@@ -11,7 +11,6 @@
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include "ght_internal.h"
-#include "stringbuffer.h"
 
 /** Create an empty dimension */
 GhtErr ght_dimension_new(GhtDimension **dimension) 
@@ -44,6 +43,11 @@ GhtErr ght_dimension_set_description(GhtDimension *dim, const char *desc)
 {
     dim->description = ght_strdup(desc);
     return GHT_OK; 
+}
+
+GhtErr ght_dimension_get_position(const GhtDimension *dim, int *position)
+{
+    *position = dim->position;
 }
 
 GhtErr ght_schema_get_dimension_by_name(const GhtSchema *schema, const char *name, GhtDimension **dim)
@@ -117,6 +121,7 @@ GhtErr ght_schema_add_dimension(GhtSchema *schema, GhtDimension *dim)
         schema->dims = ght_realloc(schema->dims, schema->max_dims * sizeof(GhtDimension*));
     }
     
+    dim->position = schema->num_dims;
     schema->dims[schema->num_dims] = dim;
     schema->num_dims++;
     
