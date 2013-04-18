@@ -10,6 +10,7 @@ set ( GHT_SOURCES
 	ght_schema.c	
 	ght_serialize.c	
 	ght_util.c
+	bytebuffer.c
 	stringbuffer.c
 	)
 
@@ -17,6 +18,7 @@ set (GHT_HEADERS
 	ght.h		
 	ght_config.h	
 	ght_internal.h	
+	bytebuffer.h
 	stringbuffer.h
 	)
 

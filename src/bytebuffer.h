@@ -1,8 +1,7 @@
 /**********************************************************************
- * stringbuffer.h
+ * bytebuffer.h
  *
- * Copyright 2002 Thamer Alharbash
- * Copyright 2009 Paul Ramsey <pramsey@cleverelephant.ca>
+ * Copyright 2013 Paul Ramsey <pramsey@cleverelephant.ca>
  *
  * Redistribution and use in source and binary forms, with or
  * without modification, are permitted provided that the following
@@ -35,39 +34,33 @@
  *
  **********************************************************************/
 
-#ifndef _STRINGBUFFER_H
-#define _STRINGBUFFER_H 1
+#ifndef _BYTEBUFFER_H
+#define _BYTEBUFFER_H 1
 
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 
-#define STRINGBUFFER_STARTSIZE 128
+#define BYTEBUFFER_STARTSIZE 1028
 
 typedef struct
 {
     size_t capacity;
-    char *str_end;
-    char *str_start;
+    uint8_t *bytes_end;
+    uint8_t *bytes_start;
 }
-stringbuffer_t;
+bytebuffer_t;
 
-extern stringbuffer_t *stringbuffer_create_with_size(size_t size);
-extern stringbuffer_t *stringbuffer_create(void);
-extern void stringbuffer_destroy(stringbuffer_t *sb);
-extern void stringbuffer_clear(stringbuffer_t *sb);
-void stringbuffer_set(stringbuffer_t *sb, const char *s);
-void stringbuffer_copy(stringbuffer_t *sb, stringbuffer_t *src);
-extern void stringbuffer_append(stringbuffer_t *sb, const char *s);
-extern int stringbuffer_aprintf(stringbuffer_t *sb, const char *fmt, ...);
-extern const char *stringbuffer_getstring(stringbuffer_t *sb);
-extern char *stringbuffer_getstringcopy(stringbuffer_t *sb);
-extern int stringbuffer_getlength(stringbuffer_t *sb);
-extern char stringbuffer_lastchar(stringbuffer_t *s);
-extern int stringbuffer_trim_trailing_white(stringbuffer_t *s);
-extern int stringbuffer_trim_trailing_zeroes(stringbuffer_t *s);
+extern bytebuffer_t *bytebuffer_create(void);
+extern void bytebuffer_destroy(bytebuffer_t *bb);
+extern void bytebuffer_append(bytebuffer_t *bb, const uint8_t *buffer, size_t buffer_size);
+extern size_t bytebuffer_getsize(bytebuffer_t *s);
+extern const uint8_t *bytebuffer_getbytes(bytebuffer_t *bb);
+extern uint8_t *bytebuffer_getbytescopy(bytebuffer_t *bb);
+extern size_t bytebuffer_getsize(bytebuffer_t *bb);
 
 #include "ght_internal.h"
 
-#endif /* _STRINGBUFFER_H */
+#endif /* _BYTEBUFFER_H */
