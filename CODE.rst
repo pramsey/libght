@@ -3,6 +3,9 @@ Coding Style Guidelines
 
 Much like the GLib/GTK+ guidelines and the GNU guidelines.
 
+https://git.gnome.org/browse/gtk+/plain/docs/CODING-STYLE
+http://www.gnu.org/prep/standards/standards.html#Writing-C
+
 Indenting / Whitespace
 ----------------------
 

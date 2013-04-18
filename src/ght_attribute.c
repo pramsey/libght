@@ -44,20 +44,39 @@ GhtErr ght_attribute_new(const GhtDimension *dim, double val, GhtAttribute **att
     if ( ! a ) return GHT_ERROR;
     memset(a, 0, sizeof(GhtAttribute));
     a->dim = dim;
+    a->next = NULL;
     GHT_TRY(ght_attribute_set_value(a, val));
     *attr = a;
     return GHT_OK;
 }
 
-GhtErr ght_attribute_free(GhtAttribute *attr)
+GhtErr
+ght_attribute_free(GhtAttribute *attr)
 {
-    if ( attr ) ght_free(attr);
+    if ( attr->next )
+    {
+        ght_attribute_free(attr->next);
+    }
+    ght_free(attr);
+    return GHT_OK;
+}
+
+GhtErr
+ght_attribute_get_by_dimension(const GhtAttribute *attr, const GhtDimension *dim, GhtAttribute *found)
+{
+    if ( ! attr ) return GHT_ERROR;
+    while ( attr->dim != dim )
+    {
+        if ( ! attr->next ) return GHT_ERROR;
+        attr = attr->next;
+    }
+    memcpy(found, attr, sizeof(GhtAttribute));
     return GHT_OK;
 }
 
 /** Convert a real value double into a value suitable for storage */
 static GhtErr
-ght_attribute_real_to_storage(const GhtDimension *dim, double *val)
+ght_attribute_double_to_storage(const GhtDimension *dim, double *val)
 {
     if ( dim->offset )
     {
@@ -72,7 +91,7 @@ ght_attribute_real_to_storage(const GhtDimension *dim, double *val)
 
 /** Convert a real value double into a value suitable for storage */
 static GhtErr
-ght_attribute_storage_to_real(const GhtDimension *dim, double *val)
+ght_attribute_storage_to_double(const GhtDimension *dim, double *val)
 {
     if ( dim->scale != 1 )
     {
@@ -170,7 +189,7 @@ GhtErr ght_attribute_get_value(const GhtAttribute *attr, double *val)
             return GHT_ERROR;
         }
     }
-    GHT_TRY(ght_attribute_storage_to_real(attr->dim, val));
+    GHT_TRY(ght_attribute_storage_to_double(attr->dim, val));
     return GHT_OK;    
 }
 
@@ -181,7 +200,7 @@ GhtErr ght_attribute_set_value(GhtAttribute *attr, double val)
     size_t size = GhtTypeSizes[type];
     double dv = val;
     
-    GHT_TRY(ght_attribute_real_to_storage(attr->dim, &dv));
+    GHT_TRY(ght_attribute_double_to_storage(attr->dim, &dv));
     
     switch(type)
     {
@@ -266,102 +285,7 @@ GhtErr ght_attribute_to_string(const GhtAttribute *attr, stringbuffer_t *sb)
 }
 
 
-/******************************************************************************/
-/* GhtAttributeList */
 
-GhtErr ght_attributelist_new(GhtAttributeList **attrlist)
-{
-    GhtAttributeList *a = ght_malloc(sizeof(GhtAttributeList));
-    if ( ! a ) return GHT_ERROR;
-    memset(a, 0, sizeof(GhtAttributeList));
-    *attrlist = a;
-    return GHT_OK;
-}
-
-GhtErr ght_attributelist_free(GhtAttributeList *al)
-{
-    if ( ! al ) return GHT_OK;
-    if ( al->attributes )
-    {
-        int i;
-        for ( i = 0; i < al->num_attributes; i++ )
-        {
-            if ( al->attributes[i] )
-                ght_attribute_free(al->attributes[i]);
-        }
-        ght_free(al->attributes);
-    }
-    ght_free(al);
-    return GHT_OK;
-}
-
-GhtErr 
-ght_attributelist_to_string(const GhtAttributeList *al, stringbuffer_t *sb)
-{
-    int i;
-    for ( i = 0; i < al->num_attributes; i++ )
-    {
-        if ( i ) stringbuffer_append(sb, ":");
-        ght_attribute_to_string(al->attributes[i], sb);
-    }
-    return GHT_OK;
-}
-
-GhtErr
-ght_attributelist_add_attribute(GhtAttributeList *al, GhtAttribute *attr)
-{
-    if ( al->max_attributes == 0 )
-    {
-        al->max_attributes = 2;
-        al->attributes = ght_malloc(al->max_attributes * sizeof(GhtAttribute*));
-    }
-    if ( al->num_attributes == al->max_attributes )
-    {
-        al->max_attributes *= 2;
-        al->attributes = ght_realloc(al->attributes, al->max_attributes * sizeof(GhtAttribute*));
-    }
-    al->attributes[al->num_attributes] = attr;
-    al->num_attributes++;
-    return GHT_OK;
-}
-
-
-GhtErr
-ght_attributelist_delete_attribute(GhtAttributeList *al, const GhtDimension *dim)
-{
-    int i, j;
-    GhtErr status = GHT_ERROR;
-    size_t sz = sizeof(GhtAttribute*);
-    
-    for ( i = 0; i < al->num_attributes; i++ )
-    {
-        if ( al->attributes[i] && dim == al->attributes[i]->dim ) 
-        {
-            status = GHT_OK;
-            break;
-        }
-    }
-    
-    if ( status != GHT_OK )
-        return status;
-    
-    /* We're going to have one less attribute */
-    al->num_attributes--;
-    
-    /* Free the attribute we're deleting */
-    ght_attribute_free(al->attributes[i]);
-    
-    /* If this removal creates a gap, fill it in */
-    for ( j = i; j < al->num_attributes; j++ )
-    {
-        al->attributes[j] = al->attributes[j+1];
-    }
-        
-    /* Null out the end of the array */
-    al->attributes[al->num_attributes] = NULL;
-    
-    return GHT_OK;
-}
 
 
 

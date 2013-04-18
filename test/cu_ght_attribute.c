@@ -185,8 +185,8 @@ test_ght_build_tree_with_attributes(void)
     stringbuffer_destroy(sb);
     
     /* Check that Intensity=5 has migrated all the way to the top of the tree */
-    CU_ASSERT_STRING_EQUAL(root->attributes->attributes[0]->dim->name, "Intensity");
-    ght_attribute_get_value(root->attributes->attributes[0], &d);
+    CU_ASSERT_STRING_EQUAL(root->attributes->dim->name, "Intensity");
+    ght_attribute_get_value(root->attributes, &d);
     CU_ASSERT_DOUBLE_EQUAL(d, 5, 0.00000001);
     
     ght_node_free(root);

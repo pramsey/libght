@@ -268,8 +268,14 @@ ght_node_to_string(GhtNode *node, stringbuffer_t *sb, int level)
     stringbuffer_aprintf(sb, "%*s%s", 2*level, "", node->hash);
     if ( node->attributes )
     {
+        GhtAttribute *attr = node->attributes;
         stringbuffer_append(sb, "  ");
-        ght_attributelist_to_string(node->attributes, sb);
+        while ( attr )
+        {
+            ght_attribute_to_string(attr, sb);
+            if ( attr->next ) stringbuffer_append(sb, ":");
+            attr = attr->next;
+        }
     }
     stringbuffer_append(sb, "\n");
     for ( i = 0; i < ght_node_num_children(node); i++ )
@@ -305,7 +311,7 @@ ght_node_free(GhtNode *node)
     assert(node != NULL);
 
     if ( node->attributes )
-        GHT_TRY(ght_attributelist_free(node->attributes));
+        GHT_TRY(ght_attribute_free(node->attributes));
 
     if ( node->children )
         GHT_TRY(ght_nodelist_free_deep(node->children));
@@ -316,30 +322,68 @@ ght_node_free(GhtNode *node)
     ght_free(node);
 }
 
+
 GhtErr
 ght_node_add_attribute(GhtNode *node, GhtAttribute *attribute)
 {
+    GhtAttribute *attr = node->attributes;
+    
+    /* First one! */
     if ( ! node->attributes )
     {
-        GHT_TRY(ght_attributelist_new(&(node->attributes)));
+        node->attributes = attribute;
+        return GHT_OK;
     }
-    GHT_TRY(ght_attributelist_add_attribute(node->attributes, attribute));
+    
+    while ( attr->next )
+    {
+        attr = attr->next;
+    }
+    
+    attr->next = attribute;
     return GHT_OK;
+    
 }
 
 GhtErr
 ght_node_delete_attribute(GhtNode *node, const GhtDimension *dim)
 {
-    if ( ! node->attributes )
-        return GHT_ERROR;
+    GhtAttribute *attr = node->attributes;
+    GhtAttribute *attr_prev;
     
-    GHT_TRY(ght_attributelist_delete_attribute(node->attributes, dim));
+    /* No attributes, noop */
+    if ( ! attr )
+        return GHT_OK;
     
-    if ( node->attributes->num_attributes == 0 )
+    /* Roll forward until we find a match */
+    while( attr->dim != dim )
     {
-        GHT_TRY(ght_attributelist_free(node->attributes));
-        node->attributes = NULL;
+        if ( attr->next )
+        {
+            attr_prev = attr;
+            attr = attr->next;
+        }
+        /* No attributes matches dimension */
+        else
+        {
+            return GHT_ERROR;
+        }
     }
+    
+    /* Handle first attribute in list specially */
+    if ( attr == node->attributes )
+    {
+        if ( attr->next )
+            node->attributes = attr->next;
+        else
+            node->attributes = NULL;
+    }
+    else
+    {
+        attr_prev->next = attr->next;
+    }
+    
+    ght_free(attr);
     return GHT_OK;
 }
 
@@ -397,15 +441,7 @@ ght_node_compact_attribute_with_delta(GhtNode *node, const GhtDimension *dim, do
     else
     {
         if ( ! node->attributes ) return GHT_ERROR;
-        for ( i = 0; i < node->attributes->num_attributes; i++ )
-        {
-            if ( dim == node->attributes->attributes[i]->dim )
-            {
-                memcpy(compacted_attribute, node->attributes->attributes[i], sizeof(GhtAttribute));
-                return GHT_OK;
-            }
-        }
-        return GHT_ERROR;
+        return ght_attribute_get_by_dimension(node->attributes, dim, compacted_attribute);
     }
 }
 

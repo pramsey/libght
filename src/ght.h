@@ -75,18 +75,12 @@ typedef struct
     GhtRange y;
 } GhtArea;
 
-typedef struct
+typedef struct GhtAttribute_t
 {
     const GhtDimension *dim;
+    struct GhtAttribute_t *next;
     char val[GHT_ATTRIBUTE_MAX_SIZE];
 } GhtAttribute;
-
-typedef struct GhtAttributeList_t
-{
-    int num_attributes;
-    int max_attributes;
-    GhtAttribute **attributes;
-} GhtAttributeList;
 
 typedef struct
 {
@@ -104,7 +98,7 @@ typedef struct
 {
     GhtHash *hash;
     struct GhtNodeList_t *children;
-    GhtAttributeList *attributes;
+    GhtAttribute *attributes;
 } GhtNode;
 
 typedef struct GhtNodeList_t

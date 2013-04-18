@@ -184,21 +184,6 @@ GhtErr ght_attribute_set_value(GhtAttribute *attr, double val);
 /** Write an appropriately formatted value into the stringbuffer_t */
 GhtErr ght_attribute_to_string(const GhtAttribute *attr, stringbuffer_t *sb);
 
-/** Allocate a new GhtAttributeList */
-GhtErr ght_attributelist_new(GhtAttributeList **attrlist);
-
-/** Free a GhtAttributeList and all contained GhtAttribute */
-GhtErr ght_attributelist_free(GhtAttributeList *al);
-
-/** Write a string version of GhtAttributeList */
-GhtErr ght_attributelist_to_string(const GhtAttributeList *al, stringbuffer_t *sb);
-
-/** Add a GhtAttribute to a GhtAttributeList */
-GhtErr ght_attributelist_add_attribute(GhtAttributeList *al, GhtAttribute *attr);
-
-/** Delete an entry from a GhtAttributeList */
-GhtErr ght_attributelist_delete_attribute(GhtAttributeList *al, const GhtDimension *dim);
-
 /** Size in bytes of an attribute type */
 GhtErr ght_type_size(GhtType type, size_t *size);
 
