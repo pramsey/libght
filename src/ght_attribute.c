@@ -112,6 +112,7 @@ GhtErr ght_attribute_get_value(const GhtAttribute *attr, double *val)
     {
         case GHT_UNKNOWN:
         {
+            ght_error("%s: unknown attribute type", __func__);
             return GHT_ERROR;
         }
         case GHT_INT8:
@@ -186,6 +187,7 @@ GhtErr ght_attribute_get_value(const GhtAttribute *attr, double *val)
         }
         default:
         {
+            ght_error("%s: unknown attribute type %d", __func__, type);
             return GHT_ERROR;
         }
     }
@@ -206,6 +208,7 @@ GhtErr ght_attribute_set_value(GhtAttribute *attr, double val)
     {
         case GHT_UNKNOWN:
         {
+            ght_error("%s: unknown attribute type %d", __func__, type);
             return GHT_ERROR;
         }
         case GHT_INT8:
@@ -270,6 +273,7 @@ GhtErr ght_attribute_set_value(GhtAttribute *attr, double val)
         }
         default:
         {
+            ght_error("%s: unknown attribute type %d", __func__, type);
             return GHT_ERROR;
         }
     }

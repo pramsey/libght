@@ -49,6 +49,25 @@ ght_writer_new_mem(GhtWriter **writer)
     return GHT_OK;
 }
 
+GhtErr
+ght_writer_write(GhtWriter *writer, uint8_t *bytes, size_t bytesize)
+{
+    if ( writer->type == GHT_WRITER_MEM )
+    {
+        
+    }
+    else if (writer->type == GHT_WRITER_FILE )
+    {
+        
+    }
+    else
+    {
+        ght_error("%s: unknown writer type %d", __func__, writer->type);
+        return GHT_ERROR;
+    }
+    
+}
+
 
 
 
