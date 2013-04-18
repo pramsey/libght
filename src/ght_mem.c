@@ -130,6 +130,11 @@ void *
 ght_malloc(size_t size)
 {
     void *mem = ght_context.alloc(size);
+    if ( ! mem )
+    {
+        ght_error("%s: unable to allocate %zu bytes", __func__, size);
+        return NULL;
+    }
     memset(mem, 0, size); /* Always clean memory */
     return mem;
 }
@@ -139,6 +144,11 @@ ght_strdup(const char *str)
 {
     size_t len = strlen(str) + 1;
     char *newstr = ght_malloc(len);
+    if ( ! newstr )
+    {
+        ght_error("%s: memory allocation failed", __func__);
+        return NULL;
+    }
     memcpy(newstr, str, len);
     return newstr;
 }
@@ -146,7 +156,13 @@ ght_strdup(const char *str)
 void *
 ght_realloc(void * mem, size_t size)
 {
-    return ght_context.realloc(mem, size);
+    void *newmem = ght_context.realloc(mem, size);
+    if ( ! newmem )
+    {
+        ght_error("%s: unable to reallocate %zu bytes", __func__, size);
+        return NULL;
+    }
+    return newmem;
 }
 
 void
