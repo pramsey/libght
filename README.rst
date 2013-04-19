@@ -49,3 +49,7 @@ To Do
   - Endianness flag (die if mismatch)
   - Version number (support legacy)
 
+- File support in reader/writer abstraction
+- Tests for reader/writer memory implementation
+
+
