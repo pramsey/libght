@@ -46,9 +46,9 @@ typedef enum
 
 typedef enum
 {
-    GHT_WRITER_FILE,
-    GHT_WRITER_MEM
-} GhtWriterType;
+    GHT_IO_FILE,
+    GHT_IO_MEM
+} GhtIoType;
 
 static char *GhtTypeStrings[] =
 {
@@ -72,11 +72,21 @@ static size_t GhtTypeSizes[] =
 
 typedef struct 
 {
-    GhtWriterType type;
+    GhtIoType type;
     FILE *file;
     char *filename;
     bytebuffer_t *bytebuffer;
 } GhtWriter;
+
+typedef struct 
+{
+    GhtIoType type;
+    FILE *file;
+    char *filename;
+    const uint8_t *bytes_start;
+    const uint8_t *bytes_current;
+    size_t bytes_size;
+} GhtReader;
 
 
 /** Allocate memory using runtime memory management */
@@ -129,6 +139,12 @@ GhtErr ght_area_from_hash(const GhtHash *hash, GhtArea *area);
 /** Release hash memory */
 GhtErr ght_hash_free(GhtHash *hash);
 
+/** Write hash to byte buffer */
+GhtErr ght_hash_write(const GhtHash *hash, GhtWriter *writer);
+
+/** Read hash from byte buffer */
+GhtErr ght_hash_read(GhtReader *reader, GhtHash **hash);
+
 /**
 * Find the common parts of two hash strings and return pointers
 * to the unique bits. Also returns a code indicating the kind
@@ -163,6 +179,9 @@ GhtErr ght_node_to_string(GhtNode *node, stringbuffer_t *sb, int level);
 /** How many leaf nodes in this tree? */
 GhtErr ght_node_count_leaves(const GhtNode *node, int *count);
 
+/** How many attributes on this node? */
+GhtErr ght_node_count_attributes(const GhtNode *node, uint8_t *count);
+
 /** Delete an attribute from the node (frees the attribute) */
 GhtErr ght_node_delete_attribute(GhtNode *node, const GhtDimension *dim);
 
@@ -171,6 +190,12 @@ GhtErr ght_node_add_attribute(GhtNode *node, GhtAttribute *attribute);
 
 /** Move attributes to the highest level in the tree at which they apply to all children */
 GhtErr ght_node_compact_attribute(GhtNode *node, const GhtDimension *dim, GhtAttribute *attr);
+
+/** Write a byte representation of a node tree */
+GhtErr ght_node_write(const GhtNode *node, GhtWriter *writer);
+
+/** Write a byte representation of a node tree */
+GhtErr ght_node_read(GhtReader *reader, const GhtSchema *schema, GhtNode **node);
 
 /** Create an empty nodelist */
 GhtErr ght_nodelist_new(GhtNodeList **nodelist);
@@ -193,14 +218,20 @@ GhtErr ght_attribute_free(GhtAttribute *attr);
 /** Return the scaled and offset version of the packed attribute value */
 GhtErr ght_attribute_get_value(const GhtAttribute *attr, double *val);
 
+/** Get the width of the packed attributes in bytes */
+GhtErr ght_attribute_get_size(const GhtAttribute *attr, size_t *sz);
+
 /** Set the packed attribute value */
 GhtErr ght_attribute_set_value(GhtAttribute *attr, double val);
 
 /** Write an appropriately formatted value into the stringbuffer_t */
 GhtErr ght_attribute_to_string(const GhtAttribute *attr, stringbuffer_t *sb);
 
-/** Size in bytes of an attribute type */
-GhtErr ght_type_size(GhtType type, size_t *size);
+/** Write byte representation of attribute into writer */
+GhtErr ght_attribute_write(const GhtAttribute *attr, GhtWriter *writer);
+
+/** Read attribute from byte representation */
+GhtErr ght_attribute_read(GhtReader *reader, const GhtSchema *schema, GhtAttribute **attr);
 
 /** Give a type string (eg "uint16_t"), return the GhtType number */
 GhtErr ght_type_from_str(const char *str, GhtType *type);
@@ -209,7 +240,7 @@ GhtErr ght_type_from_str(const char *str, GhtType *type);
 GhtErr ght_dimension_new(GhtDimension **dim);
 
 /** Where is the dimension in the schema? */
-GhtErr ght_dimension_get_position(const GhtDimension *dim, int *position);
+GhtErr ght_dimension_get_position(const GhtDimension *dim, uint8_t *position);
 
 /** Create a schema from an XML document */
 GhtErr ght_schema_from_xml_str(const char *xmlstr, GhtSchema **schema);
@@ -230,6 +261,15 @@ GhtErr ght_writer_new_file(const char *filename, GhtWriter **writer);
 GhtErr ght_writer_new_mem(GhtWriter **writer);
 
 /** Write bytes out to the target */
-GhtErr ght_write(GhtWriter *writer, uint8_t *bytes, size_t bytesize);
+GhtErr ght_write(GhtWriter *writer, const void *bytes, size_t bytesize);
+
+/** Create a new file-based reader */
+GhtErr ght_reader_new_file(const char *filename, GhtReader **reader);
+
+/** Create a new memory-based reader */
+GhtErr ght_reader_new_mem(const uint8_t *bytes_start, size_t bytes_size, GhtReader **reader);
+
+/** Read bytes in from a reader */
+GhtErr ght_read(GhtReader *reader, void *bytes, size_t read_size);
 
 #endif /* _GHT_INTERNAL_H */

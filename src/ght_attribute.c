@@ -11,14 +11,6 @@
 #include "ght_internal.h"
 #include <strings.h>
 
-GhtErr ght_type_size(GhtType type, size_t *size)
-{
-    assert(size);
-    assert(type);
-    *size = GhtTypeSizes[type];
-    return GHT_OK;
-}
-
 GhtErr ght_type_from_str(const char *str, GhtType *type)
 {
     int i;
@@ -288,8 +280,53 @@ GhtErr ght_attribute_to_string(const GhtAttribute *attr, stringbuffer_t *sb)
     return GHT_OK;
 }
 
+GhtErr ght_attribute_get_size(const GhtAttribute *attr, size_t *sz)
+{
+    *sz = GhtTypeSizes[attr->dim->type];
+    return GHT_OK;
+}
 
+GhtErr ght_attribute_write(const GhtAttribute *attr, GhtWriter *writer)
+{
+    uint8_t position;
+    size_t attrsize;
+    uint8_t buffer[128];
+    uint8_t *ptr = buffer;
+    GHT_TRY(ght_dimension_get_position(attr->dim, &position));
+    GHT_TRY(ght_attribute_get_size(attr, &attrsize));
 
+    /* Write in dimension position number */
+    memcpy(ptr, &position, 1);
+    ptr++;
+    
+    /* Write in the attribute value */
+    memcpy(ptr, attr->val, attrsize);
 
+    /* Copy the buffer into the writer */
+    return ght_write(writer, buffer, attrsize + 1);
+}
 
+GhtErr ght_attribute_read(GhtReader *reader, const GhtSchema *schema, GhtAttribute **attr)
+{
+    uint8_t dimnum;
+    GhtDimension *dim;
+    GhtAttribute *a;
+
+    ght_read(reader, &dimnum, 1);
+    if ( dimnum >= schema->num_dims )
+    {
+        ght_error("%s: attribute dimension %d does not exist in schema %p", __func__, dimnum, schema); 
+        return GHT_ERROR;
+    }
+        
+    dim = schema->dims[dimnum];
+    a = ght_malloc(sizeof(GhtAttribute));
+    if ( ! a ) return GHT_ERROR;
+    memset(a, 0, sizeof(GhtAttribute));
+    a->dim = dim;
+    a->next = NULL;
+    ght_read(reader, a->val, GhtTypeSizes[dim->type]);
+    *attr = a;
+    return GHT_OK;
+}
 

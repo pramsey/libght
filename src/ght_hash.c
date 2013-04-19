@@ -292,3 +292,43 @@ ght_hash_free(GhtHash *hash)
     assert(hash != NULL);
     ght_free(hash);
 }
+
+GhtErr 
+ght_hash_write(const GhtHash *hash, GhtWriter *writer)
+{
+    uint8_t hashlen = 0;
+
+    /* Only try to read length if there's something there */
+    if ( hash )
+        hashlen = strlen(hash);
+    
+    /* Write the length. Write 0 if there's no hash, so we know it's missing */
+    ght_write(writer, &hashlen, 1);
+    
+    /* Write the hash, omit the null terminator */
+    if ( hashlen )
+        ght_write(writer, hash, hashlen);
+    
+    return GHT_OK;    
+}
+
+GhtErr 
+ght_hash_read(GhtReader *reader, GhtHash **hash)
+{
+    uint8_t hashlen;
+    GhtHash *h = NULL;
+    
+    /* Anything there? */
+    ght_read(reader, &hashlen, 1);
+    
+    /*  Yep, read it. */
+    if ( hashlen )
+    {
+        h = ght_malloc(hashlen+1);
+        ght_read(reader, h, hashlen);
+        h[hashlen] = '\0';
+    }
+    
+    *hash = h;
+    return GHT_OK;
+}

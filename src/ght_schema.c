@@ -45,7 +45,7 @@ GhtErr ght_dimension_set_description(GhtDimension *dim, const char *desc)
     return GHT_OK; 
 }
 
-GhtErr ght_dimension_get_position(const GhtDimension *dim, int *position)
+GhtErr ght_dimension_get_position(const GhtDimension *dim, uint8_t *position)
 {
     *position = dim->position;
 }

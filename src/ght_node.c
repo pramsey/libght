@@ -346,6 +346,20 @@ ght_node_add_attribute(GhtNode *node, GhtAttribute *attribute)
 }
 
 GhtErr
+ght_node_count_attributes(const GhtNode *node, uint8_t *count)
+{
+    uint8_t c = 0;
+    GhtAttribute *attr = node->attributes;
+    while ( attr )
+    {
+        c++;
+        attr = attr->next;
+    }
+    *count = c;
+    return GHT_OK;   
+}
+
+GhtErr
 ght_node_delete_attribute(GhtNode *node, const GhtDimension *dim)
 {
     GhtAttribute *attr = node->attributes;
@@ -450,3 +464,95 @@ ght_node_compact_attribute(GhtNode *node, const GhtDimension *dim, GhtAttribute 
 {
     return ght_node_compact_attribute_with_delta(node, dim, 10e-8, attr);
 }
+
+
+/**
+* Node serialization: 
+* - length of GhtHash
+* - GhtHash (no null terminator)
+* - number of GhtAttributes
+* - GhtAttribute[]
+* - number of child GhtNodes
+* - GhtNode[]
+*/
+GhtErr 
+ght_node_write(const GhtNode *node, GhtWriter *writer)
+{
+    uint8_t attrcount = 0;
+    uint8_t childcount = 0;
+    GhtAttribute *attr = node->attributes;
+
+    /* Write the hash */
+    GHT_TRY(ght_hash_write(node->hash, writer));
+
+    /* Write the attributes */
+    GHT_TRY(ght_node_count_attributes(node, &attrcount));
+    ght_write(writer, &attrcount, 1);
+    while( attr )
+    {
+        ght_attribute_write(attr, writer); 
+    }
+
+    /* Write the children */
+    if ( node->children )
+        childcount = node->children->num_nodes;
+    
+    ght_write(writer, &childcount, 1);
+    if ( childcount )
+    {
+        int i;
+        for ( i = 0; i < node->children->num_nodes; i++ )
+        {
+            ght_node_write(node->children->nodes[i], writer);
+        }
+    }
+    return GHT_OK;
+}
+
+GhtErr 
+ght_node_read(GhtReader *reader, const GhtSchema *schema, GhtNode **node)
+{
+    int i;
+    uint8_t attrcount;
+    uint8_t childcount;
+    GhtHash *hash = NULL;
+    GhtNode *n = NULL;
+    GhtAttribute *attr = NULL;
+    
+    /* Read the hash string */
+    ght_hash_read(reader, &hash);
+    if ( hash )
+    {
+        GHT_TRY(ght_node_new_from_hash(hash, &n));
+    }
+    else
+    {
+        GHT_TRY(ght_node_new(&n));
+    }
+
+    /* Read the attributes */
+    ght_read(reader, &attrcount, 1);
+    while ( attrcount )
+    {
+        GHT_TRY(ght_attribute_read(reader, schema, &attr));
+        GHT_TRY(ght_node_add_attribute(n, attr));
+    }
+    
+    /* Read the children */
+    ght_read(reader, &childcount, 1);
+    for ( i = 0; i < childcount; i++ )
+    {
+        GhtNode *nc = NULL;
+        GHT_TRY(ght_node_read(reader, schema, &nc));
+        if ( nc )
+        {
+            ght_node_add_child(n, nc);
+        }
+    }
+    
+    *node = n;
+    return GHT_OK;
+}
+
+
+
