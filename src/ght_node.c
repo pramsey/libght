@@ -510,7 +510,7 @@ ght_node_write(const GhtNode *node, GhtWriter *writer)
 }
 
 GhtErr 
-ght_node_read(GhtReader *reader, const GhtSchema *schema, GhtNode **node)
+ght_node_read(GhtReader *reader, GhtNode **node)
 {
     int i;
     uint8_t attrcount;
@@ -534,7 +534,7 @@ ght_node_read(GhtReader *reader, const GhtSchema *schema, GhtNode **node)
     ght_read(reader, &attrcount, 1);
     while ( attrcount )
     {
-        GHT_TRY(ght_attribute_read(reader, schema, &attr));
+        GHT_TRY(ght_attribute_read(reader, &attr));
         GHT_TRY(ght_node_add_attribute(n, attr));
     }
     
@@ -543,7 +543,7 @@ ght_node_read(GhtReader *reader, const GhtSchema *schema, GhtNode **node)
     for ( i = 0; i < childcount; i++ )
     {
         GhtNode *nc = NULL;
-        GHT_TRY(ght_node_read(reader, schema, &nc));
+        GHT_TRY(ght_node_read(reader, &nc));
         if ( nc )
         {
             ght_node_add_child(n, nc);

@@ -306,11 +306,12 @@ GhtErr ght_attribute_write(const GhtAttribute *attr, GhtWriter *writer)
     return ght_write(writer, buffer, attrsize + 1);
 }
 
-GhtErr ght_attribute_read(GhtReader *reader, const GhtSchema *schema, GhtAttribute **attr)
+GhtErr ght_attribute_read(GhtReader *reader, GhtAttribute **attr)
 {
     uint8_t dimnum;
     GhtDimension *dim;
     GhtAttribute *a;
+    const GhtSchema *schema = reader->schema;
 
     ght_read(reader, &dimnum, 1);
     if ( dimnum >= schema->num_dims )

@@ -85,6 +85,7 @@ typedef struct
     char *filename;
     const uint8_t *bytes_start;
     const uint8_t *bytes_current;
+    const GhtSchema *schema;
     size_t bytes_size;
 } GhtReader;
 
@@ -195,7 +196,7 @@ GhtErr ght_node_compact_attribute(GhtNode *node, const GhtDimension *dim, GhtAtt
 GhtErr ght_node_write(const GhtNode *node, GhtWriter *writer);
 
 /** Write a byte representation of a node tree */
-GhtErr ght_node_read(GhtReader *reader, const GhtSchema *schema, GhtNode **node);
+GhtErr ght_node_read(GhtReader *reader, GhtNode **node);
 
 /** Create an empty nodelist */
 GhtErr ght_nodelist_new(GhtNodeList **nodelist);
@@ -231,7 +232,7 @@ GhtErr ght_attribute_to_string(const GhtAttribute *attr, stringbuffer_t *sb);
 GhtErr ght_attribute_write(const GhtAttribute *attr, GhtWriter *writer);
 
 /** Read attribute from byte representation */
-GhtErr ght_attribute_read(GhtReader *reader, const GhtSchema *schema, GhtAttribute **attr);
+GhtErr ght_attribute_read(GhtReader *reader, GhtAttribute **attr);
 
 /** Give a type string (eg "uint16_t"), return the GhtType number */
 GhtErr ght_type_from_str(const char *str, GhtType *type);
@@ -264,10 +265,10 @@ GhtErr ght_writer_new_mem(GhtWriter **writer);
 GhtErr ght_write(GhtWriter *writer, const void *bytes, size_t bytesize);
 
 /** Create a new file-based reader */
-GhtErr ght_reader_new_file(const char *filename, GhtReader **reader);
+GhtErr ght_reader_new_file(const char *filename, const GhtSchema *schema, GhtReader **reader);
 
 /** Create a new memory-based reader */
-GhtErr ght_reader_new_mem(const uint8_t *bytes_start, size_t bytes_size, GhtReader **reader);
+GhtErr ght_reader_new_mem(const uint8_t *bytes_start, size_t bytes_size, const GhtSchema *schema, GhtReader **reader);
 
 /** Read bytes in from a reader */
 GhtErr ght_read(GhtReader *reader, void *bytes, size_t read_size);

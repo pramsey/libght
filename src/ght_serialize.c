@@ -55,21 +55,26 @@ ght_write(GhtWriter *writer, const void *bytes, size_t bytesize)
     }    
 }
 
+GhtErr
+ght_writer_get_size(GhtWriter *writer)
+{
+}
 
 GhtErr
-ght_reader_new_file(const char *filename, GhtReader **reader)
+ght_reader_new_file(const char *filename, const GhtSchema *schema, GhtReader **reader)
 {
     GhtReader *r;
     r = ght_malloc(sizeof(GhtReader));
     memset(r, 0,sizeof(GhtReader));
     r->type = GHT_IO_FILE;
     r->filename = ght_strdup(filename);
+    r->schema = schema;
     *reader = r;
     return GHT_OK;
 }
 
 GhtErr
-ght_reader_new_mem(const uint8_t *bytes_start, size_t bytes_size, GhtReader **reader)
+ght_reader_new_mem(const uint8_t *bytes_start, size_t bytes_size, const GhtSchema *schema, GhtReader **reader)
 {
     GhtReader *r;
     r = ght_malloc(sizeof(GhtReader));
@@ -78,6 +83,7 @@ ght_reader_new_mem(const uint8_t *bytes_start, size_t bytes_size, GhtReader **re
     r->bytes_start = bytes_start;
     r->bytes_current = bytes_start;
     r->bytes_size = bytes_size;
+    r->schema = schema;
     *reader = r;
     return GHT_OK;
 }

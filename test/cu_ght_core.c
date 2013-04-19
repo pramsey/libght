@@ -13,19 +13,28 @@
 
 /* GLOBALS ************************************************************/
 
+
+static GhtSchema *schema = NULL;
+
 /* Setup/teardown for this suite */
 static int
 init_suite(void)
 {
-    return 0;
+    GhtErr result;
+    char *xmlstr = file_to_str("test/data/simple-schema.xml");
+    result = ght_schema_from_xml_str(xmlstr, &schema);
+    ght_free(xmlstr);
+    return result;
 }
 
 static int
 clean_suite(void)
 {
+    if ( schema )
+        ght_schema_free(schema);
+        
     return 0;
 }
-
 
 /* TESTS **************************************************************/
 
@@ -336,7 +345,35 @@ test_ght_node_build_tree_big(void)
 }
 
 
+static void
+test_ght_node_serialization(void)
+{
+    GhtCoordinate coord;
+    int x, y;
+    GhtNode *node1, *node2;
+    GhtErr err;
+    GhtWriter *writer;
+    GhtReader *reader;
+    const uint8_t *bytes;
+    size_t bytes_size;
 
+    /* ght_node_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtNode **node); */
+    coord.x = -127.4123;
+    coord.y = 49.23141;
+    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node1);
+    CU_ASSERT_STRING_EQUAL(node1->hash, "c0v2hdm1wpzpy4vtv4");
+    CU_ASSERT_EQUAL(err, GHT_OK);
+
+    err = ght_writer_new_mem(&writer);
+    err = ght_node_write(node1, writer);
+    bytes = bytebuffer_getbytes(writer->bytebuffer);
+    bytes_size = bytebuffer_getsize(writer->bytebuffer);
+    err = ght_reader_new_mem(bytes, bytes_size, schema, &reader);
+    err = ght_node_read(reader, &node2);
+    
+    CU_ASSERT_STRING_EQUAL(node1->hash, node2->hash);
+
+}
 
 /* REGISTER ***********************************************************/
 
@@ -347,6 +384,7 @@ CU_TestInfo core_tests[] =
     GHT_TEST(test_ght_hash_leaf_parts),
     GHT_TEST(test_ght_node_build_tree),
     GHT_TEST(test_ght_node_build_tree_big),
+    GHT_TEST(test_ght_node_serialization),
     CU_TEST_INFO_NULL
 };
 
