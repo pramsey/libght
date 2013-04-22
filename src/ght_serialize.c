@@ -11,16 +11,61 @@
 #include "ght_internal.h"
 
 
+/* typedef struct 
+{
+    GhtIoType type;
+    FILE *file;
+    char *filename;
+    bytebuffer_t *bytebuffer;
+} GhtWriter;
+*/
+
+static int
+fexists(const char *filename)
+{
+    FILE *file;
+    if ( file = fopen(filename, "r") )
+    {
+        fclose(file);
+        return 1;
+    }
+    return 0;
+}
+
 GhtErr
 ght_writer_new_file(const char *filename, GhtWriter **writer)
 {
     GhtWriter *w;
+    FILE *file;
+    
+    if ( ! filename )
+    {
+        ght_error("%s: null filename provided", __func__);
+        return GHT_ERROR;
+    }
+    
+    if ( fexists(filename) )
+    {
+        ght_error("%s: output file %s already exists", __func__, filename);
+        return GHT_ERROR;
+    }
+    
+    file = fopen(filename, "w");
+    
+    if ( ! file )
+    {
+        ght_error("%s: unable to open file %s for writing", __func__, filename);
+        return GHT_ERROR;
+    }
+    
     w = ght_malloc(sizeof(GhtWriter));
     memset(w, 0,sizeof(GhtWriter));
+    w->file = file;
     w->filename = ght_strdup(filename);
+    w->filesize = 0;
     w->type = GHT_IO_FILE;
     *writer = w;
-    return GHT_OK;
+    return GHT_OK;    
 }
 
 GhtErr
@@ -36,6 +81,26 @@ ght_writer_new_mem(GhtWriter **writer)
 }
 
 GhtErr
+ght_writer_free(GhtWriter *writer)
+{
+    if ( writer->type == GHT_IO_MEM )
+    {
+        bytebuffer_destroy(writer->bytebuffer);
+    }
+    else if ( writer->type == GHT_IO_FILE )
+    {
+        if ( writer->file )
+            fclose(writer->file);
+        if ( writer->filename )
+            ght_free(writer->filename);
+        ght_free(writer);
+    }
+
+    ght_free(writer);
+    return GHT_OK;
+}
+
+GhtErr
 ght_write(GhtWriter *writer, const void *bytes, size_t bytesize)
 {
     if ( writer->type == GHT_IO_MEM )
@@ -45,8 +110,12 @@ ght_write(GhtWriter *writer, const void *bytes, size_t bytesize)
     }
     else if (writer->type == GHT_IO_FILE )
     {
-        ght_error("%s: file writing currently unimplemented", __func__);
-        return GHT_ERROR;
+        size_t wsz;
+        wsz = fwrite(bytes, 1, bytesize, writer->file);
+        if ( wsz != bytesize )
+            return GHT_ERROR;
+        writer->filesize += wsz;
+        return GHT_OK;
     }
     else
     {
@@ -56,16 +125,52 @@ ght_write(GhtWriter *writer, const void *bytes, size_t bytesize)
 }
 
 GhtErr
-ght_writer_get_size(GhtWriter *writer)
+ght_writer_get_size(GhtWriter *writer, size_t *size)
 {
+    if ( writer->type == GHT_IO_MEM )
+    {
+        *size = bytebuffer_getsize(writer->bytebuffer);
+    }
+    else if ( writer->type == GHT_IO_FILE )
+    {
+        *size = writer->filesize;
+    }
+    else
+    {
+        return GHT_ERROR;
+    }
+    return GHT_OK;   
 }
 
 GhtErr
 ght_reader_new_file(const char *filename, const GhtSchema *schema, GhtReader **reader)
 {
     GhtReader *r;
+    FILE *file;
+
+    if ( ! filename )
+    {
+        ght_error("%s: null filename provided", __func__);
+        return GHT_ERROR;
+    }
+    
+    if ( ! fexists(filename) )
+    {
+        ght_error("%s: file %s does not exist", __func__, filename);
+        return GHT_ERROR;
+    }
+    
+    file = fopen(filename, "r");
+    
+    if ( ! file )
+    {
+        ght_error("%s: unable to open file %s for reading", __func__, filename);
+        return GHT_ERROR;
+    }
+    
     r = ght_malloc(sizeof(GhtReader));
     memset(r, 0,sizeof(GhtReader));
+    
     r->type = GHT_IO_FILE;
     r->filename = ght_strdup(filename);
     r->schema = schema;
@@ -86,6 +191,21 @@ ght_reader_new_mem(const uint8_t *bytes_start, size_t bytes_size, const GhtSchem
     r->schema = schema;
     *reader = r;
     return GHT_OK;
+}
+
+GhtErr
+ght_reader_free(GhtReader *reader)
+{
+    if ( reader->type == GHT_IO_FILE )
+    {
+        if ( reader->file )
+            fclose(reader->file);
+        if ( reader->filename )
+            ght_free(reader->filename);
+    }
+    
+    ght_free(reader);
+    return GHT_OK;    
 }
 
 GhtErr

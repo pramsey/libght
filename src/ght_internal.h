@@ -75,6 +75,7 @@ typedef struct
     GhtIoType type;
     FILE *file;
     char *filename;
+    size_t filesize;
     bytebuffer_t *bytebuffer;
 } GhtWriter;
 
@@ -252,6 +253,12 @@ GhtErr ght_schema_get_dimension_by_name(const GhtSchema *schame, const char *nam
 /** Find the GhtDimension corresponding to an index */
 GhtErr ght_schema_get_dimension_by_index(const GhtSchema *schema, int i, GhtDimension **dim);
 
+/** Write out an XML representation of a GhtSchema */
+GhtErr ght_schema_to_xml_file(const GhtSchema *schema, const char *filename);
+
+/** Write out an XML representation of a GhtSchema */
+GhtErr ght_schema_from_xml_file(const char *filename, GhtSchema **schema);
+
 /** Free an existing schema */
 GhtErr ght_schema_free(GhtSchema *schema);
 
@@ -261,6 +268,9 @@ GhtErr ght_writer_new_file(const char *filename, GhtWriter **writer);
 /** Create a new memory-backed writer */
 GhtErr ght_writer_new_mem(GhtWriter **writer);
 
+/** Close filehandle if necessary and free all memory along with writer */
+GhtErr ght_writer_free(GhtWriter *writer);
+
 /** Write bytes out to the target */
 GhtErr ght_write(GhtWriter *writer, const void *bytes, size_t bytesize);
 
@@ -269,6 +279,9 @@ GhtErr ght_reader_new_file(const char *filename, const GhtSchema *schema, GhtRea
 
 /** Create a new memory-based reader */
 GhtErr ght_reader_new_mem(const uint8_t *bytes_start, size_t bytes_size, const GhtSchema *schema, GhtReader **reader);
+
+/** Close filehandle if necessary and free all memory along with reader */
+GhtErr ght_reader_free(GhtReader *reader);
 
 /** Read bytes in from a reader */
 GhtErr ght_read(GhtReader *reader, void *bytes, size_t read_size);

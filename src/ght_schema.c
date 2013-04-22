@@ -274,7 +274,7 @@ GhtErr ght_schema_from_xml_str(const char *xml_str, GhtSchema **schema)
     return result;
 }
 
-GhtErr ght_schema_to_xml_str(const GhtSchema *schema, char **xml_str) 
+GhtErr ght_schema_to_xml_str(const GhtSchema *schema, char **xml_str, size_t *xml_str_size) 
 {
     int i;
     stringbuffer_t *sb = stringbuffer_create_with_size(1024);
@@ -314,8 +314,69 @@ GhtErr ght_schema_to_xml_str(const GhtSchema *schema, char **xml_str)
     stringbuffer_append(sb, "</pc:PointCloudSchema>");     
     
     *xml_str = stringbuffer_getstringcopy(sb);
+    *xml_str_size = stringbuffer_getlength(sb) + 1;
     stringbuffer_destroy(sb);
     return GHT_OK;
 }
 
+GhtErr ght_schema_from_xml_file(const char *filename, GhtSchema **schema)
+{
+    stringbuffer_t *sb;
+    GhtErr err;
+    FILE *file = NULL;
+    static size_t read_size = 1023;
+    size_t sz;
+    char buf[read_size+1]; /* space for null terminator */
 
+    file = fopen(filename, "r");
+    if ( ! file )
+    {
+        ght_error("%s: failed to open xml schema file %s for reading", __func__, filename);
+        return GHT_ERROR;
+    }
+    
+    sb = stringbuffer_create();
+    
+    while(1)
+    {
+        sz = fread(buf, read_size, 1, file);
+        buf[read_size] = '\0';
+        stringbuffer_append(sb, buf);
+        if ( sz != read_size )
+            break;
+    }
+    
+    err = ght_schema_from_xml_str(stringbuffer_getstring(sb), schema);
+    
+    stringbuffer_destroy(sb);
+    return err;
+}
+
+
+GhtErr ght_schema_to_xml_file(const GhtSchema *schema, const char *filename) 
+{
+    size_t xml_size, write_size;
+    char *xml;
+    GhtErr err;
+    FILE *file;
+
+    file = fopen(filename, "w");
+    if ( ! file )
+    {
+        ght_error("%s: failed to open xml schema file %s for writing", __func__, filename);
+        return GHT_ERROR;
+    }
+    
+    GHT_TRY(ght_schema_to_xml_str(schema, &xml, &xml_size));
+    
+    write_size = fwrite(xml, 1, xml_size, file);
+    if ( write_size != xml_size )
+    {
+        ght_error("%s: failed to write xml schema file", __func__);
+        return GHT_ERROR;
+    }
+    
+    fclose(file);
+    
+    return GHT_OK;
+}

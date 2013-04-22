@@ -138,7 +138,7 @@ void   ght_init(void);
 
 
 GhtErr ght_schema_from_xml_str(const char *xmlstr, GhtSchema **schema);
-GhtErr ght_schema_to_xml_str(const GhtSchema *schema, char **xml_str);
+GhtErr ght_schema_to_xml_str(const GhtSchema *schema, char **xml_str, size_t *xml_str_size);
 GhtErr ght_schema_free(GhtSchema *schema);
 
 

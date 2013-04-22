@@ -47,14 +47,15 @@ test_schema_xml()
     char *mystr, *str;
     GhtErr result;
     GhtSchema *myschema = NULL;
+    size_t schema_size;
 
-    result = ght_schema_to_xml_str(schema, &str);
+    result = ght_schema_to_xml_str(schema, &str, &schema_size);
     CU_ASSERT_EQUAL(result, GHT_OK);
     
     result = ght_schema_from_xml_str(str, &myschema);
     CU_ASSERT_EQUAL(result, GHT_OK);
 
-    result = ght_schema_to_xml_str(myschema, &mystr);
+    result = ght_schema_to_xml_str(myschema, &mystr, &schema_size);
     CU_ASSERT_EQUAL(result, GHT_OK);
     
     CU_ASSERT_STRING_EQUAL(str, mystr);
