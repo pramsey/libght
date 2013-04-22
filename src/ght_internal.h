@@ -86,8 +86,8 @@ typedef struct
     char *filename;
     const uint8_t *bytes_start;
     const uint8_t *bytes_current;
-    const GhtSchema *schema;
     size_t bytes_size;
+    const GhtSchema *schema;
 } GhtReader;
 
 
@@ -291,5 +291,8 @@ GhtErr bytes_from_hexbytes(const char *hex, size_t hexsize, uint8_t **bytes);
 
 /** Convert a byte buffer into a hex string */
 GhtErr hexbytes_from_bytes(const uint8_t *bytes, size_t bytesize, char **hex);
+
+/** Supplement to c file functions */
+int fexists(const char *filename);
 
 #endif /* _GHT_INTERNAL_H */

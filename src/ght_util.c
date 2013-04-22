@@ -100,3 +100,15 @@ hexbytes_from_bytes(const uint8_t *bytebuf, size_t bytesize, char **hexbytes)
     *hexbytes = buf;
     return GHT_OK;
 }
+
+int
+fexists(const char *filename)
+{
+    FILE *file;
+    if ( file = fopen(filename, "r") )
+    {
+        fclose(file);
+        return 1;
+    }
+    return 0;
+}

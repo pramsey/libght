@@ -61,7 +61,7 @@ test_geohash_inout()
     CU_ASSERT_EQUAL(err, GHT_OK);
     CU_ASSERT_DOUBLE_EQUAL(coord.x, (area.x.min + area.x.max)/2.0, 0.0000000001);
     CU_ASSERT_DOUBLE_EQUAL(coord.y, (area.y.min + area.y.max)/2.0, 0.0000000001);
-    ght_free(hash);
+    ght_hash_free(hash);
 
     coord.x = 0.0;
     coord.y = 0.0;
@@ -72,7 +72,7 @@ test_geohash_inout()
     CU_ASSERT_EQUAL(err, GHT_OK);
     CU_ASSERT_DOUBLE_EQUAL(coord.x, (area.x.min + area.x.max)/2.0, 0.0000000001);
     CU_ASSERT_DOUBLE_EQUAL(coord.y, (area.y.min + area.y.max)/2.0, 0.0000000001);
-    ght_free(hash);
+    ght_hash_free(hash);
 
     coord.x = 90.0;
     coord.y = 0.0;
@@ -83,7 +83,7 @@ test_geohash_inout()
     CU_ASSERT_EQUAL(err, GHT_OK);
     CU_ASSERT_DOUBLE_EQUAL(coord.x, (area.x.min + area.x.max)/2.0, 0.0000000001);
     CU_ASSERT_DOUBLE_EQUAL(coord.y, (area.y.min + area.y.max)/2.0, 0.0000000001);
-    ght_free(hash);
+    ght_hash_free(hash);
 
     coord.x = 90.0;
     coord.y = 45.0;
@@ -94,7 +94,7 @@ test_geohash_inout()
     CU_ASSERT_EQUAL(err, GHT_OK);
     CU_ASSERT_DOUBLE_EQUAL(coord.x, (area.x.min + area.x.max)/2.0, 0.0000000001);
     CU_ASSERT_DOUBLE_EQUAL(coord.y, (area.y.min + area.y.max)/2.0, 0.0000000001);
-    ght_free(hash);
+    ght_hash_free(hash);
 
     coord.x = 180.0;
     coord.y = 45.0;
@@ -105,7 +105,7 @@ test_geohash_inout()
     CU_ASSERT_EQUAL(err, GHT_OK);
     CU_ASSERT_DOUBLE_EQUAL(coord.x, (area.x.min + area.x.max)/2.0, 0.0000000001);
     CU_ASSERT_DOUBLE_EQUAL(coord.y, (area.y.min + area.y.max)/2.0, 0.0000000001);
-    ght_free(hash);
+    ght_hash_free(hash);
 
     coord.x = -180.0;
     coord.y = 45.0;
@@ -116,7 +116,7 @@ test_geohash_inout()
     CU_ASSERT_EQUAL(err, GHT_OK);
     CU_ASSERT_DOUBLE_EQUAL(coord.x, (area.x.min + area.x.max)/2.0, 0.0000000001);
     CU_ASSERT_DOUBLE_EQUAL(coord.y, (area.y.min + area.y.max)/2.0, 0.0000000001);
-    ght_free(hash);
+    ght_hash_free(hash);
 
     coord.x = 179.9999;
     coord.y = 45.0;
@@ -128,7 +128,7 @@ test_geohash_inout()
     CU_ASSERT_EQUAL(err, GHT_OK);
     CU_ASSERT_DOUBLE_EQUAL(coord.x, (area.x.min + area.x.max)/2.0, 0.0001);
     CU_ASSERT_DOUBLE_EQUAL(coord.y, (area.y.min + area.y.max)/2.0, 0.0001);
-    ght_free(hash);
+    ght_hash_free(hash);
 }
 
 static void
@@ -300,6 +300,7 @@ test_ght_node_build_tree(void)
     /* also, it's hanging off the parent node */
     CU_ASSERT_EQUAL(node3->children->nodes[1], node5);
 
+    ght_node_free(root);
 }
 
 
@@ -342,8 +343,8 @@ test_ght_node_build_tree_big(void)
     CU_ASSERT_EQUAL(err, GHT_OK);
     // printf("count %d\n", count);
     CU_ASSERT_EQUAL(count, npts*npts);
+    ght_node_free(root);
 }
-
 
 static void
 test_ght_node_serialization(void)
@@ -395,7 +396,6 @@ test_ght_node_serialization(void)
     err = ght_attribute_new(schema->dims[2], 99.99, &attr);
     err = ght_node_add_attribute(node3, attr);
     err = ght_node_insert_node(node1, node3, GHT_DUPES_YES);
-
     
     sb1 = stringbuffer_create();
     err = ght_node_to_string(node1, sb1, 0);
@@ -420,6 +420,79 @@ test_ght_node_serialization(void)
     CU_ASSERT_STRING_EQUAL(stringbuffer_getstring(sb1), stringbuffer_getstring(sb2));
     stringbuffer_destroy(sb2);
     stringbuffer_destroy(sb1);
+    ght_node_free(node1);
+    ght_node_free(node2);
+    ght_writer_free(writer);
+    ght_reader_free(reader);
+}
+
+
+static void
+test_ght_node_file_serialization(void)
+{
+    GhtCoordinate coord;
+    GhtNode *node, *root, *noderead;
+    GhtErr err;
+    GhtWriter *writer;
+    GhtReader *reader;
+    stringbuffer_t *sb1;
+    GhtAttribute *attr;
+    const char* testfile = "test.ght";
+
+    if ( fexists(testfile) )
+        remove(testfile);
+
+    coord.x = -127.4123;
+    coord.y = 49.23141;
+    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node);
+    CU_ASSERT_EQUAL(err, GHT_OK);
+    root = node;
+    
+    coord.x = -127.4122;
+    coord.y = 49.23142;
+    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node);
+    err = ght_attribute_new(schema->dims[2], 88.88, &attr);
+    err = ght_node_add_attribute(node, attr);
+    err = ght_node_insert_node(root, node, GHT_DUPES_YES);
+    CU_ASSERT_EQUAL(err, GHT_OK);
+
+    coord.x = -127.4122001;
+    coord.y = 49.23142001;
+    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node);
+    err = ght_attribute_new(schema->dims[2], 15.23, &attr);
+    err = ght_node_add_attribute(node, attr);
+    err = ght_node_insert_node(root, node, GHT_DUPES_YES);
+    CU_ASSERT_EQUAL(err, GHT_OK);
+
+    coord.x = -127.4122002;
+    coord.y = 49.23142002;
+    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node);
+    err = ght_attribute_new(schema->dims[2], 19.23, &attr);
+    err = ght_node_add_attribute(node, attr);
+    err = ght_node_insert_node(root, node, GHT_DUPES_YES);
+    CU_ASSERT_EQUAL(err, GHT_OK);
+    
+    // sb1 = stringbuffer_create();
+    // err = ght_node_to_string(root, sb1, 0);
+    // printf("\n%s\n", stringbuffer_getstring(sb1));
+    // stringbuffer_destroy(sb1);
+    
+    err = ght_writer_new_file(testfile, &writer);
+    CU_ASSERT_EQUAL(err, GHT_OK);
+    err = ght_node_write(root, writer);
+    CU_ASSERT_EQUAL(err, GHT_OK);
+    ght_writer_free(writer);
+    
+    err = ght_reader_new_file(testfile, schema, &reader);
+    CU_ASSERT_EQUAL(err, GHT_OK);
+    err = ght_node_read(reader, &noderead);
+    CU_ASSERT_EQUAL(err, GHT_OK);
+    ght_reader_free(reader);
+    remove(testfile);
+
+    ght_node_free(root);
+    ght_node_free(noderead);
+    
 }
 
 /* REGISTER ***********************************************************/
@@ -432,6 +505,7 @@ CU_TestInfo core_tests[] =
     GHT_TEST(test_ght_node_build_tree),
     GHT_TEST(test_ght_node_build_tree_big),
     GHT_TEST(test_ght_node_serialization),
+    GHT_TEST(test_ght_node_file_serialization),
     CU_TEST_INFO_NULL
 };
 

@@ -11,27 +11,6 @@
 #include "ght_internal.h"
 
 
-/* typedef struct 
-{
-    GhtIoType type;
-    FILE *file;
-    char *filename;
-    bytebuffer_t *bytebuffer;
-} GhtWriter;
-*/
-
-static int
-fexists(const char *filename)
-{
-    FILE *file;
-    if ( file = fopen(filename, "r") )
-    {
-        fclose(file);
-        return 1;
-    }
-    return 0;
-}
-
 GhtErr
 ght_writer_new_file(const char *filename, GhtWriter **writer)
 {
@@ -83,6 +62,7 @@ ght_writer_new_mem(GhtWriter **writer)
 GhtErr
 ght_writer_free(GhtWriter *writer)
 {
+    if ( ! writer ) return GHT_ERROR;
     if ( writer->type == GHT_IO_MEM )
     {
         bytebuffer_destroy(writer->bytebuffer);
@@ -93,7 +73,6 @@ ght_writer_free(GhtWriter *writer)
             fclose(writer->file);
         if ( writer->filename )
             ght_free(writer->filename);
-        ght_free(writer);
     }
 
     ght_free(writer);
@@ -103,6 +82,7 @@ ght_writer_free(GhtWriter *writer)
 GhtErr
 ght_write(GhtWriter *writer, const void *bytes, size_t bytesize)
 {
+    assert(writer);
     if ( writer->type == GHT_IO_MEM )
     {
         bytebuffer_append(writer->bytebuffer, bytes, bytesize);
@@ -170,7 +150,8 @@ ght_reader_new_file(const char *filename, const GhtSchema *schema, GhtReader **r
     
     r = ght_malloc(sizeof(GhtReader));
     memset(r, 0,sizeof(GhtReader));
-    
+
+    r->file = file;
     r->type = GHT_IO_FILE;
     r->filename = ght_strdup(filename);
     r->schema = schema;
@@ -203,7 +184,6 @@ ght_reader_free(GhtReader *reader)
         if ( reader->filename )
             ght_free(reader->filename);
     }
-    
     ght_free(reader);
     return GHT_OK;    
 }
@@ -211,6 +191,7 @@ ght_reader_free(GhtReader *reader)
 GhtErr
 ght_read(GhtReader *reader, void *bytes, size_t read_size)
 {
+    assert(reader);
     if ( reader->type == GHT_IO_MEM )
     {
         if ( reader->bytes_current - reader->bytes_start + read_size > reader->bytes_size )
@@ -224,8 +205,23 @@ ght_read(GhtReader *reader, void *bytes, size_t read_size)
     }
     else if (reader->type == GHT_IO_FILE )
     {
-        ght_error("%s: file reading currently unimplemented", __func__);
-        return GHT_ERROR;
+        size_t rsz;
+        rsz = fread(bytes, 1, read_size, reader->file);
+        if ( rsz != read_size )
+        {
+            if ( feof(reader->file) )
+            {
+                ght_warn("%s: reader reached end of file prematurely", __func__);
+                return GHT_OK;
+            }
+            else if ( ferror(reader->file) )
+            {
+                ght_error("%s: reader error", __func__);
+                return GHT_ERROR;
+            }
+        }
+        
+        return GHT_OK;
     }
     else
     {
