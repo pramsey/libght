@@ -9,6 +9,7 @@ set ( GHT_SOURCES
 	ght_node.c	
 	ght_schema.c	
 	ght_serialize.c	
+	ght_tree.c
 	ght_util.c
 	bytebuffer.c
 	stringbuffer.c
