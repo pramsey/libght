@@ -24,4 +24,6 @@ include_directories ("${CUNIT_INCLUDE_DIR}")
 add_executable(cu_tester ${GHT_TEST_SOURCES} ${GHT_TEST_HEADERS})
 target_link_libraries (cu_tester libght-static cunit)
 
+add_test(cu_tester cu_tester)
+
 install (FILES "${GHT_TEST_DATA}" DESTINATION share)
