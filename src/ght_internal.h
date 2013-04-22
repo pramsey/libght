@@ -28,6 +28,7 @@
 
 #define GHT_TRY(functioncall) { if ( (functioncall) == GHT_ERROR ) return GHT_ERROR; }
 #define GHT_NUM_TYPES 11
+#define GHT_EPSILON 10e-8
 
 typedef enum
 {
@@ -211,6 +212,10 @@ GhtErr ght_nodelist_free_deep(GhtNodeList *nl);
 /** Free a nodelist, but not the nodes it holds */
 GhtErr ght_nodelist_free_shallow(GhtNodeList *nl);
 
+/** Build a tree from a linear nodelist */
+GhtErr ght_tree_from_nodelist(const GhtSchema *schema, GhtNodeList *nlist, GhtDuplicates duplicates, GhtTree **tree);
+
+
 /** Alocate a new attribute and fill in the value */
 GhtErr ght_attribute_new(const GhtDimension *dim, double val, GhtAttribute **attr);
 
@@ -243,6 +248,12 @@ GhtErr ght_dimension_new(GhtDimension **dim);
 
 /** Where is the dimension in the schema? */
 GhtErr ght_dimension_get_position(const GhtDimension *dim, uint8_t *position);
+
+/** Are these dimensions functionally the same (name, scale, offset, type) ? */
+GhtErr ght_dimension_same(const GhtDimension *dim1, const GhtDimension *dim2, int *same);
+
+/** Are these schemas functionally the same (name, scale, offset, type) in all dimensions? */
+GhtErr ght_schema_same(const GhtSchema *s1, const GhtSchema *s2, int *same);
 
 /** Create a schema from an XML document */
 GhtErr ght_schema_from_xml_str(const char *xmlstr, GhtSchema **schema);

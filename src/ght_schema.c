@@ -11,6 +11,7 @@
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include "ght_internal.h"
+#include <math.h>
 
 /** Create an empty dimension */
 GhtErr ght_dimension_new(GhtDimension **dimension) 
@@ -48,6 +49,37 @@ GhtErr ght_dimension_set_description(GhtDimension *dim, const char *desc)
 GhtErr ght_dimension_get_position(const GhtDimension *dim, uint8_t *position)
 {
     *position = dim->position;
+}
+
+GhtErr ght_dimension_same(const GhtDimension *dim1, const GhtDimension *dim2, int *same)
+{
+    *same = 0;
+    if ( dim1->position == dim2->position &&
+         strcmp(dim1->name, dim2->name) == 0 &&
+         dim1->type == dim2->type &&
+         fabs(dim1->scale - dim2->scale) < GHT_EPSILON &&
+         fabs(dim1->offset - dim2->offset) < GHT_EPSILON )
+    {
+        *same = 1;
+    }
+    return GHT_OK;    
+}
+
+GhtErr ght_schema_same(const GhtSchema *s1, const GhtSchema *s2, int *same)
+{
+    int i;
+    *same = 0;
+    if ( s1->num_dims != s2->num_dims )
+    {
+        return GHT_OK;
+    }
+    for ( i = 0; i < s1->num_dims; i++ )
+    {
+        ght_dimension_same(s1->dims[i], s2->dims[i], same);
+        if ( ! *same )
+            return GHT_OK;
+    }
+    return GHT_OK;
 }
 
 GhtErr ght_schema_get_dimension_by_name(const GhtSchema *schema, const char *name, GhtDimension **dim)
@@ -380,3 +412,5 @@ GhtErr ght_schema_to_xml_file(const GhtSchema *schema, const char *filename)
     
     return GHT_OK;
 }
+
+
