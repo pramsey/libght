@@ -265,7 +265,14 @@ GhtErr
 ght_node_to_string(GhtNode *node, stringbuffer_t *sb, int level)
 {
     int i = 0;
-    stringbuffer_aprintf(sb, "%*s%s", 2*level, "", node->hash);
+
+    /* Print hash */
+    if ( node->hash )
+        stringbuffer_aprintf(sb, "%*s%s", 2*level, "", node->hash);
+    else
+        stringbuffer_aprintf(sb, "%*s%s", 2*level, "", "[hash-is-null]");
+
+    /* Print attributes */
     if ( node->attributes )
     {
         GhtAttribute *attr = node->attributes;
@@ -278,6 +285,8 @@ ght_node_to_string(GhtNode *node, stringbuffer_t *sb, int level)
         }
     }
     stringbuffer_append(sb, "\n");
+    
+    /* Recurse into children */
     for ( i = 0; i < ght_node_num_children(node); i++ )
     {
         GHT_TRY(ght_node_to_string(node->children->nodes[i], sb, level + 1));
@@ -491,6 +500,7 @@ ght_node_write(const GhtNode *node, GhtWriter *writer)
     while( attr )
     {
         ght_attribute_write(attr, writer); 
+        attr = attr->next;
     }
 
     /* Write the children */
@@ -536,6 +546,7 @@ ght_node_read(GhtReader *reader, GhtNode **node)
     {
         GHT_TRY(ght_attribute_read(reader, &attr));
         GHT_TRY(ght_node_add_attribute(n, attr));
+        attrcount--;
     }
     
     /* Read the children */

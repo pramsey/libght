@@ -350,12 +350,15 @@ test_ght_node_serialization(void)
 {
     GhtCoordinate coord;
     int x, y;
-    GhtNode *node1, *node2;
+    GhtNode *node1, *node2, *node3;
     GhtErr err;
     GhtWriter *writer;
     GhtReader *reader;
     const uint8_t *bytes;
     size_t bytes_size;
+    stringbuffer_t *sb1, *sb2;
+    GhtAttribute *attr;
+    char *hex;
 
     /* ght_node_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtNode **node); */
     coord.x = -127.4123;
@@ -372,7 +375,51 @@ test_ght_node_serialization(void)
     err = ght_node_read(reader, &node2);
     
     CU_ASSERT_STRING_EQUAL(node1->hash, node2->hash);
+    ght_node_free(node2);
 
+    /* add a child */
+    coord.x = -127.4125;
+    coord.y = 49.23144;
+    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node3);
+    err = ght_attribute_new(schema->dims[3], 88.88, &attr);
+    err = ght_node_add_attribute(node3, attr);
+    err = ght_node_insert_node(node1, node3, GHT_DUPES_YES);
+    CU_ASSERT_EQUAL(err, GHT_OK);
+
+    /* add another (dupe) child */
+    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node3);
+    err = ght_node_insert_node(node1, node3, GHT_DUPES_YES);
+
+    /* add another (dupe) child with an attribute */
+    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node3);
+    err = ght_attribute_new(schema->dims[2], 99.99, &attr);
+    err = ght_node_add_attribute(node3, attr);
+    err = ght_node_insert_node(node1, node3, GHT_DUPES_YES);
+
+    
+    sb1 = stringbuffer_create();
+    err = ght_node_to_string(node1, sb1, 0);
+    // printf("ORIGINAL\n%s\n", stringbuffer_getstring(sb1));
+
+    err = ght_writer_new_mem(&writer);
+    err = ght_node_write(node1, writer);
+    bytes = bytebuffer_getbytes(writer->bytebuffer);
+    bytes_size = bytebuffer_getsize(writer->bytebuffer);
+
+    err = hexbytes_from_bytes(bytes, bytes_size, &hex);
+    CU_ASSERT_STRING_EQUAL("086330763268646D3100020A77707A7079347674763400000A6374643463637839796201035800020000000001020F27000000", hex);
+    // printf("\n\n%s\n", hex);
+    
+    err = ght_reader_new_mem(bytes, bytes_size, schema, &reader);
+    err = ght_node_read(reader, &node2);
+    
+    sb2 = stringbuffer_create();
+    err = ght_node_to_string(node2, sb2, 0);
+    // printf("COPY\n%s\n", stringbuffer_getstring(sb2));
+    
+    CU_ASSERT_STRING_EQUAL(stringbuffer_getstring(sb1), stringbuffer_getstring(sb2));
+    stringbuffer_destroy(sb2);
+    stringbuffer_destroy(sb1);
 }
 
 /* REGISTER ***********************************************************/

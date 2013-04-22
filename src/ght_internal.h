@@ -273,4 +273,10 @@ GhtErr ght_reader_new_mem(const uint8_t *bytes_start, size_t bytes_size, const G
 /** Read bytes in from a reader */
 GhtErr ght_read(GhtReader *reader, void *bytes, size_t read_size);
 
+/** Convert a hex string into a byte buffer */
+GhtErr bytes_from_hexbytes(const char *hex, size_t hexsize, uint8_t **bytes);
+
+/** Convert a byte buffer into a hex string */
+GhtErr hexbytes_from_bytes(const uint8_t *bytes, size_t bytesize, char **hex);
+
 #endif /* _GHT_INTERNAL_H */
