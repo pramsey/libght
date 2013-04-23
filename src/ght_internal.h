@@ -40,12 +40,6 @@ typedef enum
 } GhtHashMatch;
 
 typedef enum
-{   
-    GHT_DUPES_NO = 0,
-    GHT_DUPES_YES = 1
-} GhtDuplicates;
-
-typedef enum
 {
     GHT_IO_FILE,
     GHT_IO_MEM
@@ -171,7 +165,7 @@ GhtErr ght_node_insert_node(GhtNode *node, GhtNode *node_to_insert, GhtDuplicate
 GhtErr ght_node_set_hash(GhtNode *node, GhtHash *hash);
 
 /** Create a new code from a coordinate */
-GhtErr ght_node_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtNode **node);
+GhtErr ght_node_new_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtNode **node);
 
 /** Create a new node from a hash */
 GhtErr ght_node_new_from_hash(GhtHash *hash, GhtNode **node);
@@ -212,12 +206,20 @@ GhtErr ght_nodelist_free_deep(GhtNodeList *nl);
 /** Free a nodelist, but not the nodes it holds */
 GhtErr ght_nodelist_free_shallow(GhtNodeList *nl);
 
+/** Allocate a new tree and initialize config parameters */
+GhtErr ght_tree_new(const GhtSchema *schema, GhtTree **tree);
+
 /** Build a tree from a linear nodelist */
-GhtErr ght_tree_from_nodelist(const GhtSchema *schema, GhtNodeList *nlist, GhtDuplicates duplicates, GhtTree **tree);
+GhtErr ght_tree_from_nodelist(const GhtSchema *schema, GhtNodeList *nlist, GhtConfig *config, GhtTree **tree);
 
+/** Free a GhtTree from memory, including nodes and schema */
+GhtErr ght_tree_free(GhtTree *tree);
 
-/** Alocate a new attribute and fill in the value */
-GhtErr ght_attribute_new(const GhtDimension *dim, double val, GhtAttribute **attr);
+/** Add a GhtNode to a GhtTree */
+GhtErr ght_tree_insert_node(GhtTree *tree, GhtNode *node);
+
+/** Alocate a new attribute and fill in the value from a double */
+GhtErr ght_attribute_new_from_double(const GhtDimension *dim, double val, GhtAttribute **attr);
 
 /** Free an attribtue */
 GhtErr ght_attribute_free(GhtAttribute *attr);
@@ -259,7 +261,7 @@ GhtErr ght_schema_same(const GhtSchema *s1, const GhtSchema *s2, int *same);
 GhtErr ght_schema_from_xml_str(const char *xmlstr, GhtSchema **schema);
 
 /** Find the GhtDimension corresponding to a name */
-GhtErr ght_schema_get_dimension_by_name(const GhtSchema *schame, const char *name, GhtDimension **dim);
+GhtErr ght_schema_get_dimension_by_name(const GhtSchema *schema, const char *name, GhtDimension **dim, int *position);
 
 /** Find the GhtDimension corresponding to an index */
 GhtErr ght_schema_get_dimension_by_index(const GhtSchema *schema, int i, GhtDimension **dim);
@@ -302,8 +304,5 @@ GhtErr bytes_from_hexbytes(const char *hex, size_t hexsize, uint8_t **bytes);
 
 /** Convert a byte buffer into a hex string */
 GhtErr hexbytes_from_bytes(const uint8_t *bytes, size_t bytesize, char **hex);
-
-/** Supplement to c file functions */
-int fexists(const char *filename);
 
 #endif /* _GHT_INTERNAL_H */

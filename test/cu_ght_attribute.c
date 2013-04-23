@@ -70,12 +70,12 @@ tsv_file_to_node_list(const char *fname, const GhtSchema *schema)
                 coord.x = dblval[0];
                 coord.y = dblval[1];
                 
-                ght_node_from_coordinate(&coord, 16, &node);
+                ght_node_new_from_coordinate(&coord, 16, &node);
                 
                 for ( i = 2; i < schema->num_dims; i++ )
                 {
                     GhtAttribute *a;
-                    ght_attribute_new(schema->dims[i], dblval[i], &a);
+                    ght_attribute_new_from_double(schema->dims[i], dblval[i], &a);
                     ght_node_add_attribute(node, a);
                 }
                 
@@ -104,12 +104,12 @@ test_ght_build_node_with_attributes(void)
     /* X, Y */
     coord.x = -127;
     coord.y = 45;
-    ght_node_from_coordinate(&coord, 16, &node);
+    ght_node_new_from_coordinate(&coord, 16, &node);
     /* Z */
-    ght_attribute_new(simpleschema->dims[2], 1231.2, &a);
+    ght_attribute_new_from_double(simpleschema->dims[2], 1231.2, &a);
     ght_node_add_attribute(node, a);
     /* Intensity */
-    ght_attribute_new(simpleschema->dims[3], 3, &a);
+    ght_attribute_new_from_double(simpleschema->dims[3], 3, &a);
     ght_node_add_attribute(node, a);
     
     ght_node_to_string(node, sb, 0);

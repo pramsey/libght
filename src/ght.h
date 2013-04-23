@@ -38,6 +38,12 @@ typedef enum
     GHT_DOUBLE  = 9,  GHT_FLOAT  = 10
 } GhtType;
 
+typedef enum
+{   
+    GHT_DUPES_NO = 0,
+    GHT_DUPES_YES = 1
+} GhtDuplicates;
+
 /* So we can alias char* to GhtHash* */
 typedef char GhtHash;
 
@@ -111,9 +117,16 @@ typedef struct GhtNodeList_t
 
 typedef struct
 {
+    GhtDuplicates  allow_duplicates;
+    unsigned char  max_hash_length;
+} GhtConfig;
+
+typedef struct
+{
     const GhtSchema *schema;
     GhtNode *root;
     int num_nodes;
+    GhtConfig config;
 } GhtTree;
 
 

@@ -11,6 +11,10 @@
 #include "ght_internal.h"
 #include <float.h>
 
+/******************************************************************************
+*  GhtNodeList
+******************************************************************************/
+
 /** New, empty, nodelist */
 GhtErr
 ght_nodelist_new(GhtNodeList **nodelist)
@@ -83,6 +87,12 @@ ght_nodelist_add_node(GhtNodeList *nl, GhtNode *node)
     return GHT_OK;
 }
 
+
+
+/******************************************************************************
+*  GhtNode
+******************************************************************************/
+
 /** Some nodelist utility functions */
 static int
 ght_node_is_leaf(const GhtNode *node)
@@ -131,7 +141,7 @@ ght_node_new_from_hash(GhtHash *hash, GhtNode **node)
 
 /** Create new node, taking ownership of hash parameter */
 GhtErr
-ght_node_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtNode **node)
+ght_node_new_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtNode **node)
 {
     GhtHash *hash;
     assert(node != NULL);
@@ -453,7 +463,7 @@ ght_node_compact_attribute_with_delta(GhtNode *node, const GhtDimension *dim, do
             {
                 ght_node_delete_attribute(node->children->nodes[i], dim);
             }
-            ght_attribute_new(dim, val, &myattr);
+            ght_attribute_new_from_double(dim, val, &myattr);
             memcpy(compacted_attribute, myattr, sizeof(GhtAttribute));
             ght_node_add_attribute(node, myattr);
             return GHT_OK;

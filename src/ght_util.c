@@ -10,6 +10,9 @@
 
 #include "ght_internal.h"
 
+int fexists(const char *filename); /* ght_util.c */
+char machine_endian(void); /* ght_util.c */
+
 /* Our static character->number map. Anything > 15 is invalid */
 static uint8_t hex2char[256] = {
 	/* not Hex characters */
@@ -111,4 +114,12 @@ fexists(const char *filename)
         return 1;
     }
     return 0;
+}
+
+char
+machine_endian(void)
+{
+        static int check_int = 1; /* dont modify this!!! */
+        return *((char *) &check_int); /* 0 = big endian | xdr, */
+                                       /* 1 = little endian | ndr */
 }

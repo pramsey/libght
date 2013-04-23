@@ -29,7 +29,7 @@ GhtErr ght_type_from_str(const char *str, GhtType *type)
 /******************************************************************************/
 /* GhtAttribute */
 
-GhtErr ght_attribute_new(const GhtDimension *dim, double val, GhtAttribute **attr)
+GhtErr ght_attribute_new_from_double(const GhtDimension *dim, double val, GhtAttribute **attr)
 {
     GhtAttribute *a;
     a = ght_malloc(sizeof(GhtAttribute));

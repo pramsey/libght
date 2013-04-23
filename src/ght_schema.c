@@ -13,6 +13,10 @@
 #include "ght_internal.h"
 #include <math.h>
 
+/******************************************************************************
+*  GhtDimension
+******************************************************************************/
+
 /** Create an empty dimension */
 GhtErr ght_dimension_new(GhtDimension **dimension) 
 {
@@ -65,6 +69,11 @@ GhtErr ght_dimension_same(const GhtDimension *dim1, const GhtDimension *dim2, in
     return GHT_OK;    
 }
 
+
+/******************************************************************************
+*  GhtSchema
+******************************************************************************/
+
 GhtErr ght_schema_same(const GhtSchema *s1, const GhtSchema *s2, int *same)
 {
     int i;
@@ -82,7 +91,7 @@ GhtErr ght_schema_same(const GhtSchema *s1, const GhtSchema *s2, int *same)
     return GHT_OK;
 }
 
-GhtErr ght_schema_get_dimension_by_name(const GhtSchema *schema, const char *name, GhtDimension **dim)
+GhtErr ght_schema_get_dimension_by_name(const GhtSchema *schema, const char *name, GhtDimension **dim, int *position)
 {
     int i;
     assert(name);
@@ -95,6 +104,7 @@ GhtErr ght_schema_get_dimension_by_name(const GhtSchema *schema, const char *nam
         if ( sname && strcasecmp(name, sname) == 0 )
         {
             *dim = schema->dims[i];
+            *position = i;
             return GHT_OK;
         }
     }

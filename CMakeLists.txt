@@ -55,10 +55,10 @@ include_directories (${LIBXML2_INCLUDE_DIR})
 set (GHT_HAVE_LIBXML2 1)
 
 #------------------------------------------------------------------------------
-# must find cunit
+# need libLAS for file translation tools
 #------------------------------------------------------------------------------
 
-include (FindCUnit)
+find_package (LibLAS)
 
 #------------------------------------------------------------------------------
 # generate config include
@@ -83,4 +83,5 @@ enable_testing()
 
 add_subdirectory (src) 
 add_subdirectory (test) 
+add_subdirectory (tools) 
 

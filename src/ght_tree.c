@@ -10,8 +10,72 @@
 
 #include "ght_internal.h"
 
+char machine_endian(void); /* from ght_util.c */
+
 GhtErr
-ght_tree_from_nodelist(const GhtSchema *schema, GhtNodeList *nlist, GhtDuplicates duplicates, GhtTree **tree)
+ght_tree_new(const GhtSchema *schema, GhtTree **tree)
+{
+    GhtTree *t;
+    t = ght_malloc(sizeof(GhtTree));
+    memset(t, 0, sizeof(GhtTree));
+    t->config.allow_duplicates = GHT_DUPES_YES;
+    t->config.max_hash_length  = GHT_MAX_HASH_LENGTH;
+    t->schema = schema;
+    *tree = t;
+}
+
+GhtErr
+ght_tree_free(GhtTree *tree)
+{
+    assert(tree);
+    if ( tree->root )
+        ght_node_free(tree->root);
+    if ( tree->schema )
+        ght_schema_free((GhtSchema*)tree->schema);
+    ght_free(tree);
+}
+
+GhtErr
+ght_tree_insert_node(GhtTree *tree, GhtNode *node)
+{
+    if ( ! tree->root )
+    {
+        tree->root = node;
+    }
+    else
+    {
+        GHT_TRY(ght_node_insert_node(tree->root, node, tree->config.allow_duplicates));
+    }
+    tree->num_nodes++;
+    return GHT_OK;
+}
+
+GhtErr
+ght_tree_write(const GhtTree *tree, GhtWriter *writer)
+{
+    uint8_t version = 1;
+    char endian = machine_endian();
+
+    assert(tree);
+    assert(writer);
+    
+    if ( ! tree->root )
+        return GHT_ERROR;
+    
+    /* Endianness */
+    GHT_TRY(ght_write(writer, &endian, 1)); /* 0 = Big, 1 = Little */
+    
+    /* File format version */
+    GHT_TRY(ght_write(writer, &version, 1));
+    
+    /* Maximum hash length in this tree */
+    GHT_TRY(ght_write(writer, &(tree->config.max_hash_length), 1));
+    
+    return ght_node_write(tree->root, writer);
+}
+
+GhtErr
+ght_tree_from_nodelist(const GhtSchema *schema, GhtNodeList *nlist, GhtConfig *config, GhtTree **tree)
 {
     int i;
     GhtTree *t;
@@ -33,7 +97,7 @@ ght_tree_from_nodelist(const GhtSchema *schema, GhtNodeList *nlist, GhtDuplicate
         }
         else
         {
-            err = ght_node_insert_node(root, node, duplicates);
+            err = ght_node_insert_node(root, node, config->allow_duplicates);
             /* If we have an error, that's a big problem. The nodes underneath */
             /* the GhtNodeList have now been mutated during the insertion */
             /* process, and there are also new interior nodes lying around too */
@@ -48,10 +112,11 @@ ght_tree_from_nodelist(const GhtSchema *schema, GhtNodeList *nlist, GhtDuplicate
         }
     }
     
-    t = ght_malloc(sizeof(GhtTree));
+    GHT_TRY(ght_tree_new(schema, tree));
     t->num_nodes = nlist->num_nodes;
     t->root = root;
     t->schema = schema;
+    t->config = *config;
     
     *tree = t;
     return GHT_OK;

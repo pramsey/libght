@@ -235,10 +235,10 @@ test_ght_node_build_tree(void)
     GhtNode *node1, *node2, *node3, *node4, *node5, *root;
     GhtErr err;
 
-    /* ght_node_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtNode **node); */
+    /* ght_node_new_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtNode **node); */
     coord.x = -127.4123;
     coord.y = 49.23141;
-    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &root);
+    err = ght_node_new_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &root);
     CU_ASSERT_STRING_EQUAL(root->hash, "c0v2hdm1wpzpy4vtv4");
     CU_ASSERT_EQUAL(err, GHT_OK);
 
@@ -247,7 +247,7 @@ test_ght_node_build_tree(void)
     /* insert duplicate */
     coord.x = -127.4123;
     coord.y = 49.23141;
-    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node1);
+    err = ght_node_new_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node1);
     err = ght_node_insert_node(root, node1, GHT_DUPES_YES);
     CU_ASSERT_EQUAL(err, GHT_OK);
     CU_ASSERT_EQUAL(node1->hash, NULL);
@@ -255,7 +255,7 @@ test_ght_node_build_tree(void)
     /* insert split */
     coord.x = -127.4124;
     coord.y = 49.23142;
-    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node2);
+    err = ght_node_new_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node2);
     /* before insert, it's full length */
     CU_ASSERT_STRING_EQUAL(node2->hash, "c0v2hdm1gcuekpf9y1");
     err = ght_node_insert_node(root, node2, GHT_DUPES_YES);
@@ -324,7 +324,7 @@ test_ght_node_build_tree_big(void)
         {
             coord.x = x_off + i*scale;
             coord.y = y_off + j*scale;
-            err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node);
+            err = ght_node_new_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node);
             if ( i || j )
             {
                 err = ght_node_insert_node(root, node, GHT_DUPES_YES);
@@ -361,10 +361,10 @@ test_ght_node_serialization(void)
     GhtAttribute *attr;
     char *hex;
 
-    /* ght_node_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtNode **node); */
+    /* ght_node_new_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtNode **node); */
     coord.x = -127.4123;
     coord.y = 49.23141;
-    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node1);
+    err = ght_node_new_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node1);
     CU_ASSERT_STRING_EQUAL(node1->hash, "c0v2hdm1wpzpy4vtv4");
     CU_ASSERT_EQUAL(err, GHT_OK);
 
@@ -381,19 +381,19 @@ test_ght_node_serialization(void)
     /* add a child */
     coord.x = -127.4125;
     coord.y = 49.23144;
-    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node3);
-    err = ght_attribute_new(schema->dims[3], 88.88, &attr);
+    err = ght_node_new_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node3);
+    err = ght_attribute_new_from_double(schema->dims[3], 88.88, &attr);
     err = ght_node_add_attribute(node3, attr);
     err = ght_node_insert_node(node1, node3, GHT_DUPES_YES);
     CU_ASSERT_EQUAL(err, GHT_OK);
 
     /* add another (dupe) child */
-    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node3);
+    err = ght_node_new_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node3);
     err = ght_node_insert_node(node1, node3, GHT_DUPES_YES);
 
     /* add another (dupe) child with an attribute */
-    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node3);
-    err = ght_attribute_new(schema->dims[2], 99.99, &attr);
+    err = ght_node_new_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node3);
+    err = ght_attribute_new_from_double(schema->dims[2], 99.99, &attr);
     err = ght_node_add_attribute(node3, attr);
     err = ght_node_insert_node(node1, node3, GHT_DUPES_YES);
     
@@ -444,30 +444,30 @@ test_ght_node_file_serialization(void)
 
     coord.x = -127.4123;
     coord.y = 49.23141;
-    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node);
+    err = ght_node_new_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node);
     CU_ASSERT_EQUAL(err, GHT_OK);
     root = node;
     
     coord.x = -127.4122;
     coord.y = 49.23142;
-    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node);
-    err = ght_attribute_new(schema->dims[2], 88.88, &attr);
+    err = ght_node_new_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node);
+    err = ght_attribute_new_from_double(schema->dims[2], 88.88, &attr);
     err = ght_node_add_attribute(node, attr);
     err = ght_node_insert_node(root, node, GHT_DUPES_YES);
     CU_ASSERT_EQUAL(err, GHT_OK);
 
     coord.x = -127.4122001;
     coord.y = 49.23142001;
-    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node);
-    err = ght_attribute_new(schema->dims[2], 15.23, &attr);
+    err = ght_node_new_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node);
+    err = ght_attribute_new_from_double(schema->dims[2], 15.23, &attr);
     err = ght_node_add_attribute(node, attr);
     err = ght_node_insert_node(root, node, GHT_DUPES_YES);
     CU_ASSERT_EQUAL(err, GHT_OK);
 
     coord.x = -127.4122002;
     coord.y = 49.23142002;
-    err = ght_node_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node);
-    err = ght_attribute_new(schema->dims[2], 19.23, &attr);
+    err = ght_node_new_from_coordinate(&coord, GHT_MAX_HASH_LENGTH, &node);
+    err = ght_attribute_new_from_double(schema->dims[2], 19.23, &attr);
     err = ght_node_add_attribute(node, attr);
     err = ght_node_insert_node(root, node, GHT_DUPES_YES);
     CU_ASSERT_EQUAL(err, GHT_OK);

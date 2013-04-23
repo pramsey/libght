@@ -10,6 +10,9 @@
 
 #include "ght_internal.h"
 
+/** Supplement to c file functions, from ght_util.c */
+int fexists(const char *filename);
+
 
 GhtErr
 ght_writer_new_file(const char *filename, GhtWriter **writer)
