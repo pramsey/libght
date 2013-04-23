@@ -36,6 +36,7 @@ set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 include (CheckIncludeFiles)
 
 check_include_files (stdint.h HAVE_STDINT_H)
+check_include_files (getopt.h HAVE_GETOPT_H)
 
 #------------------------------------------------------------------------------
 # all the tools use the API

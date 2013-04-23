@@ -6,3 +6,4 @@
 #define PROJECT_SOURCE_DIR "@PROJECT_SOURCE_DIR@"
 
 #cmakedefine HAVE_STDINT_H
+#cmakedefine HAVE_GETOPT_H
