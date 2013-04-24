@@ -13,7 +13,7 @@ if (LIBLAS_FOUND)
 
   include_directories ("${LIBLAS_INCLUDE_DIR}")
   add_executable(las2ght ${LAS2GHT_SOURCES} ${LAS2GHT_HEADERS})
-  target_link_libraries (las2ght libght-static las)
+  target_link_libraries (las2ght libght-static las_c)
   install (PROGRAMS las2ght DESTINATION bin)
 
 endif (LIBLAS_FOUND)

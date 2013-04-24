@@ -9,6 +9,8 @@
 #include "ght.h"
 #include <string.h>
 
+#define EXENAME "las2ght"
+
 #ifdef HAVE_GETOPT_H
 /* System implementation */
 #include <getopt.h>
@@ -25,14 +27,15 @@ typedef struct
 
 typedef struct 
 {
-    int something;
+    LASReaderH reader;
+    LASHeaderH header;
 } Las2GhtState;
 
 static void
 usage()
 {
-    printf("las2ght, version %d.%d\n\n", GHT_VERSION_MAJOR, GHT_VERSION_MINOR);
-    printf("usage: las2ght --lasfile <lasfile> --ghtfile <ghtfile>\n\n");
+    printf("%s, version %d.%d\n\n", EXENAME, GHT_VERSION_MAJOR, GHT_VERSION_MINOR);
+    printf("usage: %s --lasfile <lasfile> --ghtfile <ghtfile>\n\n", EXENAME);
 }
 
 static void
@@ -44,21 +47,30 @@ las2ght_config_free(Las2GhtConfig *config)
         free(config->ghtfile);
 }
 
-static Las2GhtConfig *
-getopts(int argc, char **argv)
+static int
+fexists(const char *filename)
+{
+    FILE *fd;
+    if ( ! (fd = fopen(filename, "r")) )
+        return 0;
+    fclose(fd);
+    return 1;
+}
+
+static int
+getopts(int argc, char **argv, Las2GhtConfig *config)
 {
     int ch = 0;
-    Las2GhtConfig *config;
 
     /* options descriptor */
     static struct option longopts[] = 
     {
         { "lasfile", required_argument, NULL, 'l' },
         { "ghtfile", required_argument, NULL, 'g' },
+        { "attrs", optional_argument, NULL, 'a' },
         { NULL, 0, NULL, 0 }
     };
 
-    config = malloc(sizeof(Las2GhtConfig));
     memset(config, 0, sizeof(Las2GhtConfig));
 
     while ( (ch = getopt_long(argc, argv, "g:l:", longopts, NULL)) != -1)
@@ -75,10 +87,28 @@ getopts(int argc, char **argv)
                 config->ghtfile = strdup(optarg);
                 break;
             }
+            case 'a':
+            {
+                // a - scan angle
+                // i - intensity
+                // n - number of returns for given pulse
+                // r - number of this return
+                // c - classification number
+                // C - classification name
+                // u - user data
+                // p - point source ID
+                // e - edge of flight line
+                // d - direction of scan flag
+                // R - red channel of RGB color
+                // G - green channel of RGB color
+                // B - blue channel of RGB color
+                // M - vertex index number
+                break;
+            }
             default:
             {
                 las2ght_config_free(config);
-                return NULL;
+                return 0;
             }
         }
     }
@@ -86,16 +116,16 @@ getopts(int argc, char **argv)
     if ( ! (config->lasfile && config->ghtfile) )
     {
         las2ght_config_free(config);
-        config = NULL;
+        return 0;
     }
-    return config;
+    return 1;
 }
 
 int
 main (int argc, char **argv)
 {
-    Las2GhtConfig *config;
-    Las2GhtState *state;
+    Las2GhtConfig config;
+    Las2GhtState state;
 
     /* If no options are specified, display usage */
     if (argc <= 1)
@@ -105,16 +135,79 @@ main (int argc, char **argv)
     }
 
     /* Parse command line options and set configuration */
-    config = getopts(argc, argv);
-    if ( ! config )
+    if ( ! getopts(argc, argv, &config) )
     {
         usage();
         return 1;
     }
-
-    printf ("got args: lasfile=%s ghtfile=%s\n", config->lasfile, config->ghtfile);
-
     
+    printf ("got args: lasfile=%s ghtfile=%s\n", config.lasfile, config.ghtfile);
+
+    /* Input file exists? */
+    if ( ! fexists(config.lasfile) )
+    {
+        fprintf(stderr, "%s: LAS file '%s' does not exist\n", EXENAME, config.lasfile);
+        return 1;
+    }
+
+    /* Can we open the LAS file? */
+    state.reader = LASReader_Create(config.lasfile);
+    if ( ! state.reader )
+    {
+        fprintf(stderr, "%s: unable to open LAS file '%s'\n", EXENAME, config.lasfile);
+        return 1;
+    }
+
+    /* Get the header */
+    state.header = LASReader_GetHeader(state.reader);
+    if ( ! state.header) 
+    {
+        fprintf(stderr, "%s: unable to read LAS header in '%s'\n", EXENAME, config.lasfile);
+        return 1;
+    }
+    
+    // LAS_DLL LASPointH LASReader_GetNextPoint(const LASReaderH hReader);
+    // LAS_DLL LASSRSH LASHeader_GetSRS(const LASHeaderH hHeader);
+    // LAS_DLL double LASPoint_GetX(const LASPointH hPoint);
+    // LAS_DLL double LASPoint_GetY(const LASPointH hPoint);
+    // LAS_DLL double LASPoint_GetZ(const LASPointH hPoint);
+    // LAS_DLL unsigned short LASPoint_GetIntensity(const LASPointH hPoint);
+    // LAS_DLL unsigned short LASPoint_GetReturnNumber(const LASPointH hPoint);
+    // LAS_DLL unsigned short LASPoint_GetNumberOfReturns(const LASPointH hPoint);
+    // LAS_DLL unsigned short LASPoint_GetScanDirection(const LASPointH hPoint);
+    // LAS_DLL unsigned short LASPoint_GetFlightLineEdge(const LASPointH hPoint);
+    // LAS_DLL unsigned char LASPoint_GetScanFlags(const LASPointH hPoint);
+    // LAS_DLL unsigned char LASPoint_GetClassification(const LASPointH hPoint);
+    // LAS_DLL double LASPoint_GetTime(const LASPointH hPoint);
+    // LAS_DLL char LASPoint_GetScanAngleRank(const LASPointH hPoint);
+    // LAS_DLL unsigned short LASPoint_GetPointSourceId(LASPointH hPoint);
+    // LAS_DLL LASColorH LASPoint_GetColor(const LASPointH hPoint);
+    // LAS_DLL unsigned short LASColor_GetRed(const LASColorH hColor);
+    // LAS_DLL unsigned short LASColor_GetGreen(const LASColorH hColor);
+    // LAS_DLL unsigned short LASColor_GetBlue(const LASColorH hColor);
+    // LAS_DLL LASSRSH LASHeader_GetSRS(const LASHeaderH hHeader);
+    // LAS_DLL char* LASSRS_GetProj4(LASSRSH hSRS);    
+    // enum DataMemberFlag
+    //  {
+    //      eReturnNumber = 1,
+    //      eNumberOfReturns = 2,
+    //      eScanDirection = 4,
+    //      eFlightLineEdge = 8,
+    //      eClassification = 16,
+    //      eScanAngleRank = 32,
+    //      eTime = 64
+    //  };
+    // LAS_DLL int LASPoint_Validate(LASPointH hPoint);
+    // LAS_DLL int LASPoint_IsValid(LASPointH hPoint);
+    // LAS_DLL double LASHeader_GetScaleX(const LASHeaderH hHeader);
+    // LAS_DLL double LASHeader_GetScaleY(const LASHeaderH hHeader);
+    // LAS_DLL double LASHeader_GetScaleZ(const LASHeaderH hHeader);
+    // LAS_DLL double LASHeader_GetOffsetX(const LASHeaderH hHeader);
+    // LAS_DLL double LASHeader_GetOffsetY(const LASHeaderH hHeader);
+    // LAS_DLL double LASHeader_GetOffsetZ(const LASHeaderH hHeader);
+    // LAS_DLL double LASHeader_GetMinX(const LASHeaderH hHeader);
+
+
 
     return 0;
 }
