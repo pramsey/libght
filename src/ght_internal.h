@@ -248,6 +248,12 @@ GhtErr ght_type_from_str(const char *str, GhtType *type);
 /** Create an empty dimension */
 GhtErr ght_dimension_new(GhtDimension **dim);
 
+/** Set the name on a GhtDimension (names must be unique) */
+GhtErr ght_dimension_set_name(GhtDimension *dim, const char *name);
+
+/** Set the description on a GhtDimension */
+GhtErr ght_dimension_set_description(GhtDimension *dim, const char *desc);
+
 /** Where is the dimension in the schema? */
 GhtErr ght_dimension_get_position(const GhtDimension *dim, uint8_t *position);
 
@@ -260,6 +266,9 @@ GhtErr ght_schema_same(const GhtSchema *s1, const GhtSchema *s2, int *same);
 /** Create a schema from an XML document */
 GhtErr ght_schema_from_xml_str(const char *xmlstr, GhtSchema **schema);
 
+/** Append a GhtDimension to the GhtSchema */
+GhtErr ght_schema_add_dimension(GhtSchema *schema, GhtDimension *dim);
+
 /** Find the GhtDimension corresponding to a name */
 GhtErr ght_schema_get_dimension_by_name(const GhtSchema *schema, const char *name, GhtDimension **dim, int *position);
 
@@ -271,6 +280,9 @@ GhtErr ght_schema_to_xml_file(const GhtSchema *schema, const char *filename);
 
 /** Write out an XML representation of a GhtSchema */
 GhtErr ght_schema_from_xml_file(const char *filename, GhtSchema **schema);
+
+/** Allocate a blank GhtSchema */
+GhtErr ght_schema_new(GhtSchema **schema);
 
 /** Free an existing schema */
 GhtErr ght_schema_free(GhtSchema *schema);

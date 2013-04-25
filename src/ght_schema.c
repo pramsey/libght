@@ -154,8 +154,21 @@ GhtErr ght_schema_free(GhtSchema *schema)
 
 GhtErr ght_schema_add_dimension(GhtSchema *schema, GhtDimension *dim)
 {
+    int i;
+    
     assert(schema);
     assert(dim);
+    
+    if ( ! dim->name ) return GHT_ERROR;
+    
+    for ( i = 0; i < schema->num_dims; i++ )
+    {
+        if ( strcmp(dim->name, schema->dims[i]->name) != 0 )
+        {
+            ght_error("%s: cannot add dimension with a duplicate name", __func__);
+            return GHT_ERROR;
+        }
+    }
     
     if ( schema->num_dims == schema->max_dims )
     {

@@ -123,3 +123,4 @@ machine_endian(void)
         return *((char *) &check_int); /* 0 = big endian | xdr, */
                                        /* 1 = little endian | ndr */
 }
+

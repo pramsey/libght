@@ -6,7 +6,7 @@
 ***********************************************************************/
 
 #include "liblas/capi/liblas.h"
-#include "ght.h"
+#include "ght_internal.h"
 #include <string.h>
 
 #define EXENAME "las2ght"
@@ -19,10 +19,59 @@
 #include "getopt.h"
 #endif
 
+typedef enum
+{
+    LL_INTENSITY = 0,
+    LL_RETURN_NUMBER,
+    LL_NUMBER_OF_RETURNS,
+    LL_SCAN_DIRECTION,
+    LL_FLIGHT_LINE_EDGE,
+    LL_CLASSIFICATION,
+    LL_SCAN_ANGLE,
+    LL_POINT_SOURCE_ID,
+    LL_RED,
+    LL_GREEN,
+    LL_BLUE
+} LasAttribute;
+
+typedef struct  
+{
+    const char *name;
+    const char *description;
+    GhtType type;
+    double scale;
+    double offset;
+    LasAttribute attr;
+    char flag;
+} LasDimension;
+
+
+
+static LasDimension LasAttributes[] = 
+{
+    { "Intensity", "", GHT_UINT16, 1.0, 0.0, LL_INTENSITY, 'i' },
+    { "ReturnNumber", "", GHT_UINT16, 1.0, 0.0, LL_RETURN_NUMBER, 'r' },
+    { "NumberOfReturns", "", GHT_UINT16, 1.0, 0.0, LL_NUMBER_OF_RETURNS, 'n' },
+    { "ScanDirection", "", GHT_UINT16, 1.0, 0.0, LL_SCAN_DIRECTION, 'd' },
+    { "FlightLineEdge", "", GHT_UINT16, 1.0, 0.0, LL_FLIGHT_LINE_EDGE, 'e' },
+    { "Classification", "", GHT_UINT8, 1.0, 0.0, LL_CLASSIFICATION, 'c' },
+    { "ScanAngle", "", GHT_INT8, 1.0, 0.0, LL_SCAN_ANGLE, 'a' },
+    { "PointSourceId", "", GHT_UINT16, 1.0, 0.0, LL_POINT_SOURCE_ID, 'p' },
+    { "Red", "", GHT_UINT16, 1.0, 0.0, LL_RED, 'R' },
+    { "Green", "", GHT_UINT16, 1.0, 0.0, LL_GREEN, 'G' },
+    { "Blue", "", GHT_UINT16, 1.0, 0.0, LL_BLUE, 'B' },
+    { NULL, NULL, 0, 0, 0 }
+};
+
+#define NUM_LAS_ATTRIBUTES 11
+
 typedef struct 
 {
-    char *lasfile;
-    char *ghtfile;
+    char *lasfile;   /* File to read */
+    char *ghtfile;   /* File to write */
+    char attrs[NUM_LAS_ATTRIBUTES];  /* Attributes to transfer */
+    int num_attrs;
+    int validpoints;
 } Las2GhtConfig;
 
 typedef struct 
@@ -32,14 +81,63 @@ typedef struct
 } Las2GhtState;
 
 static void
-usage()
+l2g_usage()
 {
     printf("%s, version %d.%d\n\n", EXENAME, GHT_VERSION_MAJOR, GHT_VERSION_MINOR);
-    printf("usage: %s --lasfile <lasfile> --ghtfile <ghtfile>\n\n", EXENAME);
+    printf("Usage: %s [options]\n\n", EXENAME);
+    printf("Options:\n");
+    printf("  --lasfile FILENAME            Read file as input.\n");
+    printf("  --ghtfile FILENAME            Write file as output.\n");
+    printf("  --validpoints                 Only convert valid points.\n");
+    printf("  --attrs [irndecapRGB]         Convert selected attributes.\n");
+    printf("                                X,Y,Z are always converted.\n");
+    printf("      i - intensity\n");
+    printf("      r - number of this return\n");
+    printf("      n - number of returns for given pulse\n");
+    printf("      d - direction of scan flag\n");
+    printf("      e - edge of flight line\n");
+    printf("      c - classification number\n");
+    printf("      a - scan angle\n");
+    printf("      p - point source ID\n");
+    printf("      R - red channel of RGB color\n");
+    printf("      G - green channel of RGB color\n");
+    printf("      B - blue channel of RGB color\n");
+    printf("\n");
 }
 
 static void
-las2ght_config_free(Las2GhtConfig *config)
+l2g_config_attrs(Las2GhtConfig *config, const char *attr_str)
+{
+    int len;
+    int i = 0, j = 0, k = 0;
+    char current_attr;
+    
+    assert(config);
+    config->num_attrs = 0;
+
+    /* Noop on null */
+    if ( ! attr_str ) return;
+    
+    /* Go through the string one at a time */
+    j = 0;
+    while(attr_str[j])
+    {
+        /* Go through the possible attributes one at a time */
+        i = 0;
+        while( LasAttributes[i].name )
+        {
+            /* Found an attribute flag! */
+            if ( LasAttributes[i].flag == attr_str[j] )
+            {
+                config->attrs[config->num_attrs++] = LasAttributes[i].attr;
+            }
+        }
+    }
+    return;
+}
+
+static void
+l2g_config_free(Las2GhtConfig *config)
 {
     if ( config->lasfile )
         free(config->lasfile);
@@ -48,7 +146,7 @@ las2ght_config_free(Las2GhtConfig *config)
 }
 
 static int
-fexists(const char *filename)
+l2g_fexists(const char *filename)
 {
     FILE *fd;
     if ( ! (fd = fopen(filename, "r")) )
@@ -58,7 +156,7 @@ fexists(const char *filename)
 }
 
 static int
-getopts(int argc, char **argv, Las2GhtConfig *config)
+l2g_getopts(int argc, char **argv, Las2GhtConfig *config)
 {
     int ch = 0;
 
@@ -67,13 +165,14 @@ getopts(int argc, char **argv, Las2GhtConfig *config)
     {
         { "lasfile", required_argument, NULL, 'l' },
         { "ghtfile", required_argument, NULL, 'g' },
-        { "attrs", optional_argument, NULL, 'a' },
+        { "attrs", required_argument, NULL, 'a' },
+        { "validpoints", no_argument, NULL, 'p' },
         { NULL, 0, NULL, 0 }
     };
 
     memset(config, 0, sizeof(Las2GhtConfig));
 
-    while ( (ch = getopt_long(argc, argv, "g:l:", longopts, NULL)) != -1)
+    while ( (ch = getopt_long(argc, argv, "g:l:a:p", longopts, NULL)) != -1)
     {
         switch (ch) 
         {
@@ -89,25 +188,17 @@ getopts(int argc, char **argv, Las2GhtConfig *config)
             }
             case 'a':
             {
-                // a - scan angle
-                // i - intensity
-                // n - number of returns for given pulse
-                // r - number of this return
-                // c - classification number
-                // C - classification name
-                // u - user data
-                // p - point source ID
-                // e - edge of flight line
-                // d - direction of scan flag
-                // R - red channel of RGB color
-                // G - green channel of RGB color
-                // B - blue channel of RGB color
-                // M - vertex index number
+                l2g_config_attrs(config, optarg);
+                break;
+            }
+            case 'p':
+            {
+                config->validpoints = 1;
                 break;
             }
             default:
             {
-                las2ght_config_free(config);
+                l2g_config_free(config);
                 return 0;
             }
         }
@@ -115,11 +206,63 @@ getopts(int argc, char **argv, Las2GhtConfig *config)
     
     if ( ! (config->lasfile && config->ghtfile) )
     {
-        las2ght_config_free(config);
+        l2g_config_free(config);
         return 0;
     }
     return 1;
 }
+
+static GhtSchema *
+l2g_schema_new(const Las2GhtState *state, const Las2GhtConfig *config)
+{
+    int i = 0;
+    GhtSchema *schema;
+    GhtDimension *dim;
+    ght_schema_new(&schema);
+    
+    /* Add 'X' dimension (position 0) */
+    ght_dimension_new(&dim);
+    ght_dimension_set_name(dim, "X");
+    ght_dimension_set_description(dim, "");
+    dim->scale = 1.0;
+    dim->offset = 0.0;
+    dim->type = GHT_DOUBLE;
+    ght_schema_add_dimension(schema, dim);
+
+    /* Add 'Y' dimension (position 1) */
+    ght_dimension_new(&dim);
+    ght_dimension_set_name(dim, "Y");
+    ght_dimension_set_description(dim, "");
+    dim->scale = 1.0;
+    dim->offset = 0.0;
+    dim->type = GHT_DOUBLE;
+    ght_schema_add_dimension(schema, dim);
+
+    /* Add 'Z' dimension (position 2) */
+    ght_dimension_new(&dim);
+    ght_dimension_set_name(dim, "Z");
+    ght_dimension_set_description(dim, "");
+    dim->scale = LASHeader_GetScaleZ(state->header);
+    dim->offset = LASHeader_GetOffsetZ(state->header);
+    dim->type = GHT_INT32;
+    ght_schema_add_dimension(schema, dim);
+    
+    /* Add optional attributes (positions 3+) */
+    for ( i = 0; i < config->num_attrs; i++ )
+    {
+        LasDimension ld = LasAttributes[config->attrs[i]];
+        ght_dimension_new(&dim);
+        ght_dimension_set_name(dim, ld.name);
+        ght_dimension_set_description(dim, "");
+        dim->scale = ld.scale;
+        dim->offset = ld.offset;
+        dim->type = ld.type;
+        ght_schema_add_dimension(schema, dim);
+    }
+
+    return schema;
+}
+
 
 int
 main (int argc, char **argv)
@@ -127,24 +270,24 @@ main (int argc, char **argv)
     Las2GhtConfig config;
     Las2GhtState state;
 
-    /* If no options are specified, display usage */
+    /* If no options are specified, display l2g_usage */
     if (argc <= 1)
     {
-        usage();
+        l2g_usage();
         return 1;
     }
 
     /* Parse command line options and set configuration */
-    if ( ! getopts(argc, argv, &config) )
+    if ( ! l2g_getopts(argc, argv, &config) )
     {
-        usage();
+        l2g_usage();
         return 1;
     }
     
     printf ("got args: lasfile=%s ghtfile=%s\n", config.lasfile, config.ghtfile);
 
     /* Input file exists? */
-    if ( ! fexists(config.lasfile) )
+    if ( ! l2g_fexists(config.lasfile) )
     {
         fprintf(stderr, "%s: LAS file '%s' does not exist\n", EXENAME, config.lasfile);
         return 1;
