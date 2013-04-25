@@ -218,6 +218,9 @@ GhtErr ght_tree_free(GhtTree *tree);
 /** Add a GhtNode to a GhtTree */
 GhtErr ght_tree_insert_node(GhtTree *tree, GhtNode *node);
 
+/** Write a GhtTree to memory or file */
+GhtErr ght_tree_write(const GhtTree *tree, GhtWriter *writer);
+
 /** Alocate a new attribute and fill in the value from a double */
 GhtErr ght_attribute_new_from_double(const GhtDimension *dim, double val, GhtAttribute **attr);
 

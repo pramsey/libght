@@ -10,6 +10,8 @@
 #include <string.h>
 
 #define EXENAME "las2ght"
+#define MAXPOINTS 2000000
+#define STRSIZE 1024
 
 #ifdef HAVE_GETOPT_H
 /* System implementation */
@@ -18,6 +20,10 @@
 /* Compatibility implementation */
 #include "getopt.h"
 #endif
+
+
+static char *ght_file_template = "%s-%d.ght";
+static char *xml_file_template = "%s-%d.ght.xml";
 
 typedef enum
 {
@@ -45,8 +51,6 @@ typedef struct
     char flag;
 } LasDimension;
 
-
-
 static LasDimension LasAttributes[] = 
 {
     { "Intensity", "", GHT_UINT16, 1.0, 0.0, LL_INTENSITY, 'i' },
@@ -67,18 +71,34 @@ static LasDimension LasAttributes[] =
 
 typedef struct 
 {
-    char *lasfile;   /* File to read */
-    char *ghtfile;   /* File to write */
+    char *lasfile;    /* File to read */
+    char *ghtfile;    /* File to write */
     char attrs[NUM_LAS_ATTRIBUTES];  /* Attributes to transfer */
-    int num_attrs;
-    int validpoints;
+    int num_attrs;    /* How many attributes are we transferring? */
+    int validpoints;  /* Should we only convert valid points? */
+    int resolution;   /* How many digits of the GeoHash to build? */
+    int maxpoints;    /* How many points to save in each GHT file? */
 } Las2GhtConfig;
 
 typedef struct 
 {
     LASReaderH reader;
     LASHeaderH header;
+    int fileno;
 } Las2GhtState;
+
+static void
+l2g_config_printf(const Las2GhtConfig *config)
+{
+    printf("Las2GhtConfig (%p)\n", config);
+    printf("      lasfile: %s\n", config->lasfile);
+    printf("      ghtfile: %s\n", config->ghtfile);
+    printf("        attrs: %s\n", config->attrs);
+    printf("    num_attrs: %d\n", config->num_attrs);
+    printf("  validpoints: %d\n", config->validpoints);
+    printf("   resolution: %d\n", config->resolution);
+    printf("\n");
+}
 
 static void
 l2g_usage()
@@ -156,6 +176,18 @@ l2g_fexists(const char *filename)
 }
 
 static int
+l2g_writable(const char *filename)
+{
+    FILE *fd;
+    if ( ! (fd = fopen(filename, "w")) )
+        return 0;
+    fclose(fd);
+    remove(filename);
+    return 1;
+}
+
+
+static int
 l2g_getopts(int argc, char **argv, Las2GhtConfig *config)
 {
     int ch = 0;
@@ -212,103 +244,58 @@ l2g_getopts(int argc, char **argv, Las2GhtConfig *config)
     return 1;
 }
 
-static GhtSchema *
-l2g_schema_new(const Las2GhtState *state, const Las2GhtConfig *config)
+static GhtErr
+l2g_build_schema(const Las2GhtConfig *config, Las2GhtState *state, GhtSchema **s)
 {
     int i = 0;
     GhtSchema *schema;
     GhtDimension *dim;
-    ght_schema_new(&schema);
+    GHT_TRY(ght_schema_new(&schema));
     
     /* Add 'X' dimension (position 0) */
-    ght_dimension_new(&dim);
-    ght_dimension_set_name(dim, "X");
-    ght_dimension_set_description(dim, "");
+    GHT_TRY(ght_dimension_new(&dim));
+    GHT_TRY(ght_dimension_set_name(dim, "X"));
+    GHT_TRY(ght_dimension_set_description(dim, ""));
     dim->scale = 1.0;
     dim->offset = 0.0;
     dim->type = GHT_DOUBLE;
-    ght_schema_add_dimension(schema, dim);
+    GHT_TRY(ght_schema_add_dimension(schema, dim));
 
     /* Add 'Y' dimension (position 1) */
-    ght_dimension_new(&dim);
-    ght_dimension_set_name(dim, "Y");
-    ght_dimension_set_description(dim, "");
+    GHT_TRY(ght_dimension_new(&dim));
+    GHT_TRY(ght_dimension_set_name(dim, "Y"));
+    GHT_TRY(ght_dimension_set_description(dim, ""));
     dim->scale = 1.0;
     dim->offset = 0.0;
     dim->type = GHT_DOUBLE;
-    ght_schema_add_dimension(schema, dim);
+    GHT_TRY(ght_schema_add_dimension(schema, dim));
 
     /* Add 'Z' dimension (position 2) */
-    ght_dimension_new(&dim);
-    ght_dimension_set_name(dim, "Z");
-    ght_dimension_set_description(dim, "");
+    GHT_TRY(ght_dimension_new(&dim));
+    GHT_TRY(ght_dimension_set_name(dim, "Z"));
+    GHT_TRY(ght_dimension_set_description(dim, ""));
     dim->scale = LASHeader_GetScaleZ(state->header);
     dim->offset = LASHeader_GetOffsetZ(state->header);
     dim->type = GHT_INT32;
-    ght_schema_add_dimension(schema, dim);
+    GHT_TRY(ght_schema_add_dimension(schema, dim));
     
     /* Add optional attributes (positions 3+) */
     for ( i = 0; i < config->num_attrs; i++ )
     {
         LasDimension ld = LasAttributes[config->attrs[i]];
-        ght_dimension_new(&dim);
-        ght_dimension_set_name(dim, ld.name);
-        ght_dimension_set_description(dim, "");
+        GHT_TRY(ght_dimension_new(&dim));
+        GHT_TRY(ght_dimension_set_name(dim, ld.name));
+        GHT_TRY(ght_dimension_set_description(dim, ""));
         dim->scale = ld.scale;
         dim->offset = ld.offset;
         dim->type = ld.type;
-        ght_schema_add_dimension(schema, dim);
+        GHT_TRY(ght_schema_add_dimension(schema, dim));
     }
 
-    return schema;
+    *s = schema;
+    return GHT_OK;
 }
 
-
-int
-main (int argc, char **argv)
-{
-    Las2GhtConfig config;
-    Las2GhtState state;
-
-    /* If no options are specified, display l2g_usage */
-    if (argc <= 1)
-    {
-        l2g_usage();
-        return 1;
-    }
-
-    /* Parse command line options and set configuration */
-    if ( ! l2g_getopts(argc, argv, &config) )
-    {
-        l2g_usage();
-        return 1;
-    }
-    
-    printf ("got args: lasfile=%s ghtfile=%s\n", config.lasfile, config.ghtfile);
-
-    /* Input file exists? */
-    if ( ! l2g_fexists(config.lasfile) )
-    {
-        fprintf(stderr, "%s: LAS file '%s' does not exist\n", EXENAME, config.lasfile);
-        return 1;
-    }
-
-    /* Can we open the LAS file? */
-    state.reader = LASReader_Create(config.lasfile);
-    if ( ! state.reader )
-    {
-        fprintf(stderr, "%s: unable to open LAS file '%s'\n", EXENAME, config.lasfile);
-        return 1;
-    }
-
-    /* Get the header */
-    state.header = LASReader_GetHeader(state.reader);
-    if ( ! state.header) 
-    {
-        fprintf(stderr, "%s: unable to read LAS header in '%s'\n", EXENAME, config.lasfile);
-        return 1;
-    }
-    
     // LAS_DLL LASPointH LASReader_GetNextPoint(const LASReaderH hReader);
     // LAS_DLL LASSRSH LASHeader_GetSRS(const LASHeaderH hHeader);
     // LAS_DLL double LASPoint_GetX(const LASPointH hPoint);
@@ -350,6 +337,269 @@ main (int argc, char **argv)
     // LAS_DLL double LASHeader_GetOffsetZ(const LASHeaderH hHeader);
     // LAS_DLL double LASHeader_GetMinX(const LASHeaderH hHeader);
 
+static double
+l2g_attribute_value(const LASPointH laspoint, LasAttribute lasdim)
+{
+    double val = 0.0;
+    switch ( lasdim )
+    {
+        case LL_INTENSITY:
+            val = LASPoint_GetIntensity(laspoint);
+            break;
+        case LL_RETURN_NUMBER:
+            val = LASPoint_GetReturnNumber(laspoint);
+            break;
+        case LL_NUMBER_OF_RETURNS:
+            val = LASPoint_GetNumberOfReturns(laspoint);
+            break;
+        case LL_SCAN_DIRECTION:
+            val = LASPoint_GetScanDirection(laspoint);
+            break;
+        case LL_FLIGHT_LINE_EDGE:
+            val = LASPoint_GetFlightLineEdge(laspoint);
+            break;
+        case LL_CLASSIFICATION:
+            val = LASPoint_GetClassification(laspoint);
+            break;
+        case LL_SCAN_ANGLE:
+            val = LASPoint_GetScanAngleRank(laspoint);
+            break;
+        case LL_POINT_SOURCE_ID:
+            val = LASPoint_GetPointSourceId(laspoint);
+            break;
+        case LL_RED:
+            val = LASColor_GetRed(LASPoint_GetColor(laspoint));
+            break;
+        case LL_GREEN:
+            val = LASColor_GetRed(LASPoint_GetColor(laspoint));
+            break;
+        case LL_BLUE:
+            val = LASColor_GetRed(LASPoint_GetColor(laspoint));
+            break;
+    }
+    return val;
+}
+
+static GhtErr
+l2g_build_node(const Las2GhtConfig *config, LASPointH laspoint, const GhtSchema *schema, GhtNode **node)
+{
+    int i;
+    double z;
+    GhtDimension *ghtdim;
+    GhtAttribute *attribute;
+    GhtCoordinate coord;
+    GhtErr err;
+    
+    assert(config);
+    assert(schema);
+    
+    /* Skip invalid points, if so configured */
+    if ( config->validpoints && ! LASPoint_IsValid(laspoint) )
+        return NULL;
+
+    coord.x = LASPoint_GetX(laspoint);
+    coord.y = LASPoint_GetY(laspoint);
+    
+    err = ght_node_new_from_coordinate(&coord, config->resolution, node);
+
+    /* We know that 'Z' is always dimension 2 */
+    z = LASPoint_GetZ(laspoint);
+    ghtdim = schema->dims[2];
+    err = ght_attribute_new_from_double(ghtdim, z, &attribute);
+    err = ght_node_add_attribute(*node, attribute);
+    
+    for ( i = 0; i < config->num_attrs; i++ )
+    {
+        LasAttribute lasattr = config->attrs[i];
+        double val = l2g_attribute_value(laspoint, lasattr);
+
+        /* Magic number 3: X,Y,Z are first three dimensions */
+        ghtdim = schema->dims[3 + i];
+        
+        err = ght_attribute_new_from_double(ghtdim, val, &attribute);
+        err = ght_node_add_attribute(*node, attribute);
+    }
+
+    return GHT_OK;
+}
+
+static int
+l2g_build_tree(const Las2GhtConfig *config, Las2GhtState *state, GhtSchema *schema, GhtTree **tree)
+{
+    int num_points = 0;
+    LASPointH laspoint;
+    GhtNode *node;
+    GhtErr err;
+
+    ght_tree_new(schema, tree);
+    
+    while( (laspoint = LASReader_GetNextPoint(state->reader)) && num_points <= config->maxpoints )
+    {
+        err = l2g_build_node(config, laspoint, schema, &node);
+        err = ght_tree_insert_node(*tree, node);
+        num_points++;
+    }
+    return num_points;
+}
+
+static void
+l2g_ght_file(const Las2GhtConfig *config, Las2GhtState *state, char *str)
+{
+    char *ptr;
+    char basename[STRSIZE];
+    strncpy(basename, config->ghtfile, STRSIZE);
+    /* Null out ".ght" extension if it already exists, */
+    /* because the filename template already includes it. */
+    ptr = strcasestr(basename, ".ght");
+    if ( ptr )
+        *ptr = 0;
+
+    snprintf(str, STRSIZE, ght_file_template, basename, state->fileno);
+    return;
+}
+
+static void
+l2g_xml_file(const Las2GhtConfig *config, Las2GhtState *state, char *str)
+{
+    char *ptr;
+    char basename[STRSIZE];
+    strncpy(basename, config->ghtfile, STRSIZE);
+    /* Null out ".ght" extension from basename if it already exists, */
+    /* because the filename template already includes it. */
+    ptr = strcasestr(basename, ".ght");
+    if ( ptr )
+        *ptr = 0;
+
+    snprintf(str, STRSIZE, xml_file_template, basename);
+    return;
+}
+
+static GhtErr
+l2g_save_tree(const Las2GhtConfig *config, Las2GhtState *state, const GhtTree *tree)
+{
+    char ght_filename[STRSIZE];
+    char xml_filename[STRSIZE];
+    GhtWriter *writer;
+
+    assert(config);
+    assert(state);
+    assert(tree);
+    assert(tree->schema);
+
+    l2g_ght_file(config, state, ght_filename);
+    l2g_xml_file(config, state, xml_filename);
+
+    if ( l2g_writable(ght_filename) )
+    {
+        ght_error("unable to write to '%s'", ght_filename);
+        return GHT_ERROR;
+    }
+    if ( l2g_writable(xml_filename) )
+    {
+        ght_error("unable to write to '%s'", xml_filename);
+        return GHT_ERROR;
+    }
+
+    GHT_TRY(ght_schema_to_xml_file(tree->schema, xml_filename));
+    GHT_TRY(ght_writer_new_file(ght_filename, &writer));
+    GHT_TRY(ght_tree_write(tree, writer));
+    GHT_TRY(ght_writer_free(writer));
+
+    return GHT_OK;
+}
+
+int
+main (int argc, char **argv)
+{
+    Las2GhtConfig config;
+    Las2GhtState state;
+    GhtSchema *schema;
+    GhtTree *tree;
+    int num_points;
+    
+    /* Ensure state is clean */
+    memset(&state, 0, sizeof(Las2GhtState));
+
+    /* If no options are specified, display l2g_usage */
+    if (argc <= 1)
+    {
+        l2g_usage();
+        return 1;
+    }
+
+    /* Parse command line options and set configuration */
+    if ( ! l2g_getopts(argc, argv, &config) )
+    {
+        l2g_usage();
+        return 1;
+    }
+    
+    /* Hard code resolution for now */
+    config.resolution = GHT_MAX_HASH_LENGTH;
+    config.maxpoints = 2000000;
+    
+    /* Temporary info printout */
+    l2g_config_printf(&config);
+
+    /* Input file exists? */
+    if ( ! l2g_fexists(config.lasfile) )
+    {
+        fprintf(stderr, "%s: LAS file '%s' does not exist\n", EXENAME, config.lasfile);
+        return 1;
+    }
+    
+    /* Output file is writeable? */
+    if ( ! l2g_writable(config.ghtfile) )
+    {
+        fprintf(stderr, "%s: GHT file '%s' is not writable\n", EXENAME, config.ghtfile);
+        return 1;
+    }
+
+    /* Can we open the LAS file? */
+    state.reader = LASReader_Create(config.lasfile);
+    if ( ! state.reader )
+    {
+        fprintf(stderr, "%s: unable to open LAS file '%s'\n", EXENAME, config.lasfile);
+        return 1;
+    }
+    
+    /* Get the header */
+    state.header = LASReader_GetHeader(state.reader);
+    if ( ! state.header) 
+    {
+        fprintf(stderr, "%s: unable to read LAS header in '%s'\n", EXENAME, config.lasfile);
+        return 1;
+    }
+    
+    /* Set up to use the GHT system memory management / logging */
+    ght_init();
+    
+    /* Schema is needed to create nodes/attributes */
+    if ( GHT_OK != l2g_build_schema(&config, &state, &schema) )
+    {
+        fprintf(stderr, "%s: unable to build schema!", EXENAME);
+        return 1;
+    }
+
+    /* Break the problem into chunks. We might get a really really */
+    /* big LAS file, and we don't want to blow out memory, so we need to */
+    /* do this a few million records at a file */
+    do 
+    {
+        num_points = l2g_build_tree(&config, &state, schema, &tree);
+        if ( num_points )
+        {
+            GhtErr err;
+            err = l2g_save_tree(&config, &state, tree);
+            ght_tree_free(tree);
+            if ( err != GHT_OK )
+                return 1;
+        }
+    } 
+    while ( num_points > 0 );
+
+    LASReader_Destroy(state.reader);
+    
 
 
     return 0;
