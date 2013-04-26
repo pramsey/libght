@@ -56,10 +56,11 @@ include_directories (${LIBXML2_INCLUDE_DIR})
 set (GHT_HAVE_LIBXML2 1)
 
 #------------------------------------------------------------------------------
-# need libLAS for file translation tools
+# need libLAS and Proj4 for file translation tools
 #------------------------------------------------------------------------------
 
 find_package (LibLAS)
+find_package (PROJ4)
 
 #------------------------------------------------------------------------------
 # generate config include

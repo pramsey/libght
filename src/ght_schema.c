@@ -163,7 +163,7 @@ GhtErr ght_schema_add_dimension(GhtSchema *schema, GhtDimension *dim)
     
     for ( i = 0; i < schema->num_dims; i++ )
     {
-        if ( strcmp(dim->name, schema->dims[i]->name) != 0 )
+        if ( strcmp(dim->name, schema->dims[i]->name) == 0 )
         {
             ght_error("%s: cannot add dimension with a duplicate name", __func__);
             return GHT_ERROR;

@@ -6,6 +6,7 @@
 ***********************************************************************/
 
 #include "liblas/capi/liblas.h"
+#include "proj_api.h"
 #include "ght_internal.h"
 #include <string.h>
 
@@ -85,19 +86,19 @@ typedef struct
     LASReaderH reader;
     LASHeaderH header;
     int fileno;
+    projPJ pj_input;
+    projPJ pj_output;
 } Las2GhtState;
 
 static void
 l2g_config_printf(const Las2GhtConfig *config)
 {
-    printf("Las2GhtConfig (%p)\n", config);
-    printf("      lasfile: %s\n", config->lasfile);
-    printf("      ghtfile: %s\n", config->ghtfile);
-    printf("        attrs: %s\n", config->attrs);
-    printf("    num_attrs: %d\n", config->num_attrs);
-    printf("  validpoints: %d\n", config->validpoints);
-    printf("   resolution: %d\n", config->resolution);
-    printf("\n");
+    ght_info("Las2GhtConfig (%p)", config);
+    ght_info("      lasfile: %s", config->lasfile);
+    ght_info("      ghtfile: %s", config->ghtfile);
+    ght_info("    num_attrs: %d", config->num_attrs);
+    ght_info("  validpoints: %d", config->validpoints);
+    ght_info("   resolution: %d", config->resolution);
 }
 
 static void
@@ -151,7 +152,9 @@ l2g_config_attrs(Las2GhtConfig *config, const char *attr_str)
             {
                 config->attrs[config->num_attrs++] = LasAttributes[i].attr;
             }
+            i++;
         }
+        j++;
     }
     return;
 }
@@ -508,6 +511,90 @@ l2g_save_tree(const Las2GhtConfig *config, Las2GhtState *state, const GhtTree *t
     return GHT_OK;
 }
 
+static projPJ
+l2g_proj_from_string(const char *str1)
+{
+    int t;
+    char *params[1024];  /* one for each parameter */
+    char *loc;
+    char *str;
+    size_t slen;
+    projPJ result;
+
+    if ( ! str1 || ! strlen(str1) ) return NULL;
+
+    str = strdup(str1);
+    
+    params[0] = str; /* 1st param, we'll null terminate at the " " soon */
+
+    loc = str;
+    t = 1;
+    while  ((loc != NULL) && (*loc != 0) )
+    {
+        loc = strchr(loc, ' ');
+        if (loc != NULL)
+        {
+            *loc = 0; /* null terminate */
+            loc++; /* next char */
+            params[t] = loc;
+            t++; /*next param */
+        }
+    }
+
+    if (!(result=pj_init(t, params)))
+    {
+        free(str);
+        return NULL;
+    }
+    free(str);
+    return result;
+}
+    
+static GhtErr
+l2g_read_projection(const Las2GhtConfig *config, Las2GhtState *state)
+{
+    LASSRSH lassrs;    
+    char *proj4_input = NULL;
+    static char *proj4_output = "+proj=longlat +datum=WGS84 +no_defs";
+
+    assert(state);
+    assert(state->header);
+    assert(config);
+
+
+    lassrs = LASHeader_GetSRS(state->header);
+    if ( ! lassrs )
+    {   
+        ght_error("%s: unable to read SRS from LAS header", __func__);
+        return GHT_ERROR;
+    }
+
+    proj4_input = LASSRS_GetProj4(lassrs);
+    if ( ! proj4_input )
+    {   
+        ght_error("%s: unable to read proj4 string from LAS SRS", __func__);
+        return GHT_ERROR;
+    }
+    
+    ght_info("Got LAS file projection information '%s'", proj4_input);
+    
+    state->pj_input = l2g_proj_from_string(proj4_input);
+    if ( ! state->pj_input )
+    {
+        ght_error("%s: unable to parse proj4 string '%s'", __func__, proj4_input);
+        return GHT_ERROR;
+    }
+
+    state->pj_output = l2g_proj_from_string(proj4_output);
+    if ( ! state->pj_output )
+    {
+        ght_error("%s: unable to parse proj4 string '%s'", __func__, proj4_input);
+        return GHT_ERROR;
+    }
+    
+    return GHT_OK;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -517,8 +604,18 @@ main (int argc, char **argv)
     GhtTree *tree;
     int num_points;
     
+    /* We can't do anything if we don't have GDAL/GeoTIFF support in libLAS */
+    if ( ! (LAS_IsGDALEnabled() && LAS_IsLibGeoTIFFEnabled()) )
+    {
+        ght_error("%s: requires LibLAS built with GDAL and GeoTIFF support", EXENAME);
+        return 1;
+    }
+    
     /* Ensure state is clean */
     memset(&state, 0, sizeof(Las2GhtState));
+
+    /* Set up to use the GHT system memory management / logging */
+    ght_init();
 
     /* If no options are specified, display l2g_usage */
     if (argc <= 1)
@@ -533,7 +630,7 @@ main (int argc, char **argv)
         l2g_usage();
         return 1;
     }
-    
+     
     /* Hard code resolution for now */
     config.resolution = GHT_MAX_HASH_LENGTH;
     config.maxpoints = 2000000;
@@ -544,14 +641,14 @@ main (int argc, char **argv)
     /* Input file exists? */
     if ( ! l2g_fexists(config.lasfile) )
     {
-        fprintf(stderr, "%s: LAS file '%s' does not exist\n", EXENAME, config.lasfile);
+        ght_error("%s: LAS file '%s' does not exist\n", EXENAME, config.lasfile);
         return 1;
     }
     
     /* Output file is writeable? */
     if ( ! l2g_writable(config.ghtfile) )
     {
-        fprintf(stderr, "%s: GHT file '%s' is not writable\n", EXENAME, config.ghtfile);
+        ght_error("%s: GHT file '%s' is not writable\n", EXENAME, config.ghtfile);
         return 1;
     }
 
@@ -559,48 +656,58 @@ main (int argc, char **argv)
     state.reader = LASReader_Create(config.lasfile);
     if ( ! state.reader )
     {
-        fprintf(stderr, "%s: unable to open LAS file '%s'\n", EXENAME, config.lasfile);
+        ght_error("%s: unable to open LAS file '%s'\n", EXENAME, config.lasfile);
         return 1;
     }
+    
+    ght_info("Opened LAS file '%s' for reading", config.lasfile);
     
     /* Get the header */
     state.header = LASReader_GetHeader(state.reader);
     if ( ! state.header) 
     {
-        fprintf(stderr, "%s: unable to read LAS header in '%s'\n", EXENAME, config.lasfile);
+        ght_error("%s: unable to read LAS header in '%s'\n", EXENAME, config.lasfile);
         return 1;
     }
-    
-    /* Set up to use the GHT system memory management / logging */
-    ght_init();
     
     /* Schema is needed to create nodes/attributes */
     if ( GHT_OK != l2g_build_schema(&config, &state, &schema) )
     {
-        fprintf(stderr, "%s: unable to build schema!", EXENAME);
+        ght_error("%s: unable to build schema!", EXENAME);
         return 1;
     }
+    
+    /* Project info is needed to get points into lat/lon space */
+    if ( GHT_OK != l2g_read_projection(&config, &state) )
+    {
+        ght_error("%s: unable to build projection information", EXENAME);
+        return 1;
+    }
+
+    // char *xmlstr;
+    // size_t xmlsize;
+    // ght_schema_to_xml_str(schema, &xmlstr, &xmlsize);
+    // printf("\n%s\n\n", xmlstr);
+
 
     /* Break the problem into chunks. We might get a really really */
     /* big LAS file, and we don't want to blow out memory, so we need to */
     /* do this a few million records at a file */
-    do 
-    {
-        num_points = l2g_build_tree(&config, &state, schema, &tree);
-        if ( num_points )
-        {
-            GhtErr err;
-            err = l2g_save_tree(&config, &state, tree);
-            ght_tree_free(tree);
-            if ( err != GHT_OK )
-                return 1;
-        }
-    } 
-    while ( num_points > 0 );
+    // do 
+    // {
+    //     num_points = l2g_build_tree(&config, &state, schema, &tree);
+    //     if ( num_points )
+    //     {
+    //         GhtErr err;
+    //         err = l2g_save_tree(&config, &state, tree);
+    //         ght_tree_free(tree);
+    //         if ( err != GHT_OK )
+    //             return 1;
+    //     }
+    // } 
+    // while ( num_points > 0 );
 
     LASReader_Destroy(state.reader);
     
-
-
     return 0;
 }

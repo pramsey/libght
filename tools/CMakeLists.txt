@@ -5,15 +5,16 @@
 
 include_directories ("${PROJECT_SOURCE_DIR}/src")
 
-if (LIBLAS_FOUND)
+if (LIBLAS_FOUND AND PROJ4_FOUND)
 
   set (LAS2GHT_SOURCES 
   	las2ght.c
   	)
 
   include_directories ("${LIBLAS_INCLUDE_DIR}")
+  include_directories ("${PROJ4_INCLUDE_DIR}")
   add_executable(las2ght ${LAS2GHT_SOURCES} ${LAS2GHT_HEADERS})
-  target_link_libraries (las2ght libght-static las_c)
+  target_link_libraries (las2ght libght-static las_c proj)
   install (PROGRAMS las2ght DESTINATION bin)
 
-endif (LIBLAS_FOUND)
+endif ()

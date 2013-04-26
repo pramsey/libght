@@ -50,10 +50,11 @@ default_reallocator(void *mem, size_t size)
 static void
 default_msg_handler(const char *label, const char *fmt, va_list ap)
 {
-    char newfmt[1024] = {0};
+    char newfmt[1024];
+    memset(newfmt, 0, 1024);
     snprintf(newfmt, 1024, "%s%s\n", label, fmt);
     newfmt[1023] = '\0';
-    vprintf(newfmt, ap);
+    vfprintf(stderr, newfmt, ap);
 }
 
 static void
