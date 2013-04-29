@@ -17,7 +17,7 @@
 /* Up to double/int64 */
 #define GHT_ATTRIBUTE_MAX_SIZE  8
 #define GHT_MAX_HASH_LENGTH    18
-
+#define GHT_FORMAT_VERSION      1
 
 typedef enum
 {

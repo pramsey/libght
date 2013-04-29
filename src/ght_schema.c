@@ -38,6 +38,18 @@ GhtErr ght_dimension_free(GhtDimension *dim)
     return GHT_OK;    
 }
 
+static 
+GhtErr ght_dimension_clone(const GhtDimension *dim, GhtDimension **newdim)
+{
+    GhtDimension *d = ght_malloc(sizeof(GhtDimension));
+    memcpy(d, dim, sizeof(GhtDimension));
+    if ( dim->name )
+        d->name = ght_strdup(dim->name);
+    if ( dim->description )
+        d->description = ght_strdup(dim->description);
+    return GHT_OK;        
+}
+
 GhtErr ght_dimension_set_name(GhtDimension *dim, const char *name)
 {
     dim->name = ght_strdup(name);
@@ -327,6 +339,20 @@ GhtErr ght_schema_from_xml_str(const char *xml_str, GhtSchema **schema)
     xmlCleanupParser();
     
     return result;
+}
+
+GhtErr ght_schema_clone(const GhtSchema *schema, GhtSchema **newschema)
+{
+    int i;
+    GhtSchema *s = ght_malloc(sizeof(GhtSchema));
+    s->num_dims = schema->num_dims;
+    s->max_dims = schema->num_dims;
+    s->dims = ght_malloc(s->num_dims * sizeof(GhtDimension*));
+    for ( i = 0; i < s->num_dims; i++ )
+    {
+        ght_dimension_clone(schema->dims[i], &(s->dims[i]));
+    }
+    return GHT_OK;
 }
 
 GhtErr ght_schema_to_xml_str(const GhtSchema *schema, char **xml_str, size_t *xml_str_size) 

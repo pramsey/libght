@@ -16,5 +16,11 @@ if (LIBLAS_FOUND AND PROJ4_FOUND)
   add_executable(las2ght ${LAS2GHT_SOURCES} ${LAS2GHT_HEADERS})
   target_link_libraries (las2ght libght-static las_c proj)
   install (PROGRAMS las2ght DESTINATION bin)
+  MESSAGE(STATUS "las2ght build enabled")
+
+else()
+
+  MESSAGE(STATUS "las2ght build DISABLED")
+  MESSAGE(STATUS "las2ght utility requires LibLAS and Proj4")
 
 endif ()

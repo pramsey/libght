@@ -484,7 +484,6 @@ ght_node_compact_attribute(GhtNode *node, const GhtDimension *dim, GhtAttribute 
     return ght_node_compact_attribute_with_delta(node, dim, 10e-8, attr);
 }
 
-
 /**
 * Node serialization: 
 * - length of GhtHash

@@ -13,6 +13,7 @@
 #define EXENAME "las2ght"
 #define MAXPOINTS 2000000
 #define STRSIZE 1024
+#define LOG_NUM_POINTS 100000
 
 #ifdef HAVE_GETOPT_H
 /* System implementation */
@@ -22,9 +23,9 @@
 #include "getopt.h"
 #endif
 
-
-static char *ght_file_template = "%s-%d.ght";
-static char *xml_file_template = "%s-%d.ght.xml";
+/* "username-fileno-hash.ght" */
+static char *ght_file_template = "%s-%d-%s.ght";
+static char *xml_file_template = "%s-%d-%s.ght.xml";
 
 typedef enum
 {
@@ -88,6 +89,7 @@ typedef struct
     int fileno;
     projPJ pj_input;
     projPJ pj_output;
+    GhtSchema *schema;
 } Las2GhtState;
 
 static void
@@ -163,9 +165,44 @@ static void
 l2g_config_free(Las2GhtConfig *config)
 {
     if ( config->lasfile )
+    {
         free(config->lasfile);
+        config->lasfile = NULL;
+    }
     if ( config->ghtfile )
+    {
         free(config->ghtfile);
+        config->ghtfile = NULL;
+    }
+}
+
+l2g_state_free(Las2GhtState *state)
+{
+    if ( state->header )
+    {
+        LASHeader_Destroy(state->header);
+        state->header = NULL;
+    }
+    if ( state->reader )
+    {
+        LASReader_Destroy(state->reader);
+        state->reader = NULL;
+    }
+    if ( state->pj_input )
+    {
+        pj_free(state->pj_input);
+        state->pj_input = NULL;
+    }
+    if ( state->pj_output )
+    {
+        pj_free(state->pj_output);
+        state->pj_output = NULL;
+    }
+    if ( state->schema )
+    {
+        ght_schema_free(state->schema);
+        state->schema = NULL;
+    }       
 }
 
 static int
@@ -248,7 +285,7 @@ l2g_getopts(int argc, char **argv, Las2GhtConfig *config)
 }
 
 static GhtErr
-l2g_build_schema(const Las2GhtConfig *config, Las2GhtState *state, GhtSchema **s)
+l2g_build_schema(const Las2GhtConfig *config, Las2GhtState *state)
 {
     int i = 0;
     GhtSchema *schema;
@@ -295,7 +332,7 @@ l2g_build_schema(const Las2GhtConfig *config, Las2GhtState *state, GhtSchema **s
         GHT_TRY(ght_schema_add_dimension(schema, dim));
     }
 
-    *s = schema;
+    state->schema = schema;
     return GHT_OK;
 }
 
@@ -383,8 +420,58 @@ l2g_attribute_value(const LASPointH laspoint, LasAttribute lasdim)
     return val;
 }
 
+static void
+l2g_coordinate_to_rad(GhtCoordinate *coord)
+{
+    coord->x *=  M_PI/180.0;
+    coord->y *=  M_PI/180.0;
+}
+
+static void
+l2g_coordinate_to_dec(GhtCoordinate *coord)
+{
+    coord->x *=  180.0/M_PI;
+    coord->y *=  180.0/M_PI;
+}
+
 static GhtErr
-l2g_build_node(const Las2GhtConfig *config, LASPointH laspoint, const GhtSchema *schema, GhtNode **node)
+l2g_coordinate_reproject(const Las2GhtState *state, GhtCoordinate *coord)
+{
+
+    int *pj_errno_ref;
+    GhtCoordinate origcoord;
+
+    /* Make a copy of the input point so we can report the original should an error occur */
+    origcoord = *coord;
+
+    if (pj_is_latlong(state->pj_input)) l2g_coordinate_to_rad(coord);
+
+    /* Perform the transform */
+    pj_transform(state->pj_input, state->pj_output, 1, 0, &(coord->x), &(coord->y), NULL);
+
+    /* For NAD grid-shift errors, display an error message with an additional hint */
+    pj_errno_ref = pj_get_errno_ref();
+
+    if (*pj_errno_ref != 0)
+    {
+        if (*pj_errno_ref == -38)
+        {
+            ght_warn("No no grid shift files were found, or point out of range.");
+        }
+        ght_error("%s: could not project point (%g %g): %s (%d)", 
+                  __func__, 
+                  origcoord.x, origcoord.y,
+                  pj_strerrno(*pj_errno_ref), *pj_errno_ref
+                  );
+        return GHT_ERROR;
+    }
+
+    if (pj_is_latlong(state->pj_output)) l2g_coordinate_to_dec(coord);
+    return GHT_OK;
+}
+
+static GhtErr
+l2g_build_node(const Las2GhtConfig *config, const Las2GhtState *state, LASPointH laspoint, GhtNode **node)
 {
     int i;
     double z;
@@ -394,7 +481,7 @@ l2g_build_node(const Las2GhtConfig *config, LASPointH laspoint, const GhtSchema 
     GhtErr err;
     
     assert(config);
-    assert(schema);
+    assert(state->schema);
     
     /* Skip invalid points, if so configured */
     if ( config->validpoints && ! LASPoint_IsValid(laspoint) )
@@ -403,13 +490,21 @@ l2g_build_node(const Las2GhtConfig *config, LASPointH laspoint, const GhtSchema 
     coord.x = LASPoint_GetX(laspoint);
     coord.y = LASPoint_GetY(laspoint);
     
-    err = ght_node_new_from_coordinate(&coord, config->resolution, node);
+    if ( l2g_coordinate_reproject(state, &coord) != GHT_OK )
+        return GHT_ERROR;
+    
+    if ( ght_node_new_from_coordinate(&coord, config->resolution, node) != GHT_OK )
+        return GHT_ERROR;
 
     /* We know that 'Z' is always dimension 2 */
     z = LASPoint_GetZ(laspoint);
-    ghtdim = schema->dims[2];
-    err = ght_attribute_new_from_double(ghtdim, z, &attribute);
-    err = ght_node_add_attribute(*node, attribute);
+    ghtdim = state->schema->dims[2];
+    
+    if ( ght_attribute_new_from_double(ghtdim, z, &attribute) != GHT_OK )
+        return GHT_ERROR;
+
+    if ( ght_node_add_attribute(*node, attribute) != GHT_OK )
+        return GHT_ERROR;
     
     for ( i = 0; i < config->num_attrs; i++ )
     {
@@ -417,36 +512,45 @@ l2g_build_node(const Las2GhtConfig *config, LASPointH laspoint, const GhtSchema 
         double val = l2g_attribute_value(laspoint, lasattr);
 
         /* Magic number 3: X,Y,Z are first three dimensions */
-        ghtdim = schema->dims[3 + i];
+        ghtdim = state->schema->dims[3 + i];
         
-        err = ght_attribute_new_from_double(ghtdim, val, &attribute);
-        err = ght_node_add_attribute(*node, attribute);
+        if ( ght_attribute_new_from_double(ghtdim, val, &attribute) != GHT_OK )
+            return GHT_ERROR;
+
+        if ( ght_node_add_attribute(*node, attribute) != GHT_OK )
+            return GHT_ERROR;
     }
 
     return GHT_OK;
 }
 
 static int
-l2g_build_tree(const Las2GhtConfig *config, Las2GhtState *state, GhtSchema *schema, GhtTree **tree)
+l2g_build_tree(const Las2GhtConfig *config, Las2GhtState *state, GhtTree **tree)
 {
     int num_points = 0;
+    int i;
     LASPointH laspoint;
     GhtNode *node;
     GhtErr err;
 
-    ght_tree_new(schema, tree);
-    
+    ght_info("starting a new tree");
+    ght_tree_new(state->schema, tree);
+
     while( (laspoint = LASReader_GetNextPoint(state->reader)) && num_points <= config->maxpoints )
     {
-        err = l2g_build_node(config, laspoint, schema, &node);
+        err = l2g_build_node(config, state, laspoint, &node);
+        // LASPoint_Destroy(laspoint); /* Don't need this, it's not allocated on the heap? */
         err = ght_tree_insert_node(*tree, node);
         num_points++;
+        if ( ! (num_points % LOG_NUM_POINTS) )
+            ght_info("inserted point %d into the tree...", num_points);
     }
+
     return num_points;
 }
 
 static void
-l2g_ght_file(const Las2GhtConfig *config, Las2GhtState *state, char *str)
+l2g_ght_file(const Las2GhtConfig *config, Las2GhtState *state, GhtHash *hash, char *str)
 {
     char *ptr;
     char basename[STRSIZE];
@@ -457,12 +561,12 @@ l2g_ght_file(const Las2GhtConfig *config, Las2GhtState *state, char *str)
     if ( ptr )
         *ptr = 0;
 
-    snprintf(str, STRSIZE, ght_file_template, basename, state->fileno);
+    snprintf(str, STRSIZE, ght_file_template, basename, state->fileno, hash);
     return;
 }
 
 static void
-l2g_xml_file(const Las2GhtConfig *config, Las2GhtState *state, char *str)
+l2g_xml_file(const Las2GhtConfig *config, Las2GhtState *state, GhtHash *hash, char *str)
 {
     char *ptr;
     char basename[STRSIZE];
@@ -473,7 +577,7 @@ l2g_xml_file(const Las2GhtConfig *config, Las2GhtState *state, char *str)
     if ( ptr )
         *ptr = 0;
 
-    snprintf(str, STRSIZE, xml_file_template, basename);
+    snprintf(str, STRSIZE, xml_file_template, basename, state->fileno, hash);
     return;
 }
 
@@ -483,21 +587,26 @@ l2g_save_tree(const Las2GhtConfig *config, Las2GhtState *state, const GhtTree *t
     char ght_filename[STRSIZE];
     char xml_filename[STRSIZE];
     GhtWriter *writer;
+    GhtHash *hash = NULL;
 
     assert(config);
     assert(state);
     assert(tree);
     assert(tree->schema);
 
-    l2g_ght_file(config, state, ght_filename);
-    l2g_xml_file(config, state, xml_filename);
+    ght_tree_get_hash(tree, &hash);
 
-    if ( l2g_writable(ght_filename) )
+    l2g_ght_file(config, state, hash, ght_filename);
+    l2g_xml_file(config, state, hash, xml_filename);
+
+    ght_info("writing tree to file %s", ght_filename);
+
+    if ( ! l2g_writable(ght_filename) )
     {
         ght_error("unable to write to '%s'", ght_filename);
         return GHT_ERROR;
     }
-    if ( l2g_writable(xml_filename) )
+    if ( ! l2g_writable(xml_filename) )
     {
         ght_error("unable to write to '%s'", xml_filename);
         return GHT_ERROR;
@@ -507,6 +616,9 @@ l2g_save_tree(const Las2GhtConfig *config, Las2GhtState *state, const GhtTree *t
     GHT_TRY(ght_writer_new_file(ght_filename, &writer));
     GHT_TRY(ght_tree_write(tree, writer));
     GHT_TRY(ght_writer_free(writer));
+    
+    /* Increment file counter */
+    state->fileno++;
 
     return GHT_OK;
 }
@@ -577,8 +689,10 @@ l2g_read_projection(const Las2GhtConfig *config, Las2GhtState *state)
     }
     
     ght_info("Got LAS file projection information '%s'", proj4_input);
-    
+
     state->pj_input = l2g_proj_from_string(proj4_input);
+    LASString_Free(proj4_input);
+    
     if ( ! state->pj_input )
     {
         ght_error("%s: unable to parse proj4 string '%s'", __func__, proj4_input);
@@ -600,7 +714,6 @@ main (int argc, char **argv)
 {
     Las2GhtConfig config;
     Las2GhtState state;
-    GhtSchema *schema;
     GhtTree *tree;
     int num_points;
     
@@ -666,13 +779,15 @@ main (int argc, char **argv)
     state.header = LASReader_GetHeader(state.reader);
     if ( ! state.header) 
     {
+        l2g_state_free(&state);
         ght_error("%s: unable to read LAS header in '%s'\n", EXENAME, config.lasfile);
         return 1;
     }
     
     /* Schema is needed to create nodes/attributes */
-    if ( GHT_OK != l2g_build_schema(&config, &state, &schema) )
+    if ( GHT_OK != l2g_build_schema(&config, &state) )
     {
+        l2g_state_free(&state);
         ght_error("%s: unable to build schema!", EXENAME);
         return 1;
     }
@@ -680,6 +795,7 @@ main (int argc, char **argv)
     /* Project info is needed to get points into lat/lon space */
     if ( GHT_OK != l2g_read_projection(&config, &state) )
     {
+        l2g_state_free(&state);
         ght_error("%s: unable to build projection information", EXENAME);
         return 1;
     }
@@ -693,21 +809,25 @@ main (int argc, char **argv)
     /* Break the problem into chunks. We might get a really really */
     /* big LAS file, and we don't want to blow out memory, so we need to */
     /* do this a few million records at a file */
-    // do 
-    // {
-    //     num_points = l2g_build_tree(&config, &state, schema, &tree);
-    //     if ( num_points )
-    //     {
-    //         GhtErr err;
-    //         err = l2g_save_tree(&config, &state, tree);
-    //         ght_tree_free(tree);
-    //         if ( err != GHT_OK )
-    //             return 1;
-    //     }
-    // } 
-    // while ( num_points > 0 );
+    do 
+    {
+        num_points = l2g_build_tree(&config, &state, &tree);
+        if ( num_points )
+        {
+            GhtErr err;
+            ght_tree_compact_attributes(tree);
+            err = l2g_save_tree(&config, &state, tree);
+            ght_tree_free(tree);
+            if ( err != GHT_OK )
+                return 1;
+        }
+    } 
+    while ( num_points > 0 );
 
-    LASReader_Destroy(state.reader);
-    
+    l2g_state_free(&state);
+    l2g_config_free(&config);
+
+    ght_info("conversion complete");
+
     return 0;
 }

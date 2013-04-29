@@ -30,10 +30,34 @@ ght_tree_free(GhtTree *tree)
     assert(tree);
     if ( tree->root )
         ght_node_free(tree->root);
-    if ( tree->schema )
-        ght_schema_free((GhtSchema*)tree->schema);
     ght_free(tree);
 }
+
+GhtErr
+ght_tree_get_hash(const GhtTree *tree, GhtHash **hash)
+{
+    if ( ! tree->root || ! tree->root->hash ) 
+        return GHT_ERROR;
+        
+    *hash = tree->root->hash;
+    return GHT_OK;
+}
+
+GhtErr
+ght_tree_compact_attributes(GhtTree *tree)
+{
+    int i;
+    GhtAttribute attr;
+
+    /* for 'Z 'and all other attributes... */
+    for ( i = 2; i < tree->schema->num_dims; i++ )
+    {
+        ght_node_compact_attribute(tree->root, tree->schema->dims[i], &attr);
+    }
+    return GHT_OK;
+}
+
+
 
 GhtErr
 ght_tree_insert_node(GhtTree *tree, GhtNode *node)
@@ -53,7 +77,7 @@ ght_tree_insert_node(GhtTree *tree, GhtNode *node)
 GhtErr
 ght_tree_write(const GhtTree *tree, GhtWriter *writer)
 {
-    uint8_t version = 1;
+    uint8_t version = GHT_FORMAT_VERSION;
     char endian = machine_endian();
 
     assert(tree);

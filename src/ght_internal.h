@@ -221,6 +221,12 @@ GhtErr ght_tree_insert_node(GhtTree *tree, GhtNode *node);
 /** Write a GhtTree to memory or file */
 GhtErr ght_tree_write(const GhtTree *tree, GhtWriter *writer);
 
+/** Read the top level hash key off the GhtTree */
+GhtErr ght_tree_get_hash(const GhtTree *tree, GhtHash **hash);
+
+/** Compact all the attributes from 'Z' onwards */
+GhtErr ght_tree_compact_attributes(GhtTree *tree);
+
 /** Alocate a new attribute and fill in the value from a double */
 GhtErr ght_attribute_new_from_double(const GhtDimension *dim, double val, GhtAttribute **attr);
 

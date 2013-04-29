@@ -85,7 +85,7 @@ ght_hash_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, Gh
     assert(lon <= 180.0);
     assert(resolution <= MAX_HASH_LENGTH);
 
-    geohash = (GhtHash*)ght_malloc(sizeof(GhtHash)*resolution+1);
+    geohash = ght_malloc(resolution+1);
 
     if (geohash == NULL)
         return GHT_ERROR;

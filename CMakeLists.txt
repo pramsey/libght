@@ -53,7 +53,6 @@ find_package (LibXml2 REQUIRED)
 mark_as_advanced (CLEAR LIBXML2_INCLUDE_DIR)
 mark_as_advanced (CLEAR LIBXML2_LIBRARIES)
 include_directories (${LIBXML2_INCLUDE_DIR})
-set (GHT_HAVE_LIBXML2 1)
 
 #------------------------------------------------------------------------------
 # need libLAS and Proj4 for file translation tools
