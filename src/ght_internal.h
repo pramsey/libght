@@ -13,7 +13,6 @@
 
 #include "ght.h"
 #include "stringbuffer.h"
-#include "bytebuffer.h"
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -39,12 +38,6 @@ typedef enum
     GHT_SPLIT
 } GhtHashMatch;
 
-typedef enum
-{
-    GHT_IO_FILE,
-    GHT_IO_MEM
-} GhtIoType;
-
 static char *GhtTypeStrings[] =
 {
     "unknown",
@@ -64,26 +57,6 @@ static size_t GhtTypeSizes[] =
     sizeof(int64_t), sizeof(uint64_t),  /* GHT_INT64,  GHT_UINT64 */
     sizeof(double),  sizeof(float)      /* GHT_DOUBLE, GHT_FLOAT */
 };
-
-typedef struct 
-{
-    GhtIoType type;
-    FILE *file;
-    char *filename;
-    size_t filesize;
-    bytebuffer_t *bytebuffer;
-} GhtWriter;
-
-typedef struct 
-{
-    GhtIoType type;
-    FILE *file;
-    char *filename;
-    const uint8_t *bytes_start;
-    const uint8_t *bytes_current;
-    size_t bytes_size;
-    const GhtSchema *schema;
-} GhtReader;
 
 
 /** Allocate memory using runtime memory management */
@@ -164,11 +137,11 @@ GhtErr ght_node_insert_node(GhtNode *node, GhtNode *node_to_insert, GhtDuplicate
 /** Set the hash string on a node, takes ownership of hash */
 GhtErr ght_node_set_hash(GhtNode *node, GhtHash *hash);
 
-/** Create a new code from a coordinate */
-GhtErr ght_node_new_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtNode **node);
-
 /** Create a new node from a hash */
 GhtErr ght_node_new_from_hash(GhtHash *hash, GhtNode **node);
+
+/** Create a new code from a coordinate */
+GhtErr ght_node_new_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtNode **node);
 
 /** Fill a stringbuffer with a printout of the node tree */
 GhtErr ght_node_to_string(GhtNode *node, stringbuffer_t *sb, int level);
@@ -227,8 +200,11 @@ GhtErr ght_tree_get_hash(const GhtTree *tree, GhtHash **hash);
 /** Compact all the attributes from 'Z' onwards */
 GhtErr ght_tree_compact_attributes(GhtTree *tree);
 
-/** Alocate a new attribute and fill in the value from a double */
+/** Allocate a new attribute and fill in the value from a double */
 GhtErr ght_attribute_new_from_double(const GhtDimension *dim, double val, GhtAttribute **attr);
+
+/** Allocate a new attribute and copy in the value from a byte buffer */
+GhtErr ght_attribute_new_from_bytes(const GhtDimension *dim, uint8_t *bytes, GhtAttribute **attr);
 
 /** Free an attribtue */
 GhtErr ght_attribute_free(GhtAttribute *attr);
@@ -269,11 +245,14 @@ GhtErr ght_dimension_get_position(const GhtDimension *dim, uint8_t *position);
 /** Are these dimensions functionally the same (name, scale, offset, type) ? */
 GhtErr ght_dimension_same(const GhtDimension *dim1, const GhtDimension *dim2, int *same);
 
+/** Allocate a blank GhtSchema */
+GhtErr ght_schema_new(GhtSchema **schema);
+
+/** Free an existing schema */
+GhtErr ght_schema_free(GhtSchema *schema);
+
 /** Are these schemas functionally the same (name, scale, offset, type) in all dimensions? */
 GhtErr ght_schema_same(const GhtSchema *s1, const GhtSchema *s2, int *same);
-
-/** Create a schema from an XML document */
-GhtErr ght_schema_from_xml_str(const char *xmlstr, GhtSchema **schema);
 
 /** Append a GhtDimension to the GhtSchema */
 GhtErr ght_schema_add_dimension(GhtSchema *schema, GhtDimension *dim);
@@ -284,17 +263,17 @@ GhtErr ght_schema_get_dimension_by_name(const GhtSchema *schema, const char *nam
 /** Find the GhtDimension corresponding to an index */
 GhtErr ght_schema_get_dimension_by_index(const GhtSchema *schema, int i, GhtDimension **dim);
 
+/** Create a schema from an XML document */
+GhtErr ght_schema_from_xml_str(const char *xmlstr, GhtSchema **schema);
+
+/** Turn a schema into an XML document */
+GhtErr ght_schema_to_xml_str(const GhtSchema *schema, char **xml_str, size_t *xml_str_size);
+
 /** Write out an XML representation of a GhtSchema */
 GhtErr ght_schema_to_xml_file(const GhtSchema *schema, const char *filename);
 
 /** Write out an XML representation of a GhtSchema */
 GhtErr ght_schema_from_xml_file(const char *filename, GhtSchema **schema);
-
-/** Allocate a blank GhtSchema */
-GhtErr ght_schema_new(GhtSchema **schema);
-
-/** Free an existing schema */
-GhtErr ght_schema_free(GhtSchema *schema);
 
 /** Create a new file-based writer */
 GhtErr ght_writer_new_file(const char *filename, GhtWriter **writer);

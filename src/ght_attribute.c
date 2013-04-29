@@ -42,6 +42,19 @@ GhtErr ght_attribute_new_from_double(const GhtDimension *dim, double val, GhtAtt
     return GHT_OK;
 }
 
+GhtErr ght_attribute_new_from_bytes(const GhtDimension *dim, uint8_t *bytes, GhtAttribute **attr)
+{
+    GhtAttribute *a;
+    a = ght_malloc(sizeof(GhtAttribute));
+    if ( ! a ) return GHT_ERROR;
+    memset(a, 0, sizeof(GhtAttribute));
+    a->dim = dim;
+    a->next = NULL;
+    memcpy(a->val, bytes, GhtTypeSizes[dim->type]);
+    *attr = a;
+    return GHT_OK;
+}
+
 GhtErr
 ght_attribute_free(GhtAttribute *attr)
 {

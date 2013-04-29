@@ -12,6 +12,7 @@
 #define _GHT_H
 
 #include "libxml/xmlmemory.h"
+#include "bytebuffer.h"
 #include "ght_config.h"
 
 /* Up to double/int64 */
@@ -44,6 +45,12 @@ typedef enum
     GHT_DUPES_YES = 1
 } GhtDuplicates;
 
+typedef enum
+{
+    GHT_IO_FILE,
+    GHT_IO_MEM
+} GhtIoType;
+
 /* So we can alias char* to GhtHash* */
 typedef char GhtHash;
 
@@ -63,6 +70,26 @@ typedef struct
     int max_dims;
     GhtDimension **dims;
 } GhtSchema;
+
+typedef struct 
+{
+    GhtIoType type;
+    FILE *file;
+    char *filename;
+    size_t filesize;
+    bytebuffer_t *bytebuffer;
+} GhtWriter;
+
+typedef struct 
+{
+    GhtIoType type;
+    FILE *file;
+    char *filename;
+    const uint8_t *bytes_start;
+    const uint8_t *bytes_current;
+    size_t bytes_size;
+    const GhtSchema *schema;
+} GhtReader;
 
 typedef struct
 {
@@ -149,10 +176,55 @@ typedef void  (*GhtMessageHandler)(const char *string, va_list ap);
 /** Initialize memory/message handling with defaults (malloc/free/printf) */
 void   ght_init(void);
 
-
+/** Create a GhtSchema from an XML document */
 GhtErr ght_schema_from_xml_str(const char *xmlstr, GhtSchema **schema);
-GhtErr ght_schema_to_xml_str(const GhtSchema *schema, char **xml_str, size_t *xml_str_size);
+
+/** Write out an XML representation of a GhtSchema */
+GhtErr ght_schema_to_xml_file(const GhtSchema *schema, const char *filename);
+
+/** Release the memory held by a GhtSchema */
 GhtErr ght_schema_free(GhtSchema *schema);
+
+/** Create a new GhtNode from a coordinate */
+GhtErr ght_node_new_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtNode **node);
+
+/** Add a new attribute to the GhtNode */
+GhtErr ght_node_add_attribute(GhtNode *node, GhtAttribute *attribute);
+
+/** Alocate a new GhtAttribute and fill in the value from a double */
+GhtErr ght_attribute_new_from_double(const GhtDimension *dim, double val, GhtAttribute **attr);
+
+/** Allocate a new tree and initialize config parameters */
+GhtErr ght_tree_new(const GhtSchema *schema, GhtTree **tree);
+
+/** Add a GhtNode to a GhtTree */
+GhtErr ght_tree_insert_node(GhtTree *tree, GhtNode *node);
+
+/** Read the top level hash key off the GhtTree */
+GhtErr ght_tree_get_hash(const GhtTree *tree, GhtHash **hash);
+
+/** Write a GhtTree to memory or file */
+GhtErr ght_tree_write(const GhtTree *tree, GhtWriter *writer);
+
+/** Create a new file-based writer */
+GhtErr ght_writer_new_file(const char *filename, GhtWriter **writer);
+
+/** Create a new memory-backed writer */
+GhtErr ght_writer_new_mem(GhtWriter **writer);
+
+/** Create a new file-based reader */
+GhtErr ght_reader_new_file(const char *filename, const GhtSchema *schema, GhtReader **reader);
+
+/** Create a new memory-based reader */
+GhtErr ght_reader_new_mem(const uint8_t *bytes_start, size_t bytes_size, const GhtSchema *schema, GhtReader **reader);
+
+/** Close filehandle if necessary and free all memory along with reader */
+GhtErr ght_reader_free(GhtReader *reader);
+
+/** Close filehandle if necessary and free all memory along with writer */
+GhtErr ght_writer_free(GhtWriter *writer);
+
+
 
 
 #endif
