@@ -26,4 +26,4 @@ target_link_libraries (cu_tester libght-static cunit)
 
 add_test(cu_tester cu_tester)
 
-install (FILES "${GHT_TEST_DATA}" DESTINATION share)
+#install (FILES "${GHT_TEST_DATA}" DESTINATION share)
