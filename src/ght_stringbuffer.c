@@ -35,7 +35,7 @@
  *
  **********************************************************************/
 
-#include "stringbuffer.h"
+#include "ght_stringbuffer.h"
 
 /* Use appropriate allocators for this deployment */
 #define malloc ght_malloc

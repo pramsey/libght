@@ -12,7 +12,6 @@
 #define _GHT_H
 
 #include "libxml/xmlmemory.h"
-#include "bytebuffer.h"
 #include "ght_config.h"
 
 /* Up to double/int64 */
@@ -71,25 +70,6 @@ typedef struct
     GhtDimension **dims;
 } GhtSchema;
 
-typedef struct 
-{
-    GhtIoType type;
-    FILE *file;
-    char *filename;
-    size_t filesize;
-    bytebuffer_t *bytebuffer;
-} GhtWriter;
-
-typedef struct 
-{
-    GhtIoType type;
-    FILE *file;
-    char *filename;
-    const uint8_t *bytes_start;
-    const uint8_t *bytes_current;
-    size_t bytes_size;
-    const GhtSchema *schema;
-} GhtReader;
 
 typedef struct
 {
@@ -203,26 +183,6 @@ GhtErr ght_tree_insert_node(GhtTree *tree, GhtNode *node);
 /** Read the top level hash key off the GhtTree */
 GhtErr ght_tree_get_hash(const GhtTree *tree, GhtHash **hash);
 
-/** Write a GhtTree to memory or file */
-GhtErr ght_tree_write(const GhtTree *tree, GhtWriter *writer);
-
-/** Create a new file-based writer */
-GhtErr ght_writer_new_file(const char *filename, GhtWriter **writer);
-
-/** Create a new memory-backed writer */
-GhtErr ght_writer_new_mem(GhtWriter **writer);
-
-/** Create a new file-based reader */
-GhtErr ght_reader_new_file(const char *filename, const GhtSchema *schema, GhtReader **reader);
-
-/** Create a new memory-based reader */
-GhtErr ght_reader_new_mem(const uint8_t *bytes_start, size_t bytes_size, const GhtSchema *schema, GhtReader **reader);
-
-/** Close filehandle if necessary and free all memory along with reader */
-GhtErr ght_reader_free(GhtReader *reader);
-
-/** Close filehandle if necessary and free all memory along with writer */
-GhtErr ght_writer_free(GhtWriter *writer);
 
 
 

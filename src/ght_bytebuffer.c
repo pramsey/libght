@@ -34,7 +34,7 @@
  *
  **********************************************************************/
 
-#include "bytebuffer.h"
+#include "ght_bytebuffer.h"
 
 /* Use appropriate allocators for this deployment */
 #define malloc ght_malloc

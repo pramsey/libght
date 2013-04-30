@@ -11,16 +11,17 @@ set ( GHT_SOURCES
 	ght_serialize.c	
 	ght_tree.c
 	ght_util.c
-	bytebuffer.c
-	stringbuffer.c
+	ght_bytebuffer.c
+	ght_stringbuffer.c
 	)
 
 set (GHT_HEADERS
 	ght.h		
 	ght_config.h	
 	ght_internal.h	
-	bytebuffer.h
-	stringbuffer.h
+	ght_bytebuffer.h
+	ght_stringbuffer.h
+	ght_stdint.h	
 	)
 
 add_library (libght SHARED ${GHT_SOURCES} ${GHT_HEADERS})
@@ -48,4 +49,12 @@ target_link_libraries (libght-static xml2)
 
 install (TARGETS libght DESTINATION lib)
 install (TARGETS libght-static DESTINATION lib)
+
 install (FILES "${PROJECT_SOURCE_DIR}/src/ght.h" DESTINATION include)
+install (FILES "${PROJECT_SOURCE_DIR}/src/ght_stdint.h" DESTINATION include)
+install (FILES "${PROJECT_SOURCE_DIR}/src/ght_internal.h" DESTINATION include)
+install (FILES "${PROJECT_SOURCE_DIR}/src/ght_bytebuffer.h" DESTINATION include)
+install (FILES "${PROJECT_SOURCE_DIR}/src/ght_stringbuffer.h" DESTINATION include)
+
+install (FILES "${PROJECT_BINARY_DIR}/src/ght_config.h" DESTINATION include)
+

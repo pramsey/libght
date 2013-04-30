@@ -12,7 +12,8 @@
 #define _GHT_INTERNAL_H
 
 #include "ght.h"
-#include "stringbuffer.h"
+#include "ght_stringbuffer.h"
+#include "ght_bytebuffer.h"
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -22,7 +23,7 @@
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #else
-#include "pstdint.h"
+#include "ght_stdint.h"
 #endif
 
 #define GHT_TRY(functioncall) { if ( (functioncall) == GHT_ERROR ) return GHT_ERROR; }
@@ -57,6 +58,26 @@ static size_t GhtTypeSizes[] =
     sizeof(int64_t), sizeof(uint64_t),  /* GHT_INT64,  GHT_UINT64 */
     sizeof(double),  sizeof(float)      /* GHT_DOUBLE, GHT_FLOAT */
 };
+
+typedef struct 
+{
+    GhtIoType type;
+    FILE *file;
+    char *filename;
+    size_t filesize;
+    bytebuffer_t *bytebuffer;
+} GhtWriter;
+
+typedef struct 
+{
+    GhtIoType type;
+    FILE *file;
+    char *filename;
+    const uint8_t *bytes_start;
+    const uint8_t *bytes_current;
+    size_t bytes_size;
+    const GhtSchema *schema;
+} GhtReader;
 
 
 /** Allocate memory using runtime memory management */
@@ -200,6 +221,9 @@ GhtErr ght_tree_get_hash(const GhtTree *tree, GhtHash **hash);
 /** Compact all the attributes from 'Z' onwards */
 GhtErr ght_tree_compact_attributes(GhtTree *tree);
 
+/** Write a GhtTree to memory or file */
+GhtErr ght_tree_write(const GhtTree *tree, GhtWriter *writer);
+
 /** Allocate a new attribute and fill in the value from a double */
 GhtErr ght_attribute_new_from_double(const GhtDimension *dim, double val, GhtAttribute **attr);
 
@@ -284,6 +308,12 @@ GhtErr ght_writer_new_mem(GhtWriter **writer);
 /** Close filehandle if necessary and free all memory along with writer */
 GhtErr ght_writer_free(GhtWriter *writer);
 
+/** Create a new file-based writer */
+GhtErr ght_writer_new_file(const char *filename, GhtWriter **writer);
+
+/** Create a new memory-backed writer */
+GhtErr ght_writer_new_mem(GhtWriter **writer);
+
 /** Write bytes out to the target */
 GhtErr ght_write(GhtWriter *writer, const void *bytes, size_t bytesize);
 
@@ -295,6 +325,18 @@ GhtErr ght_reader_new_mem(const uint8_t *bytes_start, size_t bytes_size, const G
 
 /** Close filehandle if necessary and free all memory along with reader */
 GhtErr ght_reader_free(GhtReader *reader);
+
+/** Create a new file-based reader */
+GhtErr ght_reader_new_file(const char *filename, const GhtSchema *schema, GhtReader **reader);
+
+/** Create a new memory-based reader */
+GhtErr ght_reader_new_mem(const uint8_t *bytes_start, size_t bytes_size, const GhtSchema *schema, GhtReader **reader);
+
+/** Close filehandle if necessary and free all memory along with reader */
+GhtErr ght_reader_free(GhtReader *reader);
+
+/** Close filehandle if necessary and free all memory along with writer */
+GhtErr ght_writer_free(GhtWriter *writer);
 
 /** Read bytes in from a reader */
 GhtErr ght_read(GhtReader *reader, void *bytes, size_t read_size);
