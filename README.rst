@@ -45,11 +45,6 @@ Windows
 To Do
 =====
 
-- File format header structure
-  - Endianness flag (die if mismatch)
-  - Version number (support legacy)
-
-- File support in reader/writer abstraction
-- Tests for reader/writer memory implementation
+- Opaque types in common header to separate user-API from internal API
 
 
