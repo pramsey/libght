@@ -17,7 +17,7 @@
 
 /** New, empty, nodelist */
 GhtErr
-ght_nodelist_new(GhtNodeList **nodelist)
+ght_nodelist_new(int capacity, GhtNodeList **nodelist)
 {
     GhtNodeList *nl;
     assert(nodelist);
@@ -26,7 +26,11 @@ ght_nodelist_new(GhtNodeList **nodelist)
     memset(nl, 0, sizeof(GhtNodeList));
     nl->nodes = NULL;
     nl->num_nodes = 0;
-    nl->max_nodes = 0;
+    nl->max_nodes = capacity;
+    if ( capacity )
+    {
+        nl->nodes = ght_malloc(sizeof(GhtNode*)*capacity);
+    }
     *nodelist = nl;
     return GHT_OK;
 }
@@ -157,7 +161,7 @@ ght_node_add_child(GhtNode *parent, GhtNode *child)
 {
     if ( ! parent->children )
     {
-        ght_nodelist_new(&(parent->children));
+        ght_nodelist_new(1, &(parent->children));
     }
     return ght_nodelist_add_node(parent->children, child);
 }
@@ -560,13 +564,18 @@ ght_node_read(GhtReader *reader, GhtNode **node)
     
     /* Read the children */
     ght_read(reader, &childcount, 1);
+    /* Set up an exactly sized node list to hold the children */
+    if ( childcount > 0 )
+    {
+        GHT_TRY(ght_nodelist_new(childcount, &(n->children)));
+    }
     for ( i = 0; i < childcount; i++ )
     {
         GhtNode *nc = NULL;
         GHT_TRY(ght_node_read(reader, &nc));
         if ( nc )
         {
-            ght_node_add_child(n, nc);
+            GHT_TRY(ght_node_add_child(n, nc));
         }
     }
     

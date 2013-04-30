@@ -45,7 +45,7 @@ tsv_file_to_node_list(const char *fname, const GhtSchema *schema)
 
     if ( ! filestr ) return NULL;
 
-    ght_nodelist_new(&nodelist);
+    ght_nodelist_new(16, &nodelist);
     
     ptr_start = ptr_end = filestr;
     

@@ -189,7 +189,7 @@ GhtErr ght_node_write(const GhtNode *node, GhtWriter *writer);
 GhtErr ght_node_read(GhtReader *reader, GhtNode **node);
 
 /** Create an empty nodelist */
-GhtErr ght_nodelist_new(GhtNodeList **nodelist);
+GhtErr ght_nodelist_new(int capacity, GhtNodeList **nodelist);
 
 /** Add a new node to a nodelist */
 GhtErr ght_nodelist_add_node(GhtNodeList *nl, GhtNode *node);
