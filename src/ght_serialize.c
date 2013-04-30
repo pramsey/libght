@@ -126,6 +126,20 @@ ght_writer_get_size(GhtWriter *writer, size_t *size)
 }
 
 GhtErr
+ght_writer_get_bytes(GhtWriter *writer, uint8_t *bytes)
+{
+    if ( writer->type == GHT_IO_MEM )
+    {
+        memcpy(bytes, bytebuffer_getbytes(writer->bytebuffer), bytebuffer_getsize(writer->bytebuffer));
+        return GHT_OK;   
+    }
+    else
+    {
+        return GHT_ERROR;
+    }
+}
+
+GhtErr
 ght_reader_new_file(const char *filename, const GhtSchema *schema, GhtReader **reader)
 {
     GhtReader *r;

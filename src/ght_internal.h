@@ -314,6 +314,12 @@ GhtErr ght_writer_new_file(const char *filename, GhtWriter **writer);
 /** Create a new memory-backed writer */
 GhtErr ght_writer_new_mem(GhtWriter **writer);
 
+/** Read current size of writen bytes */
+GhtErr ght_writer_get_size(GhtWriter *writer, size_t *size);
+
+/** Copy bytes from memory writer into external buffer */
+GhtErr ght_writer_get_bytes(GhtWriter *writer, uint8_t *bytes);
+
 /** Write bytes out to the target */
 GhtErr ght_write(GhtWriter *writer, const void *bytes, size_t bytesize);
 
