@@ -365,7 +365,6 @@ ght_node_add_attribute(GhtNode *node, GhtAttribute *attribute)
     
     attr->next = attribute;
     return GHT_OK;
-    
 }
 
 GhtErr
@@ -424,8 +423,15 @@ ght_node_delete_attribute(GhtNode *node, const GhtDimension *dim)
     return GHT_OK;
 }
 
+/* 
+* Recursive compaction routine. Pulls attribute up to the highest node such that
+* all children share the attribute value.
+*/
 static GhtErr
-ght_node_compact_attribute_with_delta(GhtNode *node, const GhtDimension *dim, double delta, GhtAttribute *compacted_attribute)
+ght_node_compact_attribute_with_delta(GhtNode *node, 
+                                      const GhtDimension *dim, 
+                                      double delta, 
+                                      GhtAttribute *compacted_attribute)
 {
     int i;
     
@@ -489,7 +495,7 @@ ght_node_compact_attribute(GhtNode *node, const GhtDimension *dim, GhtAttribute 
 }
 
 /**
-* Node serialization: 
+* Recursive node serialization: 
 * - length of GhtHash
 * - GhtHash (no null terminator)
 * - number of GhtAttributes
@@ -532,6 +538,9 @@ ght_node_write(const GhtNode *node, GhtWriter *writer)
     return GHT_OK;
 }
 
+/** 
+* Recursive node deserialization 
+*/
 GhtErr 
 ght_node_read(GhtReader *reader, GhtNode **node)
 {
@@ -582,6 +591,51 @@ ght_node_read(GhtReader *reader, GhtNode **node)
     *node = n;
     return GHT_OK;
 }
+
+/* Recursively build a nodelist from a tree of GhtNodes */
+GhtErr
+ght_node_to_nodelist(const GhtNode *node, GhtNodeList *nodelist, GhtAttribute *attr, GhtHash *hash)
+{
+    GhtHash h[GHT_MAX_HASH_LENGTH];
+    GhtAttribute *a;
+    
+    /* Add our part of the hash to the incoming part */
+    memset(h, 0, GHT_MAX_HASH_LENGTH);
+    strncpy(h, hash, GHT_MAX_HASH_LENGTH);
+    strcat(h, node->hash);
+    
+    /* Make a copy of all the incoming attributes */
+    GHT_TRY(ght_attribute_union(node->attributes, attr, &a));
+    
+    /* Recurse down to leaf nodes, copying attributes and passing them down */
+    if ( node->children && node->children->num_nodes > 0 )
+    {
+        int i;
+        for ( i = 0; i < node->children->num_nodes; i++ )
+        {
+            GHT_TRY(ght_node_to_nodelist(node->children->nodes[i], nodelist, a, h));
+        }
+        ght_attribute_free(a);
+    }
+    else
+    {
+        GhtNode *n;
+        GHT_TRY(ght_node_new_from_hash(h, &n));
+        GHT_TRY(ght_node_add_attribute(n, a));
+        GHT_TRY(ght_nodelist_add_node(nodelist, n));
+    }
+    return GHT_OK;
+}
+
+
+
+
+
+
+
+
+
+
 
 
 

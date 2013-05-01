@@ -12,6 +12,7 @@
 #define _GHT_INTERNAL_H
 
 #include "ght.h"
+#include "ght_config.h"
 #include "ght_stringbuffer.h"
 #include "ght_bytebuffer.h"
 #include <string.h>
@@ -182,6 +183,9 @@ GhtErr ght_node_add_attribute(GhtNode *node, GhtAttribute *attribute);
 /** Move attributes to the highest level in the tree at which they apply to all children */
 GhtErr ght_node_compact_attribute(GhtNode *node, const GhtDimension *dim, GhtAttribute *attr);
 
+/** Recursively build a GhtNodeList from a tree of GhtNode */
+GhtErr ght_node_to_nodelist(const GhtNode *node, GhtNodeList *nodelist, GhtAttribute *attr, GhtHash *hash);
+
 /** Write a byte representation of a node tree */
 GhtErr ght_node_write(const GhtNode *node, GhtWriter *writer);
 
@@ -224,6 +228,9 @@ GhtErr ght_tree_compact_attributes(GhtTree *tree);
 /** Write a GhtTree to memory or file */
 GhtErr ght_tree_write(const GhtTree *tree, GhtWriter *writer);
 
+/** Take in a tree and output a populated GhtNodeList, creates complete copy of data */
+GhtErr ght_tree_to_nodelist(const GhtTree *tree, GhtNodeList *nodelist);
+
 /** Allocate a new attribute and fill in the value from a double */
 GhtErr ght_attribute_new_from_double(const GhtDimension *dim, double val, GhtAttribute **attr);
 
@@ -244,6 +251,12 @@ GhtErr ght_attribute_set_value(GhtAttribute *attr, double val);
 
 /** Write an appropriately formatted value into the stringbuffer_t */
 GhtErr ght_attribute_to_string(const GhtAttribute *attr, stringbuffer_t *sb);
+
+/** Copy an attribute and all linked siblings */
+GhtErr ght_attribute_clone(const GhtAttribute *attr_in, GhtAttribute **attr_out);
+
+/** Merge attr2 and attr1, removing those dimensions of attr2 that already exist in attr2 */
+GhtErr ght_attribute_union(GhtAttribute *attr1, GhtAttribute *attr2, GhtAttribute **attr);
 
 /** Write byte representation of attribute into writer */
 GhtErr ght_attribute_write(const GhtAttribute *attr, GhtWriter *writer);

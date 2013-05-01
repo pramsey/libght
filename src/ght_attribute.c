@@ -344,3 +344,90 @@ GhtErr ght_attribute_read(GhtReader *reader, GhtAttribute **attr)
     return GHT_OK;
 }
 
+
+GhtErr ght_attribute_clone(const GhtAttribute *attr, GhtAttribute **attr_out)
+{
+    /* Clone attribute and all siblings */
+    GhtAttribute *a;
+    
+    if ( ! attr )
+    {
+        *attr_out = NULL;
+        return GHT_OK;
+    }
+
+    /* Copy the first one in */
+    a = ght_malloc(sizeof(GhtAttribute));
+    memcpy(a, attr, sizeof(GhtAttribute));
+    a->next = NULL;
+    *attr_out = a;
+    
+    return ght_attribute_clone(attr->next, &((*attr_out)->next));
+    
+}
+
+static GhtErr
+ght_attribute_append(GhtAttribute *attr1, GhtAttribute *attr2)
+{
+    while ( attr1->next )
+    {
+        attr1 = attr1->next;
+    }
+    
+    attr1->next = attr2;
+    return GHT_OK;
+}
+
+GhtErr
+ght_attribute_union(GhtAttribute *attr1, GhtAttribute *attr2, GhtAttribute **attr)
+{    
+    GhtAttribute *a1 = attr1;
+    GhtAttribute *a2 = attr2;
+    
+    /* Null input, null output */
+    if ( ! a1 || ! a2 )
+    {
+        *attr = NULL;
+        return GHT_OK;
+    }
+    
+    if ( ! a1 )
+    {
+        ght_attribute_clone(a2, attr);
+        return GHT_OK;
+    }
+
+    /* Contents of first list will be starting point */
+    ght_attribute_clone(a1, attr);
+
+    /* Nothing in second list? Done. */
+    if ( ! a2 ) return GHT_OK;
+
+    /* For each attribute in the second list... */
+    while ( a2 )
+    {
+        int unique = 1;
+        a1 = attr1;
+        /* Is this attribute in the first list? */
+        while ( a1 )
+        {
+            /* It is. Break. */
+            if ( a2->dim == a1->dim )
+            {
+                unique = 0;
+                break;
+            }
+            a1 = a1->next;
+        }
+        /* Unique attribute, add a copy to our output list */
+        if ( unique )
+        {
+            GhtAttribute *a = ght_malloc(sizeof(GhtAttribute));
+            memcpy(a, a2, sizeof(GhtAttribute));
+            a->next = NULL;
+            GHT_TRY(ght_attribute_append(*attr, a));
+        }
+        a2 = a2->next;
+    }
+    return GHT_OK;
+}

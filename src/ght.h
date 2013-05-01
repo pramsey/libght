@@ -12,7 +12,6 @@
 #define _GHT_H
 
 #include "libxml/xmlmemory.h"
-#include "ght_config.h"
 
 /* Up to double/int64 */
 #define GHT_ATTRIBUTE_MAX_SIZE  8

@@ -146,5 +146,14 @@ ght_tree_from_nodelist(const GhtSchema *schema, GhtNodeList *nlist, GhtConfig *c
     return GHT_OK;
 }
 
+GhtErr
+ght_tree_to_nodelist(const GhtTree *tree, GhtNodeList *nodelist)
+{
+    GhtHash h[GHT_MAX_HASH_LENGTH];
+    
+    if ( ! tree->root ) return GHT_ERROR;
+    
+    return ght_node_to_nodelist(tree->root, nodelist, NULL, h);
+}
 
 
