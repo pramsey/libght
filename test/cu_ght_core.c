@@ -50,18 +50,18 @@ test_geohash_inout()
 
     GhtHash *hash;
     GhtCoordinate coord;
+    GhtCoordinate coord_out;
     GhtErr err;
-    GhtArea area;
 
     coord.x = 1.0;
     coord.y = 1.0;
     err = ght_hash_from_coordinate(&coord, 20, &hash);
     CU_ASSERT_EQUAL(err, GHT_OK);
     CU_ASSERT_STRING_EQUAL(hash, "s00twy01mtw037ms06g7");
-    err = ght_area_from_hash(hash, &area);
+    err = ght_coordinate_from_hash(hash, &coord_out);
     CU_ASSERT_EQUAL(err, GHT_OK);
-    CU_ASSERT_DOUBLE_EQUAL(coord.x, (area.x.min + area.x.max)/2.0, 0.0000000001);
-    CU_ASSERT_DOUBLE_EQUAL(coord.y, (area.y.min + area.y.max)/2.0, 0.0000000001);
+    CU_ASSERT_DOUBLE_EQUAL(coord.x, coord_out.x, 0.0000000001);
+    CU_ASSERT_DOUBLE_EQUAL(coord.y, coord_out.y, 0.0000000001);
     ght_hash_free(hash);
 
     coord.x = 0.0;
@@ -69,10 +69,10 @@ test_geohash_inout()
     err = ght_hash_from_coordinate(&coord, 20, &hash);
     CU_ASSERT_EQUAL(err, GHT_OK);
     CU_ASSERT_STRING_EQUAL(hash, "s0000000000000000000");
-    err = ght_area_from_hash(hash, &area);
+    err = ght_coordinate_from_hash(hash, &coord_out);
     CU_ASSERT_EQUAL(err, GHT_OK);
-    CU_ASSERT_DOUBLE_EQUAL(coord.x, (area.x.min + area.x.max)/2.0, 0.0000000001);
-    CU_ASSERT_DOUBLE_EQUAL(coord.y, (area.y.min + area.y.max)/2.0, 0.0000000001);
+    CU_ASSERT_DOUBLE_EQUAL(coord.x, coord_out.x, 0.0000000001);
+    CU_ASSERT_DOUBLE_EQUAL(coord.y, coord_out.y, 0.0000000001);
     ght_hash_free(hash);
 
     coord.x = 90.0;
@@ -80,10 +80,10 @@ test_geohash_inout()
     err = ght_hash_from_coordinate(&coord, 20, &hash);
     CU_ASSERT_EQUAL(err, GHT_OK);
     CU_ASSERT_STRING_EQUAL(hash, "w0000000000000000000");
-    err = ght_area_from_hash(hash, &area);
+    err = ght_coordinate_from_hash(hash, &coord_out);
     CU_ASSERT_EQUAL(err, GHT_OK);
-    CU_ASSERT_DOUBLE_EQUAL(coord.x, (area.x.min + area.x.max)/2.0, 0.0000000001);
-    CU_ASSERT_DOUBLE_EQUAL(coord.y, (area.y.min + area.y.max)/2.0, 0.0000000001);
+    CU_ASSERT_DOUBLE_EQUAL(coord.x, coord_out.x, 0.0000000001);
+    CU_ASSERT_DOUBLE_EQUAL(coord.y, coord_out.y, 0.0000000001);
     ght_hash_free(hash);
 
     coord.x = 90.0;
@@ -91,10 +91,10 @@ test_geohash_inout()
     err = ght_hash_from_coordinate(&coord, 20, &hash);
     CU_ASSERT_EQUAL(err, GHT_OK);
     CU_ASSERT_STRING_EQUAL(hash, "y0000000000000000000");
-    err = ght_area_from_hash(hash, &area);
+    err = ght_coordinate_from_hash(hash, &coord_out);
     CU_ASSERT_EQUAL(err, GHT_OK);
-    CU_ASSERT_DOUBLE_EQUAL(coord.x, (area.x.min + area.x.max)/2.0, 0.0000000001);
-    CU_ASSERT_DOUBLE_EQUAL(coord.y, (area.y.min + area.y.max)/2.0, 0.0000000001);
+    CU_ASSERT_DOUBLE_EQUAL(coord.x, coord_out.x, 0.0000000001);
+    CU_ASSERT_DOUBLE_EQUAL(coord.y, coord_out.y, 0.0000000001);
     ght_hash_free(hash);
 
     coord.x = 180.0;
@@ -102,10 +102,10 @@ test_geohash_inout()
     err = ght_hash_from_coordinate(&coord, 20, &hash);
     CU_ASSERT_EQUAL(err, GHT_OK);
     CU_ASSERT_STRING_EQUAL(hash, "zbpbpbpbpbpbpbpbpbpb");
-    err = ght_area_from_hash(hash, &area);
+    err = ght_coordinate_from_hash(hash, &coord_out);
     CU_ASSERT_EQUAL(err, GHT_OK);
-    CU_ASSERT_DOUBLE_EQUAL(coord.x, (area.x.min + area.x.max)/2.0, 0.0000000001);
-    CU_ASSERT_DOUBLE_EQUAL(coord.y, (area.y.min + area.y.max)/2.0, 0.0000000001);
+    CU_ASSERT_DOUBLE_EQUAL(coord.x, coord_out.x, 0.0000000001);
+    CU_ASSERT_DOUBLE_EQUAL(coord.y, coord_out.y, 0.0000000001);
     ght_hash_free(hash);
 
     coord.x = -180.0;
@@ -113,10 +113,10 @@ test_geohash_inout()
     err = ght_hash_from_coordinate(&coord, 20, &hash);
     CU_ASSERT_EQUAL(err, GHT_OK);
     CU_ASSERT_STRING_EQUAL(hash, "b0000000000000000000");
-    err = ght_area_from_hash(hash, &area);
+    err = ght_coordinate_from_hash(hash, &coord_out);
     CU_ASSERT_EQUAL(err, GHT_OK);
-    CU_ASSERT_DOUBLE_EQUAL(coord.x, (area.x.min + area.x.max)/2.0, 0.0000000001);
-    CU_ASSERT_DOUBLE_EQUAL(coord.y, (area.y.min + area.y.max)/2.0, 0.0000000001);
+    CU_ASSERT_DOUBLE_EQUAL(coord.x, coord_out.x, 0.0000000001);
+    CU_ASSERT_DOUBLE_EQUAL(coord.y, coord_out.y, 0.0000000001);
     ght_hash_free(hash);
 
     coord.x = 179.9999;
@@ -124,11 +124,11 @@ test_geohash_inout()
     err = ght_hash_from_coordinate(&coord, 9, &hash);
     CU_ASSERT_EQUAL(err, GHT_OK);
     CU_ASSERT_STRING_EQUAL(hash, "zbpbpbpbj");
-    err = ght_area_from_hash(hash, &area);
+    err = ght_coordinate_from_hash(hash, &coord_out);
     // printf("\n%s\n", hash);
     CU_ASSERT_EQUAL(err, GHT_OK);
-    CU_ASSERT_DOUBLE_EQUAL(coord.x, (area.x.min + area.x.max)/2.0, 0.0001);
-    CU_ASSERT_DOUBLE_EQUAL(coord.y, (area.y.min + area.y.max)/2.0, 0.0001);
+    CU_ASSERT_DOUBLE_EQUAL(coord.x, coord_out.x, 0.0001);
+    CU_ASSERT_DOUBLE_EQUAL(coord.y, coord_out.y, 0.0001);
     ght_hash_free(hash);
 }
 

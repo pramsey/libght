@@ -120,6 +120,15 @@ ght_hash_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, Gh
     return GHT_OK;
 }
 
+GhtErr
+ght_coordinate_from_hash(const GhtHash *hash, GhtCoordinate *coord)
+{
+    GhtArea area;
+    GHT_TRY(ght_area_from_hash(hash, &area));
+    coord->x = (area.x.min + area.x.max)/2.0;
+    coord->y = (area.y.min + area.y.max)/2.0;
+    return GHT_OK;
+}
 
 GhtErr
 ght_area_from_hash(const GhtHash *hash, GhtArea *area)

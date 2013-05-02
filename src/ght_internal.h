@@ -128,6 +128,9 @@ GhtErr ght_hash_from_coordinate(const GhtCoordinate *coord, unsigned int resolut
 /** Generate area, since hash of finite resolution bounds an area */
 GhtErr ght_area_from_hash(const GhtHash *hash, GhtArea *area);
 
+/** Generate coordinate, as the mid-point of the GhtArea defined by a hash */
+GhtErr ght_coordinate_from_hash(const GhtHash *hash, GhtCoordinate *coord);
+
 /** Release hash memory */
 GhtErr ght_hash_free(GhtHash *hash);
 
