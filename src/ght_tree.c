@@ -103,14 +103,26 @@ GhtErr
 ght_tree_read(GhtReader *reader, GhtTree **tree)
 {
     GhtTree *t;
+    
     GHT_TRY(ght_tree_new(reader->schema, tree));
     t = *tree;
     
+    /* Endianness */
     GHT_TRY(ght_read(reader, &(t->config.endian), 1));
+    /* File format version */
     GHT_TRY(ght_read(reader, &(t->config.version), 1));
-    GHT_TRY(ght_read(reader, &(t->config.max_hash_length), 1));
-
-    return ght_node_read(reader, &(t->root));
+    
+    if ( GHT_FORMAT_VERSION == t->config.version )
+    {
+        /* Maximum hash length in this tree */
+        GHT_TRY(ght_read(reader, &(t->config.max_hash_length), 1));
+        return ght_node_read(reader, &(t->root));
+    }
+    else
+    {
+        ght_error("%s: unsupported GHT format version %d", __func__, t->config.version);
+        return GHT_ERROR;
+    }
 }
 
 GhtErr
