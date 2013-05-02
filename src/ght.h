@@ -77,6 +77,9 @@ GhtErr ght_dimension_get_name(const GhtDimensionPtr dim, const char **name);
 /** What's the type of this dimension? */
 GhtErr ght_dimension_get_type(const GhtDimensionPtr dim, GhtType *type);
 
+/** What's the index of this dimension? */
+GhtErr ght_dimension_get_index(const GhtDimensionPtr dim, int *index);
+
 
 /***********************************************************************
 *   SCHEMA
@@ -96,6 +99,9 @@ GhtErr ght_schema_add_dimension(GhtSchemaPtr schema, GhtDimensionPtr dim);
 
 /** Read a dimension */
 GhtErr ght_schema_get_dimension_by_index(const GhtSchemaPtr schema, int i, GhtDimensionPtr *dim);
+
+/** Read a dimension */
+GhtErr ght_schema_get_dimension_by_name(const GhtSchemaPtr schema, const char *name, GhtDimensionPtr *dim);
 
 /** Free an existing schema */
 GhtErr ght_schema_free(GhtSchemaPtr schema);

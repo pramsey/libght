@@ -388,6 +388,9 @@ GhtErr ght_dimension_get_name(const GhtDimension *dim, const char **name);
 /** What's the type of this dimension? */
 GhtErr ght_dimension_get_type(const GhtDimension *dim, GhtType *type);
 
+/** What's the index of this dimension? */
+GhtErr ght_dimension_get_index(const GhtDimension *dim, int *index);
+
 /** Are these dimensions functionally the same (name, scale, offset, type) ? */
 GhtErr ght_dimension_same(const GhtDimension *dim1, const GhtDimension *dim2, int *same);
 
@@ -404,7 +407,7 @@ GhtErr ght_schema_same(const GhtSchema *s1, const GhtSchema *s2, int *same);
 GhtErr ght_schema_add_dimension(GhtSchema *schema, GhtDimension *dim);
 
 /** Find the GhtDimension corresponding to a name */
-GhtErr ght_schema_get_dimension_by_name(const GhtSchema *schema, const char *name, GhtDimension **dim, int *position);
+GhtErr ght_schema_get_dimension_by_name(const GhtSchema *schema, const char *name, GhtDimension **dim);
 
 /** Find the GhtDimension corresponding to an index */
 GhtErr ght_schema_get_dimension_by_index(const GhtSchema *schema, int i, GhtDimension **dim);
