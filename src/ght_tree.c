@@ -99,6 +99,20 @@ ght_tree_write(const GhtTree *tree, GhtWriter *writer)
     return ght_node_write(tree->root, writer);
 }
 
+GhtErr 
+ght_tree_read(GhtReader *reader, GhtTree **tree)
+{
+    GhtTree *t;
+    GHT_TRY(ght_tree_new(reader->schema, tree));
+    t = *tree;
+    
+    GHT_TRY(ght_read(reader, &(t->config.endian), 1));
+    GHT_TRY(ght_read(reader, &(t->config.version), 1));
+    GHT_TRY(ght_read(reader, &(t->config.max_hash_length), 1));
+
+    return ght_node_read(reader, &(t->root));
+}
+
 GhtErr
 ght_tree_from_nodelist(const GhtSchema *schema, GhtNodeList *nlist, GhtConfig *config, GhtTree **tree)
 {

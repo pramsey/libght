@@ -125,6 +125,8 @@ typedef struct
 {
     GhtDuplicates  allow_duplicates;
     unsigned char  max_hash_length;
+    unsigned char  version;
+    unsigned char  endian;
 } GhtConfig;
 
 typedef struct

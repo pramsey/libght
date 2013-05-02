@@ -78,6 +78,8 @@ typedef struct
     const uint8_t *bytes_current;
     size_t bytes_size;
     const GhtSchema *schema;
+    uint8_t endian;
+    uint8_t version;
 } GhtReader;
 
 
@@ -233,6 +235,9 @@ GhtErr ght_tree_compact_attributes(GhtTree *tree);
 
 /** Write a GhtTree to memory or file */
 GhtErr ght_tree_write(const GhtTree *tree, GhtWriter *writer);
+
+/** Write a GhtTree to memory of file */
+GhtErr ht_tree_read(GhtReader *reader, GhtTree **tree);
 
 /** Take in a tree and output a populated GhtNodeList, creates complete copy of data */
 GhtErr ght_tree_to_nodelist(const GhtTree *tree, GhtNodeList *nodelist);
