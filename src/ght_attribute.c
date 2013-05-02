@@ -388,7 +388,7 @@ ght_attribute_union(GhtAttribute *attr1, GhtAttribute *attr2, GhtAttribute **att
     GhtAttribute *a2 = attr2;
     
     /* Null input, null output */
-    if ( ! a1 || ! a2 )
+    if ( ! a1 && ! a2 )
     {
         *attr = NULL;
         return GHT_OK;

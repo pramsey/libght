@@ -15,6 +15,7 @@
 
 static GhtSchema *simpleschema = NULL;
 static const char *schemafile = "test/data/simple-schema.xml";
+GhtNode *root;
 
 /* Setup/teardown for this suite */
 static int
@@ -125,7 +126,7 @@ test_ght_build_tree_with_attributes(void)
     int i;
     static const char *simpledata = "test/data/simple-data.tsv";   
     GhtNodeList *nodelist;
-    GhtNode *root, *node;
+    GhtNode *node;
     GhtErr err;
     GhtAttribute attr;
     stringbuffer_t *sb;
@@ -188,18 +189,47 @@ test_ght_build_tree_with_attributes(void)
     CU_ASSERT_STRING_EQUAL(root->attributes->dim->name, "Intensity");
     ght_attribute_get_value(root->attributes, &d);
     CU_ASSERT_DOUBLE_EQUAL(d, 5, 0.00000001);
-    
-    ght_node_free(root);
+
+    /* Free the root after the next test */
+    // ght_node_free(root);
     ght_nodelist_free_shallow(nodelist);
 }
 
+static void
+test_ght_unbuild_tree_with_attributes(void)
+{
+    int i;
+    GhtNodeList *nodelist;
+    GhtHash h[GHT_MAX_HASH_LENGTH];
+    
+    ght_nodelist_new(32, &nodelist);
+    ght_node_to_nodelist(root, nodelist, NULL, h);
+    
+    CU_ASSERT_EQUAL(8, nodelist->num_nodes);    
+    CU_ASSERT_STRING_EQUAL("c0n0eq6myj870p99", nodelist->nodes[4]->hash);
+    CU_ASSERT_STRING_EQUAL("Z", nodelist->nodes[4]->attributes->dim->name);
+    CU_ASSERT_STRING_EQUAL("Z", nodelist->nodes[2]->attributes->dim->name);
+    
+    // stringbuffer_t *sb = stringbuffer_create();
+    // for ( i = 0 ; i < nodelist->num_nodes; i++ )
+    // {
+    //     ght_node_to_string(nodelist->nodes[i], sb, 0);
+    //     stringbuffer_append(sb, "\n");
+    // }
+    // printf("\n%s\n", stringbuffer_getstring(sb));
+    // stringbuffer_destroy(sb);
+    
+    ght_nodelist_free_deep(nodelist);
+    ght_node_free(root);
+}
 
 /* REGISTER ***********************************************************/
 
 CU_TestInfo attribute_tests[] =
 {
-    GHT_TEST(test_ght_build_tree_with_attributes),
     GHT_TEST(test_ght_build_node_with_attributes),
+    GHT_TEST(test_ght_build_tree_with_attributes),
+    GHT_TEST(test_ght_unbuild_tree_with_attributes),
     CU_TEST_INFO_NULL
 };
 

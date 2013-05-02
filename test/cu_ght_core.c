@@ -333,7 +333,6 @@ test_ght_node_unbuild_tree(void)
 }
 
 
-
 static void
 test_ght_node_build_tree_big(void)
 {
