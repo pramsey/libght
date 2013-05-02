@@ -15,6 +15,7 @@
 
 
 static GhtSchema *schema = NULL;
+GhtNode *root;
 
 /* Setup/teardown for this suite */
 static int
@@ -232,7 +233,7 @@ test_ght_node_build_tree(void)
 {
     GhtCoordinate coord;
     int x, y;
-    GhtNode *node1, *node2, *node3, *node4, *node5, *root;
+    GhtNode *node1, *node2, *node3, *node4, *node5;
     GhtErr err;
 
     /* ght_node_new_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtNode **node); */
@@ -300,8 +301,37 @@ test_ght_node_build_tree(void)
     /* also, it's hanging off the parent node */
     CU_ASSERT_EQUAL(node3->children->nodes[1], node5);
 
+    // stringbuffer_t *sb = stringbuffer_create();
+    // err = ght_node_to_string(root, sb, 0);
+    // printf("\n%s\n", stringbuffer_getstring(sb));
+    // stringbuffer_destroy(sb);
+
+    /* This tree will be freed after the next test */
+    //ght_node_free(root);
+}
+
+static void
+test_ght_node_unbuild_tree(void)
+{
+    int i;
+    GhtNodeList *nodelist;
+    GhtHash h[GHT_MAX_HASH_LENGTH];
+    
+    ght_nodelist_new(32, &nodelist);
+    ght_node_to_nodelist(root, nodelist, NULL, h);
+    
+    CU_ASSERT_STRING_EQUAL("c0v2hdm1wpzpy4vtv4", nodelist->nodes[0]->hash);
+    CU_ASSERT_STRING_EQUAL("c0v2hdm1wpzpy4vkv4", nodelist->nodes[3]->hash);
+    CU_ASSERT_STRING_EQUAL("c0v2hdm1gcuekpf9y1", nodelist->nodes[5]->hash);
+    CU_ASSERT_EQUAL(6, nodelist->num_nodes);
+    
+    // for ( i = 0 ; i < nodelist->num_nodes; i++ )
+    //     printf("%s\n", nodelist->nodes[i]->hash);
+    
+    ght_nodelist_free_deep(nodelist);
     ght_node_free(root);
 }
+
 
 
 static void
@@ -503,6 +533,7 @@ CU_TestInfo core_tests[] =
     GHT_TEST(test_ght_hash_common_length),
     GHT_TEST(test_ght_hash_leaf_parts),
     GHT_TEST(test_ght_node_build_tree),
+    GHT_TEST(test_ght_node_unbuild_tree),
     GHT_TEST(test_ght_node_build_tree_big),
     GHT_TEST(test_ght_node_serialization),
     GHT_TEST(test_ght_node_file_serialization),

@@ -58,6 +58,9 @@ GhtErr ght_attribute_new_from_bytes(const GhtDimension *dim, uint8_t *bytes, Ght
 GhtErr
 ght_attribute_free(GhtAttribute *attr)
 {
+    /* No-op on null */
+    if ( ! attr ) return GHT_OK;
+    
     if ( attr->next )
     {
         ght_attribute_free(attr->next);

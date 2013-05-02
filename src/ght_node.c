@@ -227,10 +227,14 @@ ght_node_insert_node(GhtNode *node, GhtNode *node_to_insert, GhtDuplicates dupli
 
     if ( matchtype == GHT_SAME )
     {
+        /* New node is duplicate of this node. We insert an */
+        /* empty node (no hash) underneath, to hang attributes off of */
+        /* and use this node as the parent */
         if ( duplicates )
         {
-            /* Duplicate node entry, to hang attributes off of, strip hash */
-            /* and then use this node as the parent */
+            /* If this is the first duplicate, add a copy of the parent */
+            /* To serve as a proxy leaf for this value */
+            /* Add the new node under the parent, stripping the hash */
             ght_free(node_to_insert->hash);
             node_to_insert->hash = NULL;
             return ght_node_add_child(node, node_to_insert);
@@ -596,13 +600,18 @@ ght_node_read(GhtReader *reader, GhtNode **node)
 GhtErr
 ght_node_to_nodelist(const GhtNode *node, GhtNodeList *nodelist, GhtAttribute *attr, GhtHash *hash)
 {
-    GhtHash h[GHT_MAX_HASH_LENGTH];
+    int node_is_leaf = 0;
+    static int hash_array_len = GHT_MAX_HASH_LENGTH + 1;
+    GhtHash h[hash_array_len];
     GhtAttribute *a;
     
     /* Add our part of the hash to the incoming part */
-    memset(h, 0, GHT_MAX_HASH_LENGTH);
-    strncpy(h, hash, GHT_MAX_HASH_LENGTH);
-    strcat(h, node->hash);
+    memset(h, 0, hash_array_len);
+    strncpy(h, hash, hash_array_len);
+    if ( node->hash )
+    {
+        strcat(h, node->hash);
+    }
     
     /* Make a copy of all the incoming attributes */
     GHT_TRY(ght_attribute_union(node->attributes, attr, &a));
@@ -614,16 +623,29 @@ ght_node_to_nodelist(const GhtNode *node, GhtNodeList *nodelist, GhtAttribute *a
         for ( i = 0; i < node->children->num_nodes; i++ )
         {
             GHT_TRY(ght_node_to_nodelist(node->children->nodes[i], nodelist, a, h));
+            if ( node->children->nodes[i]->hash == NULL )
+            {
+                node_is_leaf = 1;
+            }
         }
-        ght_attribute_free(a);
     }
     else
+    {
+        node_is_leaf = 1;
+    }
+
+    if ( node_is_leaf )
     {
         GhtNode *n;
         GHT_TRY(ght_node_new_from_hash(h, &n));
         GHT_TRY(ght_node_add_attribute(n, a));
         GHT_TRY(ght_nodelist_add_node(nodelist, n));
     }
+    else
+    {
+        ght_attribute_free(a);   
+    }
+
     return GHT_OK;
 }
 

@@ -149,7 +149,7 @@ ght_tree_from_nodelist(const GhtSchema *schema, GhtNodeList *nlist, GhtConfig *c
 GhtErr
 ght_tree_to_nodelist(const GhtTree *tree, GhtNodeList *nodelist)
 {
-    GhtHash h[GHT_MAX_HASH_LENGTH];
+    GhtHash h[GHT_MAX_HASH_LENGTH+1];
     
     if ( ! tree->root ) return GHT_ERROR;
     
