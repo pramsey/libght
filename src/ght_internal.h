@@ -189,6 +189,9 @@ GhtErr ght_node_compact_attribute(GhtNode *node, const GhtDimension *dim, GhtAtt
 /** Recursively build a GhtNodeList from a tree of GhtNode */
 GhtErr ght_node_to_nodelist(const GhtNode *node, GhtNodeList *nodelist, GhtAttribute *attr, GhtHash *hash);
 
+/** Recursively calculate the extent GhtArea of a tree of GhtNode */
+GhtErr ght_node_get_extent(const GhtNode *node, const GhtHash *hash, GhtArea *area);
+
 /** Write a byte representation of a node tree */
 GhtErr ght_node_write(const GhtNode *node, GhtWriter *writer);
 
@@ -233,6 +236,9 @@ GhtErr ght_tree_write(const GhtTree *tree, GhtWriter *writer);
 
 /** Take in a tree and output a populated GhtNodeList, creates complete copy of data */
 GhtErr ght_tree_to_nodelist(const GhtTree *tree, GhtNodeList *nodelist);
+
+/** Calculate the spatial extent of a GhtTree */
+GhtErr ght_tree_get_extent(const GhtTree *tree, GhtArea *area);
 
 /** Allocate a new attribute and fill in the value from a double */
 GhtErr ght_attribute_new_from_double(const GhtDimension *dim, double val, GhtAttribute **attr);

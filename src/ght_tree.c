@@ -9,6 +9,7 @@
 ******************************************************************************/
 
 #include "ght_internal.h"
+#include <float.h>
 
 char machine_endian(void); /* from ght_util.c */
 
@@ -149,11 +150,27 @@ ght_tree_from_nodelist(const GhtSchema *schema, GhtNodeList *nlist, GhtConfig *c
 GhtErr
 ght_tree_to_nodelist(const GhtTree *tree, GhtNodeList *nodelist)
 {
-    GhtHash h[GHT_MAX_HASH_LENGTH+1];
+    GhtHash h[1];
+    h[0] = '\0';
     
     if ( ! tree->root ) return GHT_ERROR;
     
     return ght_node_to_nodelist(tree->root, nodelist, NULL, h);
 }
 
+GhtErr
+ght_tree_get_extent(const GhtTree *tree, GhtArea *area)
+{
+    GhtHash h[1];
+    h[0] = '\0';
+    
+    area->x.min = DBL_MAX;
+    area->y.min = DBL_MAX;
+    area->x.max = -1 * DBL_MAX;
+    area->y.max = -1 * DBL_MAX;
+    
+    if ( ! tree->root ) return GHT_ERROR;
+    
+    return ght_node_get_extent(tree->root, h, area);
+}
 

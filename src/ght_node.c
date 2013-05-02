@@ -649,7 +649,43 @@ ght_node_to_nodelist(const GhtNode *node, GhtNodeList *nodelist, GhtAttribute *a
     return GHT_OK;
 }
 
+/* Recursively build a nodelist from a tree of GhtNodes */
+GhtErr
+ght_node_get_extent(const GhtNode *node, const GhtHash *hash, GhtArea *area)
+{
+    static int hash_array_len = GHT_MAX_HASH_LENGTH + 1;    
+    GhtHash h[hash_array_len];
+    GhtCoordinate coord;
+    
+    /* Add our part of the hash to the incoming part */
+    memset(h, 0, hash_array_len);
+    strncpy(h, hash, hash_array_len);
+    if ( node->hash )
+        strcat(h, node->hash);
 
+    if ( node->children || node->children->num_nodes > 0 )
+    {
+        int i;
+        for ( i = 0; i < node->children->num_nodes; i++ )
+        {
+            if ( node->children->nodes[i] && node->children->nodes[i]->hash )
+            {
+                ght_node_get_extent(node->children->nodes[i], h, area);
+            }
+        }
+    }
+    else
+    {
+        ght_coordinate_from_hash(h, &coord);
+        if ( coord.x < area->x.min ) area->x.min = coord.x;
+        if ( coord.x > area->x.max ) area->x.max = coord.x;
+        if ( coord.y < area->y.min ) area->y.min = coord.y;
+        if ( coord.y > area->y.max ) area->y.max = coord.y;
+    }
+
+    return GHT_OK;
+}
+    
 
 
 
