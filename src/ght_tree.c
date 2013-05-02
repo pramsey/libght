@@ -200,3 +200,12 @@ ght_tree_get_extent(const GhtTree *tree, GhtArea *area)
     return ght_node_get_extent(tree->root, h, area);
 }
 
+GhtErr
+ght_tree_get_schema(const GhtTree *tree, const GhtSchema **schema)
+{
+    if ( ! tree || ! tree->schema )
+        return GHT_ERROR;
+    
+    *schema = tree->schema;
+    return GHT_OK;  
+}

@@ -62,9 +62,53 @@ GhtErr ght_dimension_set_description(GhtDimension *dim, const char *desc)
     return GHT_OK; 
 }
 
+GhtErr ght_dimension_set_offset(GhtDimension *dim, double offset)
+{
+    dim->offset = offset;
+    return GHT_OK;
+}
+
+GhtErr ght_dimension_set_scale(GhtDimension *dim, double scale)
+{
+    dim->scale = scale;
+    return GHT_OK;
+}
+
+GhtErr ght_dimension_set_type(GhtDimension *dim, GhtType type)
+{
+    dim->type = type;
+    return GHT_OK;
+}
+
+GhtErr ght_dimension_new_from_parameters(const char *name, const char *desc, GhtType type, double scale, double offset, GhtDimension **dim)
+{
+    GhtDimension *d;
+    GHT_TRY(ght_dimension_new(&d));
+    d->name = ght_strdup(name);
+    d->description = ght_strdup(desc);
+    d->type = type;
+    d->scale = scale;
+    d->offset = offset;
+    *dim = d;
+    return GHT_OK;
+}
+
 GhtErr ght_dimension_get_position(const GhtDimension *dim, uint8_t *position)
 {
     *position = dim->position;
+    return GHT_OK;
+}
+
+GhtErr ght_dimension_get_name(const GhtDimension *dim, const char **name)
+{
+    *name = dim->name;
+    return GHT_OK;
+}
+
+GhtErr ght_dimension_get_type(const GhtDimension *dim, GhtType *type)
+{
+    *type = dim->type;
+    return GHT_OK;
 }
 
 GhtErr ght_dimension_same(const GhtDimension *dim1, const GhtDimension *dim2, int *same)
@@ -223,15 +267,15 @@ static GhtErr ght_dimension_from_xml(xmlNodePtr node, GhtDimension **dimension)
             {
                 GhtType type;
                 GHT_TRY(ght_type_from_str(child->children->content, &type));
-                dim->type = type;
+                GHT_TRY(ght_dimension_set_type(dim, type));
             }
             else if ( TAG_IS("scale") )
             {
-                dim->scale = atof(child->children->content);
+                GHT_TRY(ght_dimension_set_scale(dim, atof(child->children->content)));
             }
             else if ( TAG_IS("offset") )
             {
-                dim->offset = atof(child->children->content);
+                GHT_TRY(ght_dimension_set_offset(dim, atof(child->children->content)));
             }
             else
             {

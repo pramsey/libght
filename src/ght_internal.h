@@ -11,15 +11,15 @@
 #ifndef _GHT_INTERNAL_H
 #define _GHT_INTERNAL_H
 
-#include "ght.h"
-#include "ght_config.h"
-#include "ght_stringbuffer.h"
-#include "ght_bytebuffer.h"
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+
+#include "ght_config.h"
+#include "ght_stringbuffer.h"
+#include "ght_bytebuffer.h"
 
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
@@ -27,9 +27,27 @@
 #include "ght_stdint.h"
 #endif
 
-#define GHT_TRY(functioncall) { if ( (functioncall) == GHT_ERROR ) return GHT_ERROR; }
+#include "libxml/xmlmemory.h"
+
 #define GHT_NUM_TYPES 11
 #define GHT_EPSILON 10e-8
+
+
+/* Up to double/int64 */
+#define GHT_ATTRIBUTE_MAX_SIZE  8
+
+
+typedef enum
+{   
+    GHT_DUPES_NO = 0,
+    GHT_DUPES_YES = 1
+} GhtDuplicates;
+
+typedef enum
+{
+    GHT_IO_FILE,
+    GHT_IO_MEM
+} GhtIoType;
 
 typedef enum
 {
@@ -60,6 +78,23 @@ static size_t GhtTypeSizes[] =
     sizeof(double),  sizeof(float)      /* GHT_DOUBLE, GHT_FLOAT */
 };
 
+typedef struct
+{
+    int position;
+    char *name;
+    char *description;
+    GhtType type;
+    double scale;
+    double offset;
+} GhtDimension;
+
+typedef struct
+{
+    int num_dims;
+    int max_dims;
+    GhtDimension **dims;
+} GhtSchema;
+
 typedef struct 
 {
     GhtIoType type;
@@ -83,6 +118,56 @@ typedef struct
 } GhtReader;
 
 
+
+typedef struct GhtAttribute_t
+{
+    const GhtDimension *dim;
+    struct GhtAttribute_t *next;
+    char val[GHT_ATTRIBUTE_MAX_SIZE];
+} GhtAttribute;
+
+typedef struct
+{
+    double min;
+    double max;
+    double sum;
+    int count;
+    GhtType type;
+    const GhtDimension *dim;
+} GhtAttributeStats;
+
+struct GhtNodeList_t;
+
+typedef struct
+{
+    GhtHash *hash;
+    struct GhtNodeList_t *children;
+    GhtAttribute *attributes;
+} GhtNode;
+
+typedef struct GhtNodeList_t
+{
+    int num_nodes;
+    int max_nodes;
+    GhtNode **nodes;
+} GhtNodeList;
+
+typedef struct
+{
+    const GhtSchema *schema;
+    GhtNode *root;
+    int num_nodes;
+    GhtConfig config;
+} GhtTree;
+
+
+
+
+
+/** Initialize memory/message handling with defaults (malloc/free/printf) */
+void   ght_init(void);
+
+
 /** Allocate memory using runtime memory management */
 void* ght_malloc(size_t size);
 /** Free memory using runtime memory management */
@@ -98,17 +183,6 @@ void ght_info(const char *fmt, ...);
 /** Send warning message */
 void ght_warn(const char *fmt, ...);
 
-
-/** Initialize memory/message handling */
-void ght_set_handlers(GhtAllocator allocator, GhtReallocator reallocator,
-                      GhtDeallocator deallocator, GhtMessageHandler error_handler,
-                      GhtMessageHandler info_handler, GhtMessageHandler warn_handler);
-
-/** Set the malloc handler */
-void   ght_set_allocator(GhtAllocator allocator);
-
-/** Set the free handler */
-void   ght_set_deallocator(GhtDeallocator deallocator);
 
 /**
 * Calculate the amount of charaters two GhtHashes have in common.
@@ -230,6 +304,9 @@ GhtErr ght_tree_write(const GhtTree *tree, GhtWriter *writer);
 /** Read the top level hash key off the GhtTree */
 GhtErr ght_tree_get_hash(const GhtTree *tree, GhtHash **hash);
 
+/** Read the schema from the GhtTree */
+GhtErr ght_tree_get_schema(const GhtTree *tree, const GhtSchema **schema);
+
 /** Compact all the attributes from 'Z' onwards */
 GhtErr ght_tree_compact_attributes(GhtTree *tree);
 
@@ -237,7 +314,7 @@ GhtErr ght_tree_compact_attributes(GhtTree *tree);
 GhtErr ght_tree_write(const GhtTree *tree, GhtWriter *writer);
 
 /** Write a GhtTree to memory of file */
-GhtErr ht_tree_read(GhtReader *reader, GhtTree **tree);
+GhtErr ght_tree_read(GhtReader *reader, GhtTree **tree);
 
 /** Take in a tree and output a populated GhtNodeList, creates complete copy of data */
 GhtErr ght_tree_to_nodelist(const GhtTree *tree, GhtNodeList *nodelist);
@@ -284,14 +361,32 @@ GhtErr ght_type_from_str(const char *str, GhtType *type);
 /** Create an empty dimension */
 GhtErr ght_dimension_new(GhtDimension **dim);
 
+/** Create a populated dimension */
+GhtErr ght_dimension_new_from_parameters(const char *name, const char *desc, GhtType type, double scale, double offset, GhtDimension **dim);
+
 /** Set the name on a GhtDimension (names must be unique) */
 GhtErr ght_dimension_set_name(GhtDimension *dim, const char *name);
 
 /** Set the description on a GhtDimension */
 GhtErr ght_dimension_set_description(GhtDimension *dim, const char *desc);
 
+/** Set the offset on a GhtDimension */
+GhtErr ght_dimension_set_offset(GhtDimension *dim, double offset);
+
+/** Set the scale on a GhtDimension */
+GhtErr ght_dimension_set_scale(GhtDimension *dim, double scale);
+
+/** Set the scale on a GhtDimension */
+GhtErr ght_dimension_set_type(GhtDimension *dim, GhtType type);
+
 /** Where is the dimension in the schema? */
 GhtErr ght_dimension_get_position(const GhtDimension *dim, uint8_t *position);
+
+/** What's the name of this dimension? */
+GhtErr ght_dimension_get_name(const GhtDimension *dim, const char **name);
+
+/** What's the type of this dimension? */
+GhtErr ght_dimension_get_type(const GhtDimension *dim, GhtType *type);
 
 /** Are these dimensions functionally the same (name, scale, offset, type) ? */
 GhtErr ght_dimension_same(const GhtDimension *dim1, const GhtDimension *dim2, int *same);
@@ -326,12 +421,6 @@ GhtErr ght_schema_to_xml_file(const GhtSchema *schema, const char *filename);
 /** Write out an XML representation of a GhtSchema */
 GhtErr ght_schema_from_xml_file(const char *filename, GhtSchema **schema);
 
-/** Create a new file-based writer */
-GhtErr ght_writer_new_file(const char *filename, GhtWriter **writer);
-
-/** Create a new memory-backed writer */
-GhtErr ght_writer_new_mem(GhtWriter **writer);
-
 /** Close filehandle if necessary and free all memory along with writer */
 GhtErr ght_writer_free(GhtWriter *writer);
 
@@ -358,18 +447,6 @@ GhtErr ght_reader_new_mem(const uint8_t *bytes_start, size_t bytes_size, const G
 
 /** Close filehandle if necessary and free all memory along with reader */
 GhtErr ght_reader_free(GhtReader *reader);
-
-/** Create a new file-based reader */
-GhtErr ght_reader_new_file(const char *filename, const GhtSchema *schema, GhtReader **reader);
-
-/** Create a new memory-based reader */
-GhtErr ght_reader_new_mem(const uint8_t *bytes_start, size_t bytes_size, const GhtSchema *schema, GhtReader **reader);
-
-/** Close filehandle if necessary and free all memory along with reader */
-GhtErr ght_reader_free(GhtReader *reader);
-
-/** Close filehandle if necessary and free all memory along with writer */
-GhtErr ght_writer_free(GhtWriter *writer);
 
 /** Read bytes in from a reader */
 GhtErr ght_read(GhtReader *reader, void *bytes, size_t read_size);

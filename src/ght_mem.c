@@ -9,6 +9,7 @@
 ******************************************************************************/
 
 #include "ght_internal.h"
+#include "ght_mem.h"
 
 struct GhtContext_t
 {

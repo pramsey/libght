@@ -65,8 +65,7 @@ ght_nodelist_free_deep(GhtNodeList *nl)
 GhtErr
 ght_nodelist_add_node(GhtNodeList *nl, GhtNode *node)
 {
-    // assert(nl);
-    // assert(node);
+
     /* First time, initialize */
     if ( nl->max_nodes == 0 )
     {

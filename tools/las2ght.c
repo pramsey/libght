@@ -7,8 +7,10 @@
 
 #include "liblas/capi/liblas.h"
 #include "proj_api.h"
-#include "ght_internal.h"
+#include "ght.h"
 #include <string.h>
+#include <stdio.h>
+#include <assert.h>
 
 #define EXENAME "las2ght"
 #define MAXPOINTS 2000000
@@ -89,7 +91,7 @@ typedef struct
     int fileno;
     projPJ pj_input;
     projPJ pj_output;
-    GhtSchema *schema;
+    GhtSchemaPtr schema;
 } Las2GhtState;
 
 static void
@@ -288,47 +290,27 @@ static GhtErr
 l2g_build_schema(const Las2GhtConfig *config, Las2GhtState *state)
 {
     int i = 0;
-    GhtSchema *schema;
-    GhtDimension *dim;
+    GhtSchemaPtr schema;
+    GhtDimensionPtr dim;
     GHT_TRY(ght_schema_new(&schema));
     
     /* Add 'X' dimension (position 0) */
-    GHT_TRY(ght_dimension_new(&dim));
-    GHT_TRY(ght_dimension_set_name(dim, "X"));
-    GHT_TRY(ght_dimension_set_description(dim, ""));
-    dim->scale = 1.0;
-    dim->offset = 0.0;
-    dim->type = GHT_DOUBLE;
+    GHT_TRY(ght_dimension_new_from_parameters("X", "", GHT_DOUBLE, 1.0, 0.0, &dim));
     GHT_TRY(ght_schema_add_dimension(schema, dim));
 
     /* Add 'Y' dimension (position 1) */
-    GHT_TRY(ght_dimension_new(&dim));
-    GHT_TRY(ght_dimension_set_name(dim, "Y"));
-    GHT_TRY(ght_dimension_set_description(dim, ""));
-    dim->scale = 1.0;
-    dim->offset = 0.0;
-    dim->type = GHT_DOUBLE;
+    GHT_TRY(ght_dimension_new_from_parameters("Y", "", GHT_DOUBLE, 1.0, 0.0, &dim));
     GHT_TRY(ght_schema_add_dimension(schema, dim));
 
     /* Add 'Z' dimension (position 2) */
-    GHT_TRY(ght_dimension_new(&dim));
-    GHT_TRY(ght_dimension_set_name(dim, "Z"));
-    GHT_TRY(ght_dimension_set_description(dim, ""));
-    dim->scale = LASHeader_GetScaleZ(state->header);
-    dim->offset = LASHeader_GetOffsetZ(state->header);
-    dim->type = GHT_INT32;
+    GHT_TRY(ght_dimension_new_from_parameters("Z", "", GHT_DOUBLE, 1.0, 0.0, &dim));
     GHT_TRY(ght_schema_add_dimension(schema, dim));
     
     /* Add optional attributes (positions 3+) */
     for ( i = 0; i < config->num_attrs; i++ )
     {
         LasDimension ld = LasAttributes[config->attrs[i]];
-        GHT_TRY(ght_dimension_new(&dim));
-        GHT_TRY(ght_dimension_set_name(dim, ld.name));
-        GHT_TRY(ght_dimension_set_description(dim, ""));
-        dim->scale = ld.scale;
-        dim->offset = ld.offset;
-        dim->type = ld.type;
+        GHT_TRY(ght_dimension_new_from_parameters(ld.name, "", ld.type, ld.scale, ld.offset, &dim));
         GHT_TRY(ght_schema_add_dimension(schema, dim));
     }
 
@@ -471,12 +453,12 @@ l2g_coordinate_reproject(const Las2GhtState *state, GhtCoordinate *coord)
 }
 
 static GhtErr
-l2g_build_node(const Las2GhtConfig *config, const Las2GhtState *state, LASPointH laspoint, GhtNode **node)
+l2g_build_node(const Las2GhtConfig *config, const Las2GhtState *state, LASPointH laspoint, GhtNodePtr *node)
 {
     int i;
     double z;
-    GhtDimension *ghtdim;
-    GhtAttribute *attribute;
+    GhtDimensionPtr ghtdim;
+    GhtAttributePtr attribute;
     GhtCoordinate coord;
     GhtErr err;
     
@@ -498,7 +480,7 @@ l2g_build_node(const Las2GhtConfig *config, const Las2GhtState *state, LASPointH
 
     /* We know that 'Z' is always dimension 2 */
     z = LASPoint_GetZ(laspoint);
-    ghtdim = state->schema->dims[2];
+    GHT_TRY(ght_schema_get_dimension_by_index(state->schema, 2, &ghtdim));
     
     if ( ght_attribute_new_from_double(ghtdim, z, &attribute) != GHT_OK )
         return GHT_ERROR;
@@ -512,7 +494,7 @@ l2g_build_node(const Las2GhtConfig *config, const Las2GhtState *state, LASPointH
         double val = l2g_attribute_value(laspoint, lasattr);
 
         /* Magic number 3: X,Y,Z are first three dimensions */
-        ghtdim = state->schema->dims[3 + i];
+        GHT_TRY(ght_schema_get_dimension_by_index(state->schema, 3+i, &ghtdim));
         
         if ( ght_attribute_new_from_double(ghtdim, val, &attribute) != GHT_OK )
             return GHT_ERROR;
@@ -525,12 +507,12 @@ l2g_build_node(const Las2GhtConfig *config, const Las2GhtState *state, LASPointH
 }
 
 static int
-l2g_build_tree(const Las2GhtConfig *config, Las2GhtState *state, GhtTree **tree)
+l2g_build_tree(const Las2GhtConfig *config, Las2GhtState *state, GhtTreePtr *tree)
 {
     int num_points = 0;
     int i;
     LASPointH laspoint;
-    GhtNode *node;
+    GhtNodePtr node;
     GhtErr err;
 
     ght_info("starting a new tree");
@@ -582,17 +564,17 @@ l2g_xml_file(const Las2GhtConfig *config, Las2GhtState *state, GhtHash *hash, ch
 }
 
 static GhtErr
-l2g_save_tree(const Las2GhtConfig *config, Las2GhtState *state, const GhtTree *tree)
+l2g_save_tree(const Las2GhtConfig *config, Las2GhtState *state, const GhtTreePtr tree)
 {
     char ght_filename[STRSIZE];
     char xml_filename[STRSIZE];
-    GhtWriter *writer;
+    GhtWriterPtr writer;
+    GhtSchemaPtr schema;
     GhtHash *hash = NULL;
 
     assert(config);
     assert(state);
     assert(tree);
-    assert(tree->schema);
 
     ght_tree_get_hash(tree, &hash);
 
@@ -612,7 +594,8 @@ l2g_save_tree(const Las2GhtConfig *config, Las2GhtState *state, const GhtTree *t
         return GHT_ERROR;
     }
 
-    GHT_TRY(ght_schema_to_xml_file(tree->schema, xml_filename));
+    GHT_TRY(ght_tree_get_schema(tree, &schema));
+    GHT_TRY(ght_schema_to_xml_file(schema, xml_filename));
     GHT_TRY(ght_writer_new_file(ght_filename, &writer));
     GHT_TRY(ght_tree_write(tree, writer));
     GHT_TRY(ght_writer_free(writer));
@@ -714,7 +697,7 @@ main (int argc, char **argv)
 {
     Las2GhtConfig config;
     Las2GhtState state;
-    GhtTree *tree;
+    GhtTreePtr tree;
     int num_points;
     
     /* We can't do anything if we don't have GDAL/GeoTIFF support in libLAS */
