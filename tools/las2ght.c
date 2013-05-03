@@ -7,7 +7,7 @@
 
 #include "liblas/capi/liblas.h"
 #include "proj_api.h"
-#include "ght.h"
+#include "ght.h" /* We use the public GHT API to promote good practices */
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
