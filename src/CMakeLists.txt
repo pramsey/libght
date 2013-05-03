@@ -52,5 +52,5 @@ install (TARGETS libght-static DESTINATION lib)
 
 install (FILES "${PROJECT_SOURCE_DIR}/src/ght.h" DESTINATION include)
 
-install (FILES "${PROJECT_BINARY_DIR}/src/ght_config.h" DESTINATION include)
+install (FILES "${PROJECT_SOURCE_DIR}/src/ght_core.h" DESTINATION include)
 

@@ -84,8 +84,22 @@ GhtErr ght_dimension_new_from_parameters(const char *name, const char *desc, Ght
 {
     GhtDimension *d;
     GHT_TRY(ght_dimension_new(&d));
-    d->name = ght_strdup(name);
-    d->description = ght_strdup(desc);
+    if ( name )
+    {
+        d->name = ght_strdup(name);
+    }
+    else
+    {
+        return GHT_ERROR; /* need a name! */
+    }
+    if ( desc )
+    {
+        d->description = ght_strdup(desc);
+    }
+    else
+    {
+        d->description = ght_strdup("");
+    }
     d->type = type;
     d->scale = scale;
     d->offset = offset;
@@ -210,6 +224,13 @@ GhtErr ght_schema_free(GhtSchema *schema)
     }
     ght_free(schema->dims);
     ght_free(schema);
+    return GHT_OK;
+}
+
+GhtErr ght_schema_get_num_dimensions(const GhtSchema *schema, unsigned int *num_dims)
+{
+    assert(schema);
+    *num_dims = schema->num_dims;
     return GHT_OK;
 }
 

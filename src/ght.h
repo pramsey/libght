@@ -8,12 +8,10 @@
 *
 ******************************************************************************/
 
-#include "ght_config.h"
+#include "ght_core.h"
 
 #ifndef _GHT_H
 #define _GHT_H
-
-
 
 typedef void* GhtDimensionPtr;
 typedef void* GhtSchemaPtr;
@@ -35,8 +33,14 @@ GhtErr ght_node_new_from_hash(const GhtHash *hash, GhtNodePtr *node);
 /** Create a new code from a coordinate */
 GhtErr ght_node_new_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtNodePtr *node);
 
+/** Get the coordinates represented by the node */
+GhtErr ght_node_get_coordinate(const GhtNodePtr node, GhtCoordinate *coord);
+
 /** Add a new attribute to the node */
 GhtErr ght_node_add_attribute(GhtNodePtr node, GhtAttributePtr attribute);
+
+/** Get the attribute list handing off the node */
+GhtErr ght_node_get_attributes(const GhtNodePtr node, GhtAttributePtr *attr);
 
 
 /***********************************************************************
@@ -45,6 +49,12 @@ GhtErr ght_node_add_attribute(GhtNodePtr node, GhtAttributePtr attribute);
 
 /** Create an empty nodelist */
 GhtErr ght_nodelist_new(int capacity, GhtNodeListPtr *nodelist);
+
+/** How many nodes in this GhtNodeList? */
+GhtErr ght_nodelist_get_num_nodes(const GhtNodeListPtr nodelist, int *num_nodes);
+
+/** Get a GhtNode by index number */
+GhtErr ght_nodelist_get_node(const GhtNodeListPtr nodelist, int index, GhtNodePtr *node);
 
 /** Add a new node to a nodelist */
 GhtErr ght_nodelist_add_node(GhtNodeListPtr nodelist, GhtNodePtr node);
@@ -63,6 +73,11 @@ GhtErr ght_nodelist_free_shallow(GhtNodeListPtr nodelist);
 /** Allocate a new attribute and fill in the value from a double */
 GhtErr ght_attribute_new_from_double(const GhtDimensionPtr dim, double val, GhtAttributePtr *attr);
 
+/** Read the next attribute from an attribute list */
+GhtErr ght_attribute_get_next(const GhtAttributePtr attr, GhtAttributePtr *nextattr);
+
+/** Get the dimension associated with a GhtAttribute */
+GhtErr ght_attribute_get_dimension(const GhtAttributePtr attr, const GhtDimensionPtr *dim);
 
 /***********************************************************************
 *   DIMENSION
@@ -96,6 +111,9 @@ GhtErr ght_schema_from_xml_file(const char *filename, GhtSchemaPtr *schema);
 
 /** Append a GhtDimension to the GhtSchemaPtr */
 GhtErr ght_schema_add_dimension(GhtSchemaPtr schema, GhtDimensionPtr dim);
+
+/** How many dimensions in this schema? */
+GhtErr ght_schema_get_num_dimensions(const GhtSchemaPtr schema, unsigned int *num_dims);
 
 /** Read a dimension */
 GhtErr ght_schema_get_dimension_by_index(const GhtSchemaPtr schema, int i, GhtDimensionPtr *dim);

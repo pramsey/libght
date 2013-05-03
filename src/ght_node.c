@@ -35,6 +35,25 @@ ght_nodelist_new(int capacity, GhtNodeList **nodelist)
     return GHT_OK;
 }
 
+GhtErr
+ght_nodelist_get_num_nodes(const GhtNodeList *nodelist, int *num_nodes)
+{
+    assert(nodelist);
+    *num_nodes = nodelist->num_nodes;
+    return GHT_OK;
+}
+
+GhtErr
+ght_nodelist_get_node(const GhtNodeList *nodelist, int index, GhtNode **node)
+{
+    assert(nodelist);
+    assert(nodelist->num_nodes > index);
+    assert(index >= 0);
+    
+    *node = nodelist->nodes[index];
+    return GHT_OK;
+}
+
 /** Free just the containing structure, leaving the nodes */
 GhtErr
 ght_nodelist_free_shallow(GhtNodeList *nl)
@@ -131,6 +150,29 @@ ght_node_set_hash(GhtNode *node, GhtHash *hash)
         ght_free(node->hash);
     node->hash = hash;
     return GHT_OK;
+}
+
+
+GhtErr
+ght_node_get_attributes(const GhtNode *node, GhtAttribute **attr)
+{
+    if ( node->attributes )
+    {
+        *attr = node->attributes;
+        return GHT_OK;
+    }
+    *attr = NULL;
+    return GHT_ERROR;
+}
+
+GhtErr
+ght_node_get_coordinate(const GhtNode *node, GhtCoordinate *coord)
+{
+    if ( ! node->hash )
+    {
+        return GHT_ERROR;
+    }
+    return ght_coordinate_from_hash(node->hash, coord);
 }
 
 /** Create new node, taking ownership of hash parameter */

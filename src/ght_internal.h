@@ -18,6 +18,7 @@
 #include <assert.h>
 
 #include "ght_config.h"
+#include "ght_core.h"
 #include "ght_stringbuffer.h"
 #include "ght_bytebuffer.h"
 
@@ -238,6 +239,12 @@ GhtErr ght_node_insert_node(GhtNode *node, GhtNode *node_to_insert, GhtDuplicate
 /** Set the hash string on a node, takes ownership of hash */
 GhtErr ght_node_set_hash(GhtNode *node, GhtHash *hash);
 
+/** Get the coordinates represented by the node */
+GhtErr ght_node_get_coordinate(const GhtNode *node, GhtCoordinate *coord);
+
+/** Get the attribute list handing off the node */
+GhtErr ght_node_get_attributes(const GhtNode *node, GhtAttribute **attr);
+
 /** Create a new node from a hash */
 GhtErr ght_node_new_from_hash(GhtHash *hash, GhtNode **node);
 
@@ -276,6 +283,12 @@ GhtErr ght_node_read(GhtReader *reader, GhtNode **node);
 
 /** Create an empty nodelist */
 GhtErr ght_nodelist_new(int capacity, GhtNodeList **nodelist);
+
+/** How many nodes in this GhtNodeList? */
+GhtErr ght_nodelist_get_num_nodes(const GhtNodeList *nodelist, int *num_nodes);
+
+/** Get a GhtNode by index number */
+GhtErr ght_nodelist_get_node(const GhtNodeList *nodelist, int index, GhtNode **node);
 
 /** Add a new node to a nodelist */
 GhtErr ght_nodelist_add_node(GhtNodeList *nl, GhtNode *node);
@@ -328,6 +341,9 @@ GhtErr ght_attribute_new_from_double(const GhtDimension *dim, double val, GhtAtt
 /** Allocate a new attribute and copy in the value from a byte buffer */
 GhtErr ght_attribute_new_from_bytes(const GhtDimension *dim, uint8_t *bytes, GhtAttribute **attr);
 
+/** Read the next attribute from an attribute list */
+GhtErr ght_attribute_get_next(const GhtAttribute *attr, GhtAttribute **nextattr);
+
 /** Free an attribtue */
 GhtErr ght_attribute_free(GhtAttribute *attr);
 
@@ -336,6 +352,9 @@ GhtErr ght_attribute_get_value(const GhtAttribute *attr, double *val);
 
 /** Get the width of the packed attributes in bytes */
 GhtErr ght_attribute_get_size(const GhtAttribute *attr, size_t *sz);
+
+/** Get the dimension associated with a GhtAttribute */
+GhtErr ght_attribute_get_dimension(const GhtAttribute *attr, const GhtDimension **dim);
 
 /** Set the packed attribute value */
 GhtErr ght_attribute_set_value(GhtAttribute *attr, double val);
@@ -411,6 +430,9 @@ GhtErr ght_schema_get_dimension_by_name(const GhtSchema *schema, const char *nam
 
 /** Find the GhtDimension corresponding to an index */
 GhtErr ght_schema_get_dimension_by_index(const GhtSchema *schema, int i, GhtDimension **dim);
+
+/** How many dimensions in this GhtSchema? */
+GhtErr ght_schema_get_num_dimensions(const GhtSchema *schema, unsigned int *num_dims);
 
 /** Create a schema from an XML document */
 GhtErr ght_schema_from_xml_str(const char *xmlstr, GhtSchema **schema);

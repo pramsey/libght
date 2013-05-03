@@ -70,6 +70,30 @@ ght_attribute_free(GhtAttribute *attr)
 }
 
 GhtErr
+ght_attribute_get_next(const GhtAttribute *attr, GhtAttribute **nextattr)
+{
+    if ( attr->next )
+    {
+        *nextattr = attr->next;
+        return GHT_OK;
+    }
+    *nextattr = NULL;
+    return GHT_ERROR;
+}
+
+GhtErr
+ght_attribute_get_dimension(const GhtAttribute *attr, const GhtDimension **dim)
+{
+    if ( attr->dim )
+    {
+        *dim = attr->dim;
+        return GHT_OK;
+    }
+    *dim = NULL;
+    return GHT_ERROR;
+}
+
+GhtErr
 ght_attribute_get_by_dimension(const GhtAttribute *attr, const GhtDimension *dim, GhtAttribute *found)
 {
     if ( ! attr ) return GHT_ERROR;
