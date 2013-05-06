@@ -327,23 +327,23 @@ ght_node_to_string(GhtNode *node, stringbuffer_t *sb, int level)
 
     /* Print hash */
     if ( node->hash )
-        stringbuffer_aprintf(sb, "%*s%s", 2*level, "", node->hash);
+        ght_stringbuffer_aprintf(sb, "%*s%s", 2*level, "", node->hash);
     else
-        stringbuffer_aprintf(sb, "%*s%s", 2*level, "", "[hash-is-null]");
+        ght_stringbuffer_aprintf(sb, "%*s%s", 2*level, "", "[hash-is-null]");
 
     /* Print attributes */
     if ( node->attributes )
     {
         GhtAttribute *attr = node->attributes;
-        stringbuffer_append(sb, "  ");
+        ght_stringbuffer_append(sb, "  ");
         while ( attr )
         {
             ght_attribute_to_string(attr, sb);
-            if ( attr->next ) stringbuffer_append(sb, ":");
+            if ( attr->next ) ght_stringbuffer_append(sb, ":");
             attr = attr->next;
         }
     }
-    stringbuffer_append(sb, "\n");
+    ght_stringbuffer_append(sb, "\n");
     
     /* Recurse into children */
     for ( i = 0; i < ght_node_num_children(node); i++ )

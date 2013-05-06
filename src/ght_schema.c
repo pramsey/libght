@@ -428,45 +428,45 @@ GhtErr ght_schema_clone(const GhtSchema *schema, GhtSchema **newschema)
 GhtErr ght_schema_to_xml_str(const GhtSchema *schema, char **xml_str, size_t *xml_str_size) 
 {
     int i;
-    stringbuffer_t *sb = stringbuffer_create_with_size(1024);
+    stringbuffer_t *sb = ght_ght_stringbuffer_create_with_size(1024);
     assert(schema);
     assert(xml_str);
     
-    stringbuffer_append(sb, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-    stringbuffer_append(sb, "<pc:PointCloudSchema xmlns:pc=\"http://pointcloud.org/schemas/PC/1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n");
+    ght_stringbuffer_append(sb, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+    ght_stringbuffer_append(sb, "<pc:PointCloudSchema xmlns:pc=\"http://pointcloud.org/schemas/PC/1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n");
     
     for ( i = 0; i < schema->num_dims; i++ )
     {
         GhtDimension *dim = schema->dims[i];
-        stringbuffer_append(sb, "<pc:dimension>\n");
-        stringbuffer_aprintf(sb, "<pc:position>%d</pc:position>\n", i+1);
+        ght_stringbuffer_append(sb, "<pc:dimension>\n");
+        ght_stringbuffer_aprintf(sb, "<pc:position>%d</pc:position>\n", i+1);
         if ( dim->name )
         {
-            stringbuffer_aprintf(sb, "<pc:name>%s</pc:name>\n", dim->name);
+            ght_stringbuffer_aprintf(sb, "<pc:name>%s</pc:name>\n", dim->name);
         }
         if ( dim->description )
         {
-            stringbuffer_aprintf(sb, "<pc:description>%s</pc:description>\n", dim->description);
+            ght_stringbuffer_aprintf(sb, "<pc:description>%s</pc:description>\n", dim->description);
         }
-        stringbuffer_aprintf(sb, "<pc:interpretation>%s</pc:interpretation>\n", GhtTypeStrings[dim->type]);
-        stringbuffer_aprintf(sb, "<pc:size>%zu</pc:size>\n", GhtTypeSizes[dim->type]);
+        ght_stringbuffer_aprintf(sb, "<pc:interpretation>%s</pc:interpretation>\n", GhtTypeStrings[dim->type]);
+        ght_stringbuffer_aprintf(sb, "<pc:size>%zu</pc:size>\n", GhtTypeSizes[dim->type]);
         if ( dim->scale != 1 )
         {
-            stringbuffer_aprintf(sb, "<pc:scale>%g</pc:scale>\n", dim->scale);
+            ght_stringbuffer_aprintf(sb, "<pc:scale>%g</pc:scale>\n", dim->scale);
         }
         if ( dim->offset != 0 )
         {
-            stringbuffer_aprintf(sb, "<pc:offset>%g</pc:offset>\n", dim->offset);
+            ght_stringbuffer_aprintf(sb, "<pc:offset>%g</pc:offset>\n", dim->offset);
         }
-        stringbuffer_append(sb, "<pc:active>true</pc:active>\n");
-        stringbuffer_append(sb, "</pc:dimension>\n");
+        ght_stringbuffer_append(sb, "<pc:active>true</pc:active>\n");
+        ght_stringbuffer_append(sb, "</pc:dimension>\n");
     }
     
-    stringbuffer_append(sb, "</pc:PointCloudSchema>");     
+    ght_stringbuffer_append(sb, "</pc:PointCloudSchema>");     
     
-    *xml_str = stringbuffer_getstringcopy(sb);
-    *xml_str_size = stringbuffer_getlength(sb) + 1;
-    stringbuffer_destroy(sb);
+    *xml_str = ght_stringbuffer_getstringcopy(sb);
+    *xml_str_size = ght_stringbuffer_getlength(sb) + 1;
+    ght_stringbuffer_destroy(sb);
     return GHT_OK;
 }
 
@@ -486,20 +486,20 @@ GhtErr ght_schema_from_xml_file(const char *filename, GhtSchema **schema)
         return GHT_ERROR;
     }
     
-    sb = stringbuffer_create();
+    sb = ght_stringbuffer_create();
     
     while(1)
     {
         sz = fread(buf, read_size, 1, file);
         buf[read_size] = '\0';
-        stringbuffer_append(sb, buf);
+        ght_stringbuffer_append(sb, buf);
         if ( sz != read_size )
             break;
     }
     
-    err = ght_schema_from_xml_str(stringbuffer_getstring(sb), schema);
+    err = ght_schema_from_xml_str(ght_stringbuffer_getstring(sb), schema);
     
-    stringbuffer_destroy(sb);
+    ght_stringbuffer_destroy(sb);
     return err;
 }
 

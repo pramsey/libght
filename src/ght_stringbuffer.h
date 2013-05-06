@@ -53,20 +53,20 @@ typedef struct
 }
 stringbuffer_t;
 
-extern stringbuffer_t *stringbuffer_create_with_size(size_t size);
-extern stringbuffer_t *stringbuffer_create(void);
-extern void stringbuffer_destroy(stringbuffer_t *sb);
-extern void stringbuffer_clear(stringbuffer_t *sb);
-void stringbuffer_set(stringbuffer_t *sb, const char *s);
-void stringbuffer_copy(stringbuffer_t *sb, stringbuffer_t *src);
-extern void stringbuffer_append(stringbuffer_t *sb, const char *s);
-extern int stringbuffer_aprintf(stringbuffer_t *sb, const char *fmt, ...);
-extern const char *stringbuffer_getstring(stringbuffer_t *sb);
-extern char *stringbuffer_getstringcopy(stringbuffer_t *sb);
-extern int stringbuffer_getlength(stringbuffer_t *sb);
-extern char stringbuffer_lastchar(stringbuffer_t *s);
-extern int stringbuffer_trim_trailing_white(stringbuffer_t *s);
-extern int stringbuffer_trim_trailing_zeroes(stringbuffer_t *s);
+extern stringbuffer_t *ght_ght_stringbuffer_create_with_size(size_t size);
+extern stringbuffer_t *ght_stringbuffer_create(void);
+extern void ght_stringbuffer_destroy(stringbuffer_t *sb);
+extern void ght_stringbuffer_clear(stringbuffer_t *sb);
+void ght_stringbuffer_set(stringbuffer_t *sb, const char *s);
+void ght_stringbuffer_copy(stringbuffer_t *sb, stringbuffer_t *src);
+extern void ght_stringbuffer_append(stringbuffer_t *sb, const char *s);
+extern int ght_stringbuffer_aprintf(stringbuffer_t *sb, const char *fmt, ...);
+extern const char *ght_stringbuffer_getstring(stringbuffer_t *sb);
+extern char *ght_stringbuffer_getstringcopy(stringbuffer_t *sb);
+extern int ght_stringbuffer_getlength(stringbuffer_t *sb);
+extern char ght_stringbuffer_lastchar(stringbuffer_t *s);
+extern int ght_stringbuffer_trim_trailing_white(stringbuffer_t *s);
+extern int ght_stringbuffer_trim_trailing_zeroes(stringbuffer_t *s);
 
 #include "ght_internal.h"
 

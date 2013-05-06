@@ -316,7 +316,7 @@ GhtErr ght_attribute_to_string(const GhtAttribute *attr, stringbuffer_t *sb)
 {
     double d;
     GHT_TRY(ght_attribute_get_value(attr, &d));
-    stringbuffer_aprintf(sb, "%s=%g", attr->dim->name, d);
+    ght_stringbuffer_aprintf(sb, "%s=%g", attr->dim->name, d);
     return GHT_OK;
 }
 

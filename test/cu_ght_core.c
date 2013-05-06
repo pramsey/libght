@@ -301,10 +301,10 @@ test_ght_node_build_tree(void)
     /* also, it's hanging off the parent node */
     CU_ASSERT_EQUAL(node3->children->nodes[1], node5);
 
-    // stringbuffer_t *sb = stringbuffer_create();
+    // stringbuffer_t *sb = ght_stringbuffer_create();
     // err = ght_node_to_string(root, sb, 0);
-    // printf("\n%s\n", stringbuffer_getstring(sb));
-    // stringbuffer_destroy(sb);
+    // printf("\n%s\n", ght_stringbuffer_getstring(sb));
+    // ght_stringbuffer_destroy(sb);
 
     /* This tree will be freed after the next test */
     //ght_node_free(root);
@@ -364,10 +364,10 @@ test_ght_node_build_tree_big(void)
             }
         }
     }
-    // sb = stringbuffer_create();
+    // sb = ght_stringbuffer_create();
     // err = ght_node_to_string(root, sb, 0);
-    // printf("\n%s\n", stringbuffer_getstring(sb));
-    // stringbuffer_destroy(sb);
+    // printf("\n%s\n", ght_stringbuffer_getstring(sb));
+    // ght_stringbuffer_destroy(sb);
     err = ght_node_count_leaves(root, &count);
     CU_ASSERT_EQUAL(err, GHT_OK);
     // printf("count %d\n", count);
@@ -426,9 +426,9 @@ test_ght_node_serialization(void)
     err = ght_node_add_attribute(node3, attr);
     err = ght_node_insert_node(node1, node3, GHT_DUPES_YES);
     
-    sb1 = stringbuffer_create();
+    sb1 = ght_stringbuffer_create();
     err = ght_node_to_string(node1, sb1, 0);
-    // printf("ORIGINAL\n%s\n", stringbuffer_getstring(sb1));
+    // printf("ORIGINAL\n%s\n", ght_stringbuffer_getstring(sb1));
 
     err = ght_writer_new_mem(&writer);
     err = ght_node_write(node1, writer);
@@ -442,13 +442,13 @@ test_ght_node_serialization(void)
     err = ght_reader_new_mem(bytes, bytes_size, schema, &reader);
     err = ght_node_read(reader, &node2);
     
-    sb2 = stringbuffer_create();
+    sb2 = ght_stringbuffer_create();
     err = ght_node_to_string(node2, sb2, 0);
-    // printf("COPY\n%s\n", stringbuffer_getstring(sb2));
+    // printf("COPY\n%s\n", ght_stringbuffer_getstring(sb2));
     
-    CU_ASSERT_STRING_EQUAL(stringbuffer_getstring(sb1), stringbuffer_getstring(sb2));
-    stringbuffer_destroy(sb2);
-    stringbuffer_destroy(sb1);
+    CU_ASSERT_STRING_EQUAL(ght_stringbuffer_getstring(sb1), ght_stringbuffer_getstring(sb2));
+    ght_stringbuffer_destroy(sb2);
+    ght_stringbuffer_destroy(sb1);
     ght_node_free(node1);
     ght_node_free(node2);
     ght_writer_free(writer);
@@ -501,10 +501,10 @@ test_ght_node_file_serialization(void)
     err = ght_node_insert_node(root, node, GHT_DUPES_YES);
     CU_ASSERT_EQUAL(err, GHT_OK);
     
-    // sb1 = stringbuffer_create();
+    // sb1 = ght_stringbuffer_create();
     // err = ght_node_to_string(root, sb1, 0);
-    // printf("\n%s\n", stringbuffer_getstring(sb1));
-    // stringbuffer_destroy(sb1);
+    // printf("\n%s\n", ght_stringbuffer_getstring(sb1));
+    // ght_stringbuffer_destroy(sb1);
     
     err = ght_writer_new_file(testfile, &writer);
     CU_ASSERT_EQUAL(err, GHT_OK);

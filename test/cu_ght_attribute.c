@@ -100,7 +100,7 @@ test_ght_build_node_with_attributes(void)
     GhtAttribute *a;
     GhtCoordinate coord;
     GhtNode *node;
-    stringbuffer_t *sb = stringbuffer_create();
+    stringbuffer_t *sb = ght_stringbuffer_create();
     
     /* X, Y */
     coord.x = -127;
@@ -114,9 +114,9 @@ test_ght_build_node_with_attributes(void)
     ght_node_add_attribute(node, a);
     
     ght_node_to_string(node, sb, 0);
-    CU_ASSERT_STRING_EQUAL("c0j8n012j80252h0  Z=1231.2:Intensity=3\n", stringbuffer_getstring(sb));
-    // printf("%s\n", stringbuffer_getstring(sb));
-    stringbuffer_destroy(sb);
+    CU_ASSERT_STRING_EQUAL("c0j8n012j80252h0  Z=1231.2:Intensity=3\n", ght_stringbuffer_getstring(sb));
+    // printf("%s\n", ght_stringbuffer_getstring(sb));
+    ght_stringbuffer_destroy(sb);
     ght_node_free(node);
 }
 
@@ -158,10 +158,10 @@ test_ght_build_tree_with_attributes(void)
             980jtyf1dh  Z=123.4:Intensity=5
             2khvpfu13f  Z=123.4:Intensity=5
     */
-    sb = stringbuffer_create();
+    sb = ght_stringbuffer_create();
     ght_node_to_string(root, sb, 0);
-    // printf("\n%s\n", stringbuffer_getstring(sb));
-    stringbuffer_destroy(sb);
+    // printf("\n%s\n", ght_stringbuffer_getstring(sb));
+    ght_stringbuffer_destroy(sb);
 
     /* Compact the tree on both attributes:
         c0n0e  Intensity=5
@@ -178,12 +178,12 @@ test_ght_build_tree_with_attributes(void)
             980jtyf1dh
             2khvpfu13f  
     */
-    sb = stringbuffer_create();
+    sb = ght_stringbuffer_create();
     ght_node_compact_attribute(root, simpleschema->dims[2], &attr);
     ght_node_compact_attribute(root, simpleschema->dims[3], &attr);
     ght_node_to_string(root, sb, 0);
-    // printf("\n%s\n", stringbuffer_getstring(sb));
-    stringbuffer_destroy(sb);
+    // printf("\n%s\n", ght_stringbuffer_getstring(sb));
+    ght_stringbuffer_destroy(sb);
     
     /* Check that Intensity=5 has migrated all the way to the top of the tree */
     CU_ASSERT_STRING_EQUAL(root->attributes->dim->name, "Intensity");
@@ -210,14 +210,14 @@ test_ght_unbuild_tree_with_attributes(void)
     CU_ASSERT_STRING_EQUAL("Z", nodelist->nodes[4]->attributes->dim->name);
     CU_ASSERT_STRING_EQUAL("Z", nodelist->nodes[2]->attributes->dim->name);
     
-    // stringbuffer_t *sb = stringbuffer_create();
+    // stringbuffer_t *sb = ght_stringbuffer_create();
     // for ( i = 0 ; i < nodelist->num_nodes; i++ )
     // {
     //     ght_node_to_string(nodelist->nodes[i], sb, 0);
-    //     stringbuffer_append(sb, "\n");
+    //     ght_stringbuffer_append(sb, "\n");
     // }
-    // printf("\n%s\n", stringbuffer_getstring(sb));
-    // stringbuffer_destroy(sb);
+    // printf("\n%s\n", ght_stringbuffer_getstring(sb));
+    // ght_stringbuffer_destroy(sb);
     
     ght_nodelist_free_deep(nodelist);
     ght_node_free(root);
