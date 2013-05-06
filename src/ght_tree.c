@@ -23,6 +23,7 @@ ght_tree_new(const GhtSchema *schema, GhtTree **tree)
     t->config.max_hash_length  = GHT_MAX_HASH_LENGTH;
     t->schema = schema;
     *tree = t;
+    return GHT_OK;
 }
 
 GhtErr
@@ -32,6 +33,7 @@ ght_tree_free(GhtTree *tree)
     if ( tree->root )
         ght_node_free(tree->root);
     ght_free(tree);
+    return GHT_OK;
 }
 
 GhtErr
