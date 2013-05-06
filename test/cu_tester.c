@@ -13,6 +13,7 @@
 extern CU_SuiteInfo schema_suite;
 extern CU_SuiteInfo core_suite;
 extern CU_SuiteInfo attributes_suite;
+extern CU_SuiteInfo tree_suite;
 
 /*
 ** The main() function for setting up and running the tests.
@@ -27,6 +28,7 @@ int main(int argc, char *argv[])
         schema_suite,
         core_suite,
         attributes_suite,
+        tree_suite,
         CU_SUITE_INFO_NULL
     };
 

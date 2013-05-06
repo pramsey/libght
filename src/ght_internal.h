@@ -476,6 +476,9 @@ GhtErr ght_reader_free(GhtReader *reader);
 /** Read bytes in from a reader */
 GhtErr ght_read(GhtReader *reader, void *bytes, size_t read_size);
 
+/** Set up a tree configuration with defaults */
+GhtErr ght_config_init(GhtConfig *config);
+
 /** Convert a hex string into a byte buffer */
 GhtErr bytes_from_hexbytes(const char *hex, size_t hexsize, uint8_t **bytes);
 

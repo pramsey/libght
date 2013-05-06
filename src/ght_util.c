@@ -150,3 +150,22 @@ ght_version(void)
     return ght_strdup(buf);
 }
 
+GhtErr
+ght_config_init(GhtConfig *config)
+{
+    // typedef struct
+    // {
+    //     unsigned char  allow_duplicates;
+    //     unsigned char  max_hash_length;
+    //     unsigned char  version;
+    //     unsigned char  endian;
+    // } GhtConfig;
+    memset(config, 0, sizeof(GhtConfig));
+    config->allow_duplicates = GHT_DUPES_YES;
+    config->max_hash_length = GHT_MAX_HASH_LENGTH;
+    config->version = GHT_FORMAT_VERSION;
+    config->endian = machine_endian();
+    return GHT_OK;
+}
+
+

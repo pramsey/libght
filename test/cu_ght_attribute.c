@@ -15,7 +15,7 @@
 
 static GhtSchema *simpleschema = NULL;
 static const char *schemafile = "test/data/simple-schema.xml";
-GhtNode *root;
+static GhtNode *root;
 
 /* Setup/teardown for this suite */
 static int
@@ -35,7 +35,7 @@ clean_suite(void)
     return 0;
 }
 
-GhtNodeList *
+static GhtNodeList *
 tsv_file_to_node_list(const char *fname, const GhtSchema *schema)
 {
     GhtNodeList *nodelist;

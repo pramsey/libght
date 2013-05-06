@@ -163,7 +163,7 @@ ght_tree_from_nodelist(const GhtSchema *schema, GhtNodeList *nlist, GhtConfig *c
         }
     }
     
-    GHT_TRY(ght_tree_new(schema, tree));
+    GHT_TRY(ght_tree_new(schema, &t));
     t->num_nodes = nlist->num_nodes;
     t->root = root;
     t->schema = schema;

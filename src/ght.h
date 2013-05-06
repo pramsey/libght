@@ -21,6 +21,7 @@ typedef void* GhtTreePtr;
 typedef void* GhtNodeListPtr;
 typedef void* GhtNodePtr;
 typedef void* GhtAttributePtr;
+typedef GhtConfig* GhtConfigPtr;
 
 
 /***********************************************************************
@@ -133,7 +134,7 @@ GhtErr ght_schema_free(GhtSchemaPtr schema);
 GhtErr ght_tree_new(const GhtSchemaPtr a, GhtTreePtr *tree);
 
 /** Build a tree from a linear nodelist */
-GhtErr ght_tree_from_nodelist(const GhtSchemaPtr schema, GhtNodeListPtr nlist, GhtConfig *config, GhtTreePtr *tree);
+GhtErr ght_tree_from_nodelist(const GhtSchemaPtr schema, GhtNodeListPtr nlist, GhtConfigPtr config, GhtTreePtr *tree);
 
 /** Free a GhtTree from memory, including nodes and schema */
 GhtErr ght_tree_free(GhtTreePtr tree);
@@ -162,6 +163,8 @@ GhtErr ght_tree_write(const GhtTreePtr tree, GhtWriterPtr writer);
 /** Write a GhtTree to memory of file */
 GhtErr ght_tree_read(GhtReaderPtr reader, GhtTreePtr *tree);
 
+/** Set up a tree configuration with defaults */
+GhtErr ght_config_init(GhtConfigPtr config);
 
 
 /***********************************************************************

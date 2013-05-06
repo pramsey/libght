@@ -704,7 +704,7 @@ ght_node_get_extent(const GhtNode *node, const GhtHash *hash, GhtArea *area)
     if ( node->hash )
         strcat(h, node->hash);
 
-    if ( node->children || node->children->num_nodes > 0 )
+    if ( node->children && node->children->num_nodes > 0 )
     {
         int i;
         for ( i = 0; i < node->children->num_nodes; i++ )
