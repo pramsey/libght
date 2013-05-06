@@ -67,3 +67,9 @@ typedef struct
 /* So we can alias char* to GhtHash* */
 typedef char GhtHash;
 
+/* Access version information */
+int ght_version_major(void);
+int ght_version_minor(void);
+int ght_version_patch(void);
+char * ght_version(void);
+

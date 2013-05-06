@@ -47,4 +47,5 @@ To Do
 
 - Opaque types in common header to separate user-API from internal API
 - Filtering functions to return sub-trees based on attribute or spatial constraints
+- Attribute statistics stored at top of tree
 

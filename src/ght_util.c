@@ -124,3 +124,29 @@ machine_endian(void)
                                        /* 1 = little endian | ndr */
 }
 
+int 
+ght_version_major(void)
+{
+    return GHT_VERSION_MAJOR;
+}
+
+int 
+ght_version_minor(void)
+{
+    return GHT_VERSION_MINOR;
+}
+
+int 
+ght_version_patch(void)
+{
+    return GHT_VERSION_PATCH;
+}
+
+char *
+ght_version(void)
+{
+    char buf[32];
+    snprintf(buf, 32, "%d.%d.%d", GHT_VERSION_MAJOR, GHT_VERSION_MINOR, GHT_VERSION_PATCH);
+    return ght_strdup(buf);
+}
+

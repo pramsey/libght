@@ -108,7 +108,7 @@ l2g_config_printf(const Las2GhtConfig *config)
 static void
 l2g_usage()
 {
-    printf("%s, version %d.%d\n\n", EXENAME, GHT_VERSION_MAJOR, GHT_VERSION_MINOR);
+    printf("%s, version %d.%d\n\n", EXENAME, ght_version_major(), ght_version_minor());
     printf("Usage: %s [options]\n\n", EXENAME);
     printf("Options:\n");
     printf("  --lasfile FILENAME            Read file as input.\n");
