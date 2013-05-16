@@ -60,6 +60,7 @@ include_directories (${LIBXML2_INCLUDE_DIR})
 
 find_package (LibLAS)
 find_package (PROJ4)
+find_package (CUnit)
 
 #------------------------------------------------------------------------------
 # generate config include
