@@ -8,6 +8,7 @@
 #include "liblas/capi/liblas.h"
 #include "proj_api.h"
 #include "ght.h" /* We use the public GHT API to promote good practices */
+#define _GNU_SOURCE
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
@@ -467,7 +468,7 @@ l2g_build_node(const Las2GhtConfig *config, const Las2GhtState *state, LASPointH
     
     /* Skip invalid points, if so configured */
     if ( config->validpoints && ! LASPoint_IsValid(laspoint) )
-        return NULL;
+        return GHT_ERROR;
 
     coord.x = LASPoint_GetX(laspoint);
     coord.y = LASPoint_GetY(laspoint);
