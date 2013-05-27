@@ -5,10 +5,11 @@
 *
 ***********************************************************************/
 
+#define _GNU_SOURCE
+
 #include "liblas/capi/liblas.h"
 #include "proj_api.h"
 #include "ght.h" /* We use the public GHT API to promote good practices */
-#define _GNU_SOURCE
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
@@ -700,6 +701,9 @@ main (int argc, char **argv)
     Las2GhtState state;
     GhtTreePtr tree;
     int num_points;
+
+    /* Set up to use the GHT system memory management / logging */
+    ght_init();
     
     /* We can't do anything if we don't have GDAL/GeoTIFF support in libLAS */
     if ( ! (LAS_IsGDALEnabled() && LAS_IsLibGeoTIFFEnabled()) )
@@ -710,9 +714,6 @@ main (int argc, char **argv)
     
     /* Ensure state is clean */
     memset(&state, 0, sizeof(Las2GhtState));
-
-    /* Set up to use the GHT system memory management / logging */
-    ght_init();
 
     /* If no options are specified, display l2g_usage */
     if (argc <= 1)
