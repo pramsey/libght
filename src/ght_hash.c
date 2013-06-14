@@ -79,11 +79,13 @@ ght_hash_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, Gh
     double val1, val2, val_tmp;
     GhtRange *range1, *range2, *range_tmp;
 
-    assert(lat >= -90.0);
-    assert(lat <= 90.0);
-    assert(lon >= -180.0);
-    assert(lon <= 180.0);
     assert(resolution <= MAX_HASH_LENGTH);
+
+    if ( lat < -90 || lat > 90 || lon < -180 || lon > 180 )
+    {
+        ght_error("%s: coordinate values (%g, %g) out of range (-180/180,-90/90)", __func__, lon, lat);
+        return GHT_ERROR;
+    }
 
     geohash = ght_malloc(resolution+1);
 
