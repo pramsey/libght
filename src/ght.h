@@ -154,6 +154,18 @@ GhtErr ght_tree_get_schema(const GhtTreePtr tree, GhtSchemaPtr *schema);
 /** Calculate the spatial extent of a GhtTree */
 GhtErr ght_tree_get_extent(const GhtTreePtr tree, GhtArea *area);
 
+/** Allocate new tree with only nodes that meet the filter condition */
+GhtErr ght_tree_filter_greater_than(const GhtTreePtr tree, const char *dimname, double value, GhtTreePtr *tree_filtered);
+
+/** Allocate new tree with only nodes that meet the filter condition */
+GhtErr ght_tree_filter_less_than(const GhtTreePtr tree, const char *dimname, double value, GhtTreePtr *tree_filtered);
+
+/** Allocate new tree with only nodes that meet the filter condition */
+GhtErr ght_tree_filter_between(const GhtTreePtr tree, const char *dimname, double value1, double value2, GhtTreePtr *tree_filtered);
+
+/** Allocate new tree with only nodes that meet the filter condition */
+GhtErr ght_tree_filter_equal(const GhtTreePtr tree, const char *dimname, double value, GhtTreePtr *tree_filtered);
+
 /** Compact all the attributes from 'Z' onwards */
 GhtErr ght_tree_compact_attributes(GhtTreePtr tree);
 

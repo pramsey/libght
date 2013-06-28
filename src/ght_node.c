@@ -359,6 +359,10 @@ ght_node_count_leaves(const GhtNode *node, int *count)
 {
     int i;
     GhtErr err;
+    
+    /* No-op on empty */
+    if ( ! node ) return GHT_OK;
+    
     if ( ght_node_is_leaf(node) )
     {
         *count += 1;
@@ -727,14 +731,87 @@ ght_node_get_extent(const GhtNode *node, const GhtHash *hash, GhtArea *area)
     return GHT_OK;
 }
     
+GhtErr 
+ght_node_filter_by_attribute(const GhtNode *node, const GhtFilter *filter, GhtNode **filtered_node)
+{
+    int i;
+    double val;
+    int keep = 1;
+    GhtAttribute *attr; 
+    GhtNode *node_copy = NULL;
 
+    /* Our default position is nothing is getting returned */
+    *filtered_node = NULL;
+    
+    /* No-op on an empty input */
+    if ( ! node )
+        return GHT_OK;
+    
+    attr = node->attributes;
+    while ( attr )
+    {
+        /* Only filter on the attribute of interest */
+        if ( attr->dim != filter->dim )
+        {
+            attr = attr->next;
+        }
+        else
+        {
+            GHT_TRY(ght_attribute_get_value(attr, &val));
+            switch ( filter->mode )
+            {
+                case GHT_GREATER_THAN:
+                    keep = (val > filter->range.min);
+                    break;
+                case GHT_LESS_THAN:
+                    keep = (val < filter->range.max);
+                    break;
+                case GHT_BETWEEN:
+                    keep = ((val <= filter->range.max) && (val >= filter->range.min));
+                    break;
+                case GHT_EQUAL:
+                    keep = (val == filter->range.min);
+                    break;
+                default:
+                    ght_error("%s: invalid GhtFilterMode (%d)", __func__, filter->mode);
+            }
+            break;
+        }
+    }
+    
+    /* We found a relevant attribute, and it failed the filter test. */
+    /* So, this node (and all it's children) are excluded! */
+    if ( ! keep )
+        return GHT_OK;
+    
+    /* Also take copies of any children that pass the filter */
+    if ( node->children )
+    {
+        for ( i = 0; i < node->children->num_nodes; i++ )
+        {
+            GhtNode *child_copy;
+            GHT_TRY(ght_node_filter_by_attribute(node->children->nodes[i], filter, &child_copy));
+            /* Child survived the filtering */
+            if ( child_copy )
+            {
+                if ( ! node_copy )
+                {
+                    GHT_TRY(ght_node_new(&node_copy));
+                    GHT_TRY(ght_hash_clone(node->hash, &(node_copy->hash)));
+                    GHT_TRY(ght_attribute_clone(node->attributes, &(node_copy->attributes)));
+                }
+                GHT_TRY(ght_node_add_child(node_copy, child_copy));
+            }
+        }
+    }
+    else
+    {
+        GHT_TRY(ght_node_new(&node_copy));
+        GHT_TRY(ght_hash_clone(node->hash, &(node_copy->hash)));
+        GHT_TRY(ght_attribute_clone(node->attributes, &(node_copy->attributes)));
+    }
 
-
-
-
-
-
-
-
-
-
+    /* Done, return the structure */
+    *filtered_node = node_copy;
+    return GHT_OK;
+}

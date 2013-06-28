@@ -83,8 +83,8 @@ ght_tree_write(const GhtTree *tree, GhtWriter *writer)
     uint8_t version = GHT_FORMAT_VERSION;
     char endian = machine_endian();
 
-    assert(tree);
     assert(writer);
+    assert(tree);
     
     if ( ! tree->root )
         return GHT_ERROR;
@@ -211,3 +211,100 @@ ght_tree_get_schema(const GhtTree *tree, const GhtSchema **schema)
     *schema = tree->schema;
     return GHT_OK;  
 }
+
+static GhtErr
+ght_tree_filter(const GhtTree *tree, const GhtFilter *filter, GhtTree **tree_filtered)
+{
+    GhtSchema *schema_filtered = NULL;
+    GhtNode *root_filtered = NULL;
+    GhtErr err;
+    int num_leaves = 0;
+    
+    /* We need a tree and a place to put a new tree */
+    if ( ! tree || ! tree_filtered )
+        return GHT_ERROR;
+    
+    /* Filter */
+    err = ght_node_filter_by_attribute(tree->root, filter, &root_filtered);
+    if ( err == GHT_ERROR )
+        ght_error("%s: attribute filter failed", __func__);
+        
+    /* Got a valid response, so build a new tree around it */
+    GHT_TRY(ght_node_count_leaves(root_filtered, &num_leaves));
+    GHT_TRY(ght_schema_clone(tree->schema, &schema_filtered));
+    GHT_TRY(ght_tree_new(schema_filtered, tree_filtered));
+    (*tree_filtered)->num_nodes = num_leaves;
+    (*tree_filtered)->config = tree->config;
+    (*tree_filtered)->root = root_filtered;
+
+    return GHT_OK;
+}
+
+GhtErr
+ght_tree_filter_greater_than(const GhtTree *tree, const char *dimname, double value, GhtTree **tree_filtered)
+{
+    GhtFilter filter;
+    GhtDimension *dim;
+    
+    /* Set up filter */
+    filter.mode = GHT_GREATER_THAN;
+    filter.range.min = filter.range.max = value;
+    GHT_TRY(ght_schema_get_dimension_by_name(tree->schema, dimname, &dim));
+    filter.dim = dim;
+    
+    return ght_tree_filter(tree, &filter, tree_filtered);
+}    
+
+GhtErr
+ght_tree_filter_less_than(const GhtTree *tree, const char *dimname, double value, GhtTree **tree_filtered)
+{
+    GhtFilter filter;
+    GhtDimension *dim;
+    
+    /* Set up filter */
+    filter.mode = GHT_LESS_THAN;
+    filter.range.min = filter.range.max = value;
+    GHT_TRY(ght_schema_get_dimension_by_name(tree->schema, dimname, &dim));
+    filter.dim = dim;
+    
+    return ght_tree_filter(tree, &filter, tree_filtered);
+}    
+
+GhtErr
+ght_tree_filter_between(const GhtTree *tree, const char *dimname, double value1, double value2, GhtTree **tree_filtered)
+{
+    GhtFilter filter;
+    GhtDimension *dim;
+
+    if ( value1 > value2 )
+    {   
+        double tmp = value1;
+        value1 = value2;
+        value2 = tmp;
+    }
+    
+    /* Set up filter */
+    filter.mode = GHT_BETWEEN;
+    filter.range.min = value1;
+    filter.range.max = value2;
+    GHT_TRY(ght_schema_get_dimension_by_name(tree->schema, dimname, &dim));
+    filter.dim = dim;
+    
+    return ght_tree_filter(tree, &filter, tree_filtered);
+}    
+
+GhtErr
+ght_tree_filter_equal(const GhtTree *tree, const char *dimname, double value, GhtTree **tree_filtered)
+{
+    GhtFilter filter;
+    GhtDimension *dim;
+    
+    /* Set up filter */
+    filter.mode = GHT_EQUAL;
+    filter.range.min = filter.range.max = value;
+    GHT_TRY(ght_schema_get_dimension_by_name(tree->schema, dimname, &dim));
+    filter.dim = dim;
+    
+    return ght_tree_filter(tree, &filter, tree_filtered);
+}
+    

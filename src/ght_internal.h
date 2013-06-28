@@ -59,6 +59,14 @@ typedef enum
     GHT_SPLIT
 } GhtHashMatch;
 
+typedef enum
+{
+    GHT_GREATER_THAN,
+    GHT_LESS_THAN,
+    GHT_BETWEEN,
+    GHT_EQUAL
+} GhtFilterMode;
+    
 static char *GhtTypeStrings[] =
 {
     "unknown",
@@ -118,7 +126,12 @@ typedef struct
     uint8_t version;
 } GhtReader;
 
-
+typedef struct
+{
+    GhtRange range;
+    GhtFilterMode mode;
+    const GhtDimension *dim;
+} GhtFilter;
 
 typedef struct GhtAttribute_t
 {
@@ -217,6 +230,9 @@ GhtErr ght_hash_write(const GhtHash *hash, GhtWriter *writer);
 /** Read hash from byte buffer */
 GhtErr ght_hash_read(GhtReader *reader, GhtHash **hash);
 
+/** Make a copy of the input hash */
+GhtErr ght_hash_clone(const GhtHash *hash, GhtHash **hash_new);
+
 /**
 * Find the common parts of two hash strings and return pointers
 * to the unique bits. Also returns a code indicating the kind
@@ -274,6 +290,9 @@ GhtErr ght_node_to_nodelist(const GhtNode *node, GhtNodeList *nodelist, GhtAttri
 
 /** Recursively calculate the extent GhtArea of a tree of GhtNode */
 GhtErr ght_node_get_extent(const GhtNode *node, const GhtHash *hash, GhtArea *area);
+
+/** Recursively filter out sub-elements of the tree that don't pass the filter, returns a freshly allocated tree that corresponds to the filter */
+GhtErr ght_node_filter_by_attribute(const GhtNode *node, const GhtFilter *filter, GhtNode **filtered_node);
 
 /** Write a byte representation of a node tree */
 GhtErr ght_node_write(const GhtNode *node, GhtWriter *writer);
@@ -334,6 +353,18 @@ GhtErr ght_tree_to_nodelist(const GhtTree *tree, GhtNodeList *nodelist);
 
 /** Calculate the spatial extent of a GhtTree */
 GhtErr ght_tree_get_extent(const GhtTree *tree, GhtArea *area);
+
+/** Allocate new tree with only nodes that meet the filter condition */
+GhtErr ght_tree_filter_greater_than(const GhtTree *tree, const char *dimname, double value, GhtTree **tree_filtered);
+
+/** Allocate new tree with only nodes that meet the filter condition */
+GhtErr ght_tree_filter_less_than(const GhtTree *tree, const char *dimname, double value, GhtTree **tree_filtered);
+
+/** Allocate new tree with only nodes that meet the filter condition */
+GhtErr ght_tree_filter_between(const GhtTree *tree, const char *dimname, double value1, double value2, GhtTree **tree_filtered);
+
+/** Allocate new tree with only nodes that meet the filter condition */
+GhtErr ght_tree_filter_equal(const GhtTree *tree, const char *dimname, double value, GhtTree **tree_filtered);
 
 /** Allocate a new attribute and fill in the value from a double */
 GhtErr ght_attribute_new_from_double(const GhtDimension *dim, double val, GhtAttribute **attr);

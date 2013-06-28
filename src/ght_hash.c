@@ -65,6 +65,21 @@ static const char BORDERS_TABLE[8][9] =
 };
 
 GhtErr
+ght_hash_clone(const GhtHash *hash, GhtHash **hash_new)
+{
+    size_t sz;
+    if ( ! hash ) 
+    {
+        *hash_new = NULL;
+        return GHT_OK;
+    }
+    sz = strlen(hash) + 1;
+    *hash_new = ght_malloc(sz);
+    memcpy(*hash_new, hash, sz);
+    return GHT_OK;
+}
+
+GhtErr
 ght_hash_from_coordinate(const GhtCoordinate *coord, unsigned int resolution, GhtHash **hash)
 {
     int i;

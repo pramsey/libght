@@ -123,6 +123,57 @@ test_ght_tree_extent(void)
     ght_tree_free(tree);
 }
 
+static void
+test_ght_tree_empty(void)
+{
+    GhtTree *tree1, *tree2;
+    GhtErr err;
+    GhtWriter *writer;
+    GhtReader *reader;
+    uint8_t *bytes;
+    size_t bytes_size;
+
+    /* Empty tree */
+    err = ght_tree_new(simpleschema, &tree1);
+    CU_ASSERT_EQUAL(err, GHT_OK);
+    
+    /* Serialize it */
+    err = ght_writer_new_mem(&writer);
+    err = ght_tree_write(tree1, writer);
+    CU_ASSERT_EQUAL(err, GHT_ERROR);
+
+    ght_tree_free(tree1);
+    ght_writer_free(writer);
+}
+
+static void
+test_ght_tree_filter(void)
+{
+    static const char *simpledata = "test/data/simple-data.tsv";   
+    GhtTree *tree1, *tree2;
+    GhtErr err;
+    
+    /* Read a nodelist from a TSV file */
+    tree1 = tsv_file_to_tree(simpledata, simpleschema);
+    CU_ASSERT_EQUAL(tree1->num_nodes, 8);
+
+    err = ght_tree_filter_greater_than(tree1, "Z", 123.35, &tree2);
+    CU_ASSERT_EQUAL(err, GHT_OK);
+    CU_ASSERT_EQUAL(tree2->num_nodes, 7);    
+    ght_tree_free(tree2);
+    
+    err = ght_tree_filter_less_than(tree1, "Z", 123.35, &tree2);
+    CU_ASSERT_EQUAL(err, GHT_OK);
+    CU_ASSERT_EQUAL(tree2->num_nodes, 1);    
+    ght_tree_free(tree2);
+
+    err = ght_tree_filter_less_than(tree1, "Z", 103.35, &tree2);
+    CU_ASSERT_EQUAL(err, GHT_OK);
+    CU_ASSERT_EQUAL(tree2->num_nodes, 0);   
+    ght_tree_free(tree2);
+    
+    ght_tree_free(tree1);
+}
 
 
 /* REGISTER ***********************************************************/
@@ -130,6 +181,8 @@ test_ght_tree_extent(void)
 CU_TestInfo tree_tests[] =
 {
     GHT_TEST(test_ght_tree_extent),
+    GHT_TEST(test_ght_tree_empty),
+    GHT_TEST(test_ght_tree_filter),
     CU_TEST_INFO_NULL
 };
 
