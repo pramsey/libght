@@ -339,6 +339,9 @@ GhtErr ght_tree_get_hash(const GhtTree *tree, GhtHash **hash);
 /** Read the schema from the GhtTree */
 GhtErr ght_tree_get_schema(const GhtTree *tree, const GhtSchema **schema);
 
+/** Read the point count from the GhtTree */
+GhtErr ght_tree_get_numpoints(const GhtTree *tree, int *numpoints);
+
 /** Compact all the attributes from 'Z' onwards */
 GhtErr ght_tree_compact_attributes(GhtTree *tree);
 

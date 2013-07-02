@@ -308,3 +308,16 @@ ght_tree_filter_equal(const GhtTree *tree, const char *dimname, double value, Gh
     return ght_tree_filter(tree, &filter, tree_filtered);
 }
     
+GhtErr
+ght_tree_get_numpoints(const GhtTree *tree, int *numpoints)
+{
+    if ( numpoints )
+    {
+        *numpoints = tree->num_nodes;
+        return GHT_OK;
+    }
+    else
+    {
+        return GHT_ERROR;
+    }
+}

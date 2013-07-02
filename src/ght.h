@@ -151,6 +151,9 @@ GhtErr ght_tree_get_hash(const GhtTreePtr tree, GhtHash **hash);
 /** Read the schema from the GhtTree */
 GhtErr ght_tree_get_schema(const GhtTreePtr tree, GhtSchemaPtr *schema);
 
+/** Read the point cound from the GhtTree */
+GhtErr ght_tree_get_numpoints(const GhtTreePtr tree, int *numpoints);
+
 /** Calculate the spatial extent of a GhtTree */
 GhtErr ght_tree_get_extent(const GhtTreePtr tree, GhtArea *area);
 
