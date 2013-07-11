@@ -268,7 +268,7 @@ test_ght_node_build_tree(void)
     /* and distinct part of the root is now a new child node */
     CU_ASSERT_STRING_EQUAL(root->children->nodes[0]->hash, "wpzpy4vtv4");
     /* which in turn has the old identical node as a child */
-    CU_ASSERT_EQUAL(root->children->nodes[0]->children->nodes[0], node1);
+    CU_ASSERT_EQUAL(root->children->nodes[0]->children->nodes[1], node1);
 
     /* insert child */
     err = ght_node_new_from_hash("c0v2hdm1wpzpy4vkv4", &node3);
@@ -288,7 +288,7 @@ test_ght_node_build_tree(void)
     /* after insert it's nulled, because it's a duplicate */
     CU_ASSERT_EQUAL(node4->hash, NULL);
     /* also, it's hanging off the previous node */
-    CU_ASSERT_EQUAL(node3->children->nodes[0], node4);
+    CU_ASSERT_EQUAL(node3->children->nodes[1], node4);
 
     /* insert another duplicate of previous */
     err = ght_node_new_from_hash("c0v2hdm1wpzpy4vkv4", &node5);
@@ -299,7 +299,7 @@ test_ght_node_build_tree(void)
     /* after insert it's nulled, because it's a duplicate */
     CU_ASSERT_EQUAL(node5->hash, NULL);
     /* also, it's hanging off the parent node */
-    CU_ASSERT_EQUAL(node3->children->nodes[1], node5);
+    CU_ASSERT_EQUAL(node3->children->nodes[2], node5);
 
     // stringbuffer_t *sb = ght_stringbuffer_create();
     // err = ght_node_to_string(root, sb, 0);
@@ -436,7 +436,7 @@ test_ght_node_serialization(void)
     bytes_size = bytebuffer_getsize(writer->bytebuffer);
 
     err = hexbytes_from_bytes(bytes, bytes_size, &hex);
-    CU_ASSERT_STRING_EQUAL("086330763268646D3100020A77707A7079347674763400000A6374643463637839796201035800020000000001020F27000000", hex);
+    CU_ASSERT_STRING_EQUAL("086330763268646D3100020A77707A7079347674763400000A6374643463637839796200030001035800000000000001020F27000000", hex);
     // printf("\n\n%s\n", hex);
     
     err = ght_reader_new_mem(bytes, bytes_size, schema, &reader);

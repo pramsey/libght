@@ -275,14 +275,25 @@ ght_node_insert_node(GhtNode *node, GhtNode *node_to_insert, GhtDuplicates dupli
         {
             /* If this is the first duplicate, add a copy of the parent */
             /* To serve as a proxy leaf for this value */
+            if ( ( ! node->children ) || ( node->children->num_nodes == 0 ) )
+            {
+                GhtNode *parent_leaf;
+                GHT_TRY(ght_node_new(&parent_leaf));
+                GHT_TRY(ght_node_transfer_attributes(node, parent_leaf));
+                GHT_TRY(ght_node_add_child(node, parent_leaf));
+            }
+            
             /* Add the new node under the parent, stripping the hash */
             ght_free(node_to_insert->hash);
             node_to_insert->hash = NULL;
-            return ght_node_add_child(node, node_to_insert);
+            GHT_TRY(ght_node_add_child(node, node_to_insert));
+            
+            return GHT_OK;
         }
         else
         {
-            /* Average / median the duplicates onto parent here? */
+            /* For now, we just skip duplicates. */
+            /* In future, average / median the duplicates onto parent here? */
             return GHT_OK;
         }
     }
@@ -645,7 +656,6 @@ ght_node_read(GhtReader *reader, GhtNode **node)
 GhtErr
 ght_node_to_nodelist(const GhtNode *node, GhtNodeList *nodelist, GhtAttribute *attr, GhtHash *hash)
 {
-    int node_is_leaf = 0;
     static int hash_array_len = GHT_MAX_HASH_LENGTH + 1;
     GhtHash h[hash_array_len];
     GhtAttribute *a;
@@ -668,28 +678,18 @@ ght_node_to_nodelist(const GhtNode *node, GhtNodeList *nodelist, GhtAttribute *a
         for ( i = 0; i < node->children->num_nodes; i++ )
         {
             GHT_TRY(ght_node_to_nodelist(node->children->nodes[i], nodelist, a, h));
-            if ( node->children->nodes[i]->hash == NULL )
-            {
-                node_is_leaf = 1;
-            }
         }
+        ght_attribute_free(a);   
     }
+    /* This is a leaf node, create a new node and add to list */
     else
-    {
-        node_is_leaf = 1;
-    }
-
-    if ( node_is_leaf )
     {
         GhtNode *n;
         GHT_TRY(ght_node_new_from_hash(h, &n));
         GHT_TRY(ght_node_add_attribute(n, a));
         GHT_TRY(ght_nodelist_add_node(nodelist, n));
     }
-    else
-    {
-        ght_attribute_free(a);   
-    }
+
 
     return GHT_OK;
 }
@@ -780,9 +780,11 @@ ght_node_filter_by_attribute(const GhtNode *node, const GhtFilter *filter, GhtNo
     }
     
     /* We found a relevant attribute, and it failed the filter test. */
-    /* So, this node (and all it's children) are excluded! */
+    /* So, this node (and all it's children) can be excluded! */
     if ( ! keep )
+    {
         return GHT_OK;
+    }
     
     /* Also take copies of any children that pass the filter */
     if ( node->children )
