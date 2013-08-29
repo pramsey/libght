@@ -29,6 +29,15 @@ set (CMAKE_COLOR_MAKEFILE ON)
 # Path to additional CMake modules
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 
+
+#------------------------------------------------------------------------------
+# use default install location if not specified
+#------------------------------------------------------------------------------
+
+if (NOT DEFINED LIB_INSTALL_DIR)
+  set (LIB_INSTALL_DIR lib)
+endif()
+
 #------------------------------------------------------------------------------
 # check for headers
 #------------------------------------------------------------------------------
