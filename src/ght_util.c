@@ -107,8 +107,8 @@ hexbytes_from_bytes(const uint8_t *bytebuf, size_t bytesize, char **hexbytes)
 int
 fexists(const char *filename)
 {
-    FILE *file;
-    if ( file = fopen(filename, "r") )
+    FILE *file = fopen(filename, "r");
+    if ( file )
     {
         fclose(file);
         return 1;

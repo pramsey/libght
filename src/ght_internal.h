@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <ctype.h>
 
 #include "ght_config.h"
 #include "ght_core.h"
@@ -390,6 +391,9 @@ GhtErr ght_attribute_get_size(const GhtAttribute *attr, size_t *sz);
 /** Get the dimension associated with a GhtAttribute */
 GhtErr ght_attribute_get_dimension(const GhtAttribute *attr, const GhtDimension **dim);
 
+/** Traverse GhtAttribute chain and copy out GhtAttribute that corresponds to the GhtDimension */
+GhtErr ght_attribute_get_by_dimension(const GhtAttribute *attr, const GhtDimension *dim, GhtAttribute *found);
+
 /** Set the packed attribute value */
 GhtErr ght_attribute_set_value(GhtAttribute *attr, double val);
 
@@ -449,6 +453,9 @@ GhtErr ght_dimension_same(const GhtDimension *dim1, const GhtDimension *dim2, in
 
 /** Allocate a blank GhtSchema */
 GhtErr ght_schema_new(GhtSchema **schema);
+
+/** Create a copy of a GhtSchema */
+GhtErr ght_schema_clone(const GhtSchema *schema, GhtSchema **newschema);
 
 /** Free an existing schema */
 GhtErr ght_schema_free(GhtSchema *schema);
@@ -518,6 +525,9 @@ GhtErr bytes_from_hexbytes(const char *hex, size_t hexsize, uint8_t **bytes);
 
 /** Convert a byte buffer into a hex string */
 GhtErr hexbytes_from_bytes(const uint8_t *bytes, size_t bytesize, char **hex);
+
+/** Test that a file exists */
+int fexists(const char *filename);
 
 
 #endif /* _GHT_INTERNAL_H */

@@ -23,7 +23,7 @@ include_directories ("${PROJECT_SOURCE_DIR}/src")
 include_directories ("${CUNIT_INCLUDE_DIR}")
 
 add_executable(cu_tester ${GHT_TEST_SOURCES} ${GHT_TEST_HEADERS})
-target_link_libraries (cu_tester libght-static cunit)
+target_link_libraries (cu_tester libght-static ${CUNIT_LIBRARIES})
 
 add_test(cu_tester cu_tester)
 

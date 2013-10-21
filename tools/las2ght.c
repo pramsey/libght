@@ -212,8 +212,8 @@ l2g_state_free(Las2GhtState *state)
 static int
 l2g_fexists(const char *filename)
 {
-    FILE *fd;
-    if ( ! (fd = fopen(filename, "r")) )
+    FILE *fd = fopen(filename, "r");
+    if ( !fd )
         return 0;
     fclose(fd);
     return 1;

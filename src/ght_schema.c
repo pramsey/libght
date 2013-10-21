@@ -10,6 +10,7 @@
 
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
+#include <libxml/xpathInternals.h>
 #include "ght_internal.h"
 #include <math.h>
 
@@ -265,6 +266,7 @@ GhtErr ght_schema_add_dimension(GhtSchema *schema, GhtDimension *dim)
     return GHT_OK;
 }
 
+#define TAG_IS(str) (strcmp((char*)(child->name), str) == 0)
 
 static GhtErr ght_dimension_from_xml(xmlNodePtr node, GhtDimension **dimension)
 {
@@ -277,31 +279,29 @@ static GhtErr ght_dimension_from_xml(xmlNodePtr node, GhtDimension **dimension)
     for ( child = node->children; child; child = child->next )
     {
         if ( child->type == XML_ELEMENT_NODE )
-        {
-            
-#define TAG_IS(str) (strcmp(child->name, str) == 0)
-            
+        { 
+			char *content = (char*)(child->children->content);
             if ( TAG_IS("name") )
             {
-                ght_dimension_set_name(dim, child->children->content);
+                ght_dimension_set_name(dim, content);
             }
             else if ( TAG_IS("description") )
             {
-                ght_dimension_set_description(dim, child->children->content);
+                ght_dimension_set_description(dim, content);
             }
             else if ( TAG_IS("interpretation") )
             {
                 GhtType type;
-                GHT_TRY(ght_type_from_str(child->children->content, &type));
+                GHT_TRY(ght_type_from_str(content, &type));
                 GHT_TRY(ght_dimension_set_type(dim, type));
             }
             else if ( TAG_IS("scale") )
             {
-                GHT_TRY(ght_dimension_set_scale(dim, atof(child->children->content)));
+                GHT_TRY(ght_dimension_set_scale(dim, atof(content)));
             }
             else if ( TAG_IS("offset") )
             {
-                GHT_TRY(ght_dimension_set_offset(dim, atof(child->children->content)));
+                GHT_TRY(ght_dimension_set_offset(dim, atof(content)));
             }
             else
             {
@@ -315,7 +315,7 @@ static GhtErr ght_dimension_from_xml(xmlNodePtr node, GhtDimension **dimension)
 
 static GhtErr ght_schema_from_xml(xmlDocPtr xml_doc, GhtSchema **schema)
 {
-    static xmlChar *xpath_str = "/pc:PointCloudSchema/pc:dimension";
+    static xmlChar *xpath_str = (unsigned char*)("/pc:PointCloudSchema/pc:dimension");
     xmlNsPtr xml_ns = NULL;
     xmlXPathContextPtr xpath_ctx;
     xmlXPathObjectPtr xpath_obj;
@@ -337,7 +337,7 @@ static GhtErr ght_schema_from_xml(xmlDocPtr xml_doc, GhtSchema **schema)
 
     /* Register the root namespace if there is one */
     if ( xml_ns )
-        xmlXPathRegisterNs(xpath_ctx, "pc", xml_ns->href);
+        xmlXPathRegisterNs(xpath_ctx, (xmlChar*)("pc"), xml_ns->href);
 
     /* Evaluate xpath expression */
     xpath_obj = xmlXPathEvalExpression(xpath_str, xpath_ctx);
@@ -349,7 +349,8 @@ static GhtErr ght_schema_from_xml(xmlDocPtr xml_doc, GhtSchema **schema)
     }
 
     /* Iterate on the dimensions we found */
-    if ( nodes = xpath_obj->nodesetval )
+    nodes = xpath_obj->nodesetval;
+    if ( nodes )
     {
         int i;
         int ndims = nodes->nodeNr;

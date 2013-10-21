@@ -62,6 +62,7 @@ ght_nodelist_free_shallow(GhtNodeList *nl)
         ght_free(nl->nodes);
 
     ght_free(nl);
+	return GHT_OK;
 }
 
 /** Free all the nodes, then the containing stuff */
@@ -403,6 +404,7 @@ ght_node_free(GhtNode *node)
         GHT_TRY(ght_hash_free(node->hash));
 
     ght_free(node);
+	return GHT_OK;
 }
 
 

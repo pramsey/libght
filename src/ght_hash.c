@@ -317,6 +317,7 @@ ght_hash_free(GhtHash *hash)
 {
     assert(hash != NULL);
     ght_free(hash);
+    return GHT_OK;
 }
 
 GhtErr 
