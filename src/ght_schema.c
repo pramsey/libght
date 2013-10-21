@@ -315,7 +315,7 @@ static GhtErr ght_dimension_from_xml(xmlNodePtr node, GhtDimension **dimension)
 
 static GhtErr ght_schema_from_xml(xmlDocPtr xml_doc, GhtSchema **schema)
 {
-    static xmlChar *xpath_str = (unsigned char*)("/pc:PointCloudSchema/pc:dimension");
+    static xmlChar *xpath_str = (xmlChar*)("/pc:PointCloudSchema/pc:dimension");
     xmlNsPtr xml_ns = NULL;
     xmlXPathContextPtr xpath_ctx;
     xmlXPathObjectPtr xpath_obj;
@@ -349,8 +349,7 @@ static GhtErr ght_schema_from_xml(xmlDocPtr xml_doc, GhtSchema **schema)
     }
 
     /* Iterate on the dimensions we found */
-    nodes = xpath_obj->nodesetval;
-    if ( nodes )
+    if ( (nodes = xpath_obj->nodesetval) )
     {
         int i;
         int ndims = nodes->nodeNr;

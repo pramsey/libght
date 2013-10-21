@@ -325,8 +325,8 @@ test_ght_node_unbuild_tree(void)
     CU_ASSERT_STRING_EQUAL("c0v2hdm1gcuekpf9y1", nodelist->nodes[5]->hash);
     CU_ASSERT_EQUAL(6, nodelist->num_nodes);
     
-    // for ( i = 0 ; i < nodelist->num_nodes; i++ )
-    //     printf("%s\n", nodelist->nodes[i]->hash);
+    for ( i = 0 ; i < nodelist->num_nodes; i++ )
+        printf("%s\n", nodelist->nodes[i]->hash);
     
     ght_nodelist_free_deep(nodelist);
     ght_node_free(root);
