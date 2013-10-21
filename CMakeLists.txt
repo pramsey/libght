@@ -12,7 +12,7 @@ project (GHT)
 
 set (GHT_VERSION_MAJOR 0)
 set (GHT_VERSION_MINOR 1)
-set (GHT_VERSION_PATCH 0)
+set (GHT_VERSION_PATCH 1)
 
 # full path for identification
 set (GHT_VERSION "${GHT_VERSION_MAJOR}.${GHT_VERSION_MINOR}.${GHT_VERSION_PATCH}")
