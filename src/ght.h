@@ -25,6 +25,21 @@ typedef GhtConfig* GhtConfigPtr;
 
 
 /***********************************************************************
+*   MEMORY MANAGEMENT
+*/
+
+/* Global function signatures for memory/logging handlers. */
+typedef void* (*GhtAllocator)(size_t size);
+typedef void* (*GhtReallocator)(void *mem, size_t size);
+typedef void  (*GhtDeallocator)(void *mem);
+typedef void  (*GhtMessageHandler)(const char *string, va_list ap);
+
+/** Initialize memory/message handling */
+void ght_set_handlers(GhtAllocator allocator, GhtReallocator reallocator,
+                      GhtDeallocator deallocator, GhtMessageHandler error_handler,
+                      GhtMessageHandler info_handler, GhtMessageHandler warn_handler);
+
+/***********************************************************************
 *   NODE
 */
 
@@ -79,6 +94,9 @@ GhtErr ght_attribute_get_next(const GhtAttributePtr attr, GhtAttributePtr *nexta
 
 /** Get the dimension associated with a GhtAttribute */
 GhtErr ght_attribute_get_dimension(const GhtAttributePtr attr, const GhtDimensionPtr *dim);
+
+/** Return the scaled and offset version of the packed attribute value */
+GhtErr ght_attribute_get_value(const GhtAttributePtr attr, double *val);
 
 /***********************************************************************
 *   DIMENSION
@@ -180,6 +198,9 @@ GhtErr ght_tree_read(GhtReaderPtr reader, GhtTreePtr *tree);
 
 /** Set up a tree configuration with defaults */
 GhtErr ght_config_init(GhtConfigPtr config);
+
+/** Take in a tree and output a populated GhtNodeList, creates complete copy of data */
+GhtErr ght_tree_to_nodelist(const GhtTreePtr tree, GhtNodeListPtr nodelist);
 
 
 /***********************************************************************

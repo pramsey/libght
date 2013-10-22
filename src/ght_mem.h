@@ -17,11 +17,6 @@ typedef void* (*GhtReallocator)(void *mem, size_t size);
 typedef void  (*GhtDeallocator)(void *mem);
 typedef void  (*GhtMessageHandler)(const char *string, va_list ap);
 
-/** Initialize memory/message handling */
-void ght_set_handlers(GhtAllocator allocator, GhtReallocator reallocator,
-                      GhtDeallocator deallocator, GhtMessageHandler error_handler,
-                      GhtMessageHandler info_handler, GhtMessageHandler warn_handler);
-
 /** Set the malloc handler */
 void   ght_set_allocator(GhtAllocator allocator);
 
