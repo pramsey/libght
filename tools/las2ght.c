@@ -9,10 +9,10 @@
 
 #include "liblas/capi/liblas.h"
 #include "proj_api.h"
-#include "ght.h" /* We use the public GHT API to promote good practices */
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
+#include "ght.h" /* We use the public GHT API to promote good practices */
 
 #define EXENAME "las2ght"
 #define MAXPOINTS 2000000
