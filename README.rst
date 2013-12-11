@@ -26,7 +26,7 @@ UNIX
 
     mkdir libght-build
     cd libght-build
-    cmake ../libght-src
+    cmake ../src
     make
     make test
     make install
@@ -38,7 +38,7 @@ Windows
 
     mkdir libght-build
     cd libght-build
-    cmake -G "NMake Makefiles" ..\libght-src
+    cmake -G "NMake Makefiles" ..\src
     nmake
     nmake install
 
