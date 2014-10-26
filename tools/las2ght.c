@@ -31,6 +31,12 @@
 static char *ght_file_template = "%s-%d-%s.ght";
 static char *xml_file_template = "%s-%d-%s.ght.xml";
 
+/* declarations */
+void ght_init(void);
+void ght_info(const char *fmt, ...);
+void ght_warn(const char *fmt, ...);
+void ght_error(const char *fmt, ...);
+
 typedef enum
 {
     LL_INTENSITY = 0,
@@ -180,6 +186,7 @@ l2g_config_free(Las2GhtConfig *config)
     }
 }
 
+static void
 l2g_state_free(Las2GhtState *state)
 {
     if ( state->header )
