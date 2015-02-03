@@ -658,7 +658,7 @@ ght_node_read(GhtReader *reader, GhtNode **node)
 GhtErr
 ght_node_to_nodelist(const GhtNode *node, GhtNodeList *nodelist, GhtAttribute *attr, GhtHash *hash)
 {
-    static int hash_array_len = GHT_MAX_HASH_LENGTH + 1;
+    static int hash_array_len = GHT_MAX_HASH_LENGTH;
     GhtHash h[hash_array_len];
     GhtAttribute *a;
     
@@ -667,6 +667,7 @@ ght_node_to_nodelist(const GhtNode *node, GhtNodeList *nodelist, GhtAttribute *a
     strncpy(h, hash, hash_array_len);
     if ( node->hash )
     {
+        /* TODO: limit write to GHT_MAX_HASH_LENGTH - strlen(node->hash) */
         strcat(h, node->hash);
     }
     
