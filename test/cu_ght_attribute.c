@@ -201,6 +201,7 @@ test_ght_unbuild_tree_with_attributes(void)
     int i;
     GhtNodeList *nodelist;
     GhtHash h[GHT_MAX_HASH_LENGTH];
+    memset(h, 0, GHT_MAX_HASH_LENGTH);
     
     ght_nodelist_new(32, &nodelist);
     ght_node_to_nodelist(root, nodelist, NULL, h);
