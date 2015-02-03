@@ -316,6 +316,7 @@ test_ght_node_unbuild_tree(void)
     int i;
     GhtNodeList *nodelist;
     GhtHash h[GHT_MAX_HASH_LENGTH];
+    memset(h, 0, GHT_MAX_HASH_LENGTH);
     
     ght_nodelist_new(32, &nodelist);
     ght_node_to_nodelist(root, nodelist, NULL, h);
