@@ -92,7 +92,8 @@ tsv_string_to_tree(char *str, const GhtSchema *schema)
     }
     
     ght_config_init(&config);
-    ght_tree_from_nodelist(schema, nodelist, &config, &tree);
+    if ( ght_tree_from_nodelist(schema, nodelist, &config, &tree) != GHT_OK )
+      return NULL;
     ght_tree_compact_attributes(tree);
     ght_nodelist_free_shallow(nodelist);
     
@@ -191,6 +192,7 @@ test_ght_tree_xxx(void)
     char tsv[256];
     sprintf(tsv, "18\t-45.5\t123.4\t5\n170\t-45\t123.4\t5\n");
     tree = tsv_string_to_tree(tsv, simpleschema);
+    CU_ASSERT_FATAL( tree != NULL );
     printf("Num nodes: %d", tree->num_nodes);
     CU_ASSERT_EQUAL(tree->num_nodes, 2);
     ght_tree_free(tree);
