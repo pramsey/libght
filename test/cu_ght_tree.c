@@ -36,17 +36,16 @@ clean_suite(void)
 }
 
 static GhtTree *
-tsv_file_to_tree(const char *fname, const GhtSchema *schema)
+tsv_string_to_tree(char *str, const GhtSchema *schema)
 {
     GhtNodeList *nodelist;
     GhtTree *tree;
     GhtConfig config;
-    char *ptr_start, *ptr_end, *tmp;
-    char *filestr = file_to_str(fname);
+    char *ptr_start, *tmp;
+    char *ptr_end;
+    char *filestr = str;
     double dblval[16]; /* Only going to handle files 16 columns wide */
     int field_num = 0;
-
-    if ( ! filestr ) return NULL;
 
     ght_nodelist_new(16, &nodelist);
     
@@ -97,6 +96,16 @@ tsv_file_to_tree(const char *fname, const GhtSchema *schema)
     ght_tree_compact_attributes(tree);
     ght_nodelist_free_shallow(nodelist);
     
+    return tree;
+}
+
+static GhtTree *
+tsv_file_to_tree(const char *fname, const GhtSchema *schema)
+{
+    char *filestr = file_to_str(fname);
+    if ( ! filestr ) return NULL;
+    GhtTree *tree = tsv_string_to_tree(filestr, schema);
+    ght_free(filestr);
     return tree;
 }
 
@@ -175,6 +184,17 @@ test_ght_tree_filter(void)
     ght_tree_free(tree1);
 }
 
+static void
+test_ght_tree_xxx(void)
+{
+    GhtTree *tree;
+    char tsv[256];
+    sprintf(tsv, "18\t-45.5\t123.4\t5\n170\t-45\t123.4\t5\n");
+    tree = tsv_string_to_tree(tsv, simpleschema);
+    printf("Num nodes: %d", tree->num_nodes);
+    CU_ASSERT_EQUAL(tree->num_nodes, 2);
+    ght_tree_free(tree);
+}
 
 /* REGISTER ***********************************************************/
 
@@ -183,6 +203,7 @@ CU_TestInfo tree_tests[] =
     GHT_TEST(test_ght_tree_extent),
     GHT_TEST(test_ght_tree_empty),
     GHT_TEST(test_ght_tree_filter),
+    GHT_TEST(test_ght_tree_xxx),
     CU_TEST_INFO_NULL
 };
 
