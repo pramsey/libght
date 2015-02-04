@@ -1,3 +1,6 @@
+.. image:: https://secure.travis-ci.org/pramsey/libght.png
+    :target: http://travis-ci.org/pramsey/libght
+
 GeoHashTree for Point Cloud Data
 ================================
 
