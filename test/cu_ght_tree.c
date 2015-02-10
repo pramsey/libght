@@ -186,7 +186,7 @@ test_ght_tree_filter(void)
 }
 
 static void
-test_ght_tree_xxx(void)
+test_ght_tree_issue18(void)
 {
     GhtTree *tree;
     char tsv[256];
@@ -205,7 +205,7 @@ CU_TestInfo tree_tests[] =
     GHT_TEST(test_ght_tree_extent),
     GHT_TEST(test_ght_tree_empty),
     GHT_TEST(test_ght_tree_filter),
-    GHT_TEST(test_ght_tree_xxx),
+    GHT_TEST(test_ght_tree_issue18),
     CU_TEST_INFO_NULL
 };
 
